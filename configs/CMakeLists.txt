@@ -22,7 +22,7 @@ include(DAQTopprojHelpers)
 # development area, the developer is encouraged to add it to its
 # appropriate place in this list
 
-set(build_order "daq-buildtools" "cmdlib" "restcmd" "appfwk" "ipm" "driver" "udaq-readout" "ddpdemo" "listrev")
+set(build_order "daq-buildtools" "logging" "cmdlib" "restcmd" "appfwk" "ipm" "driver" "udaq-readout" "ddpdemo" "listrev")
 
 daq_add_subpackages("${build_order}") 
 
