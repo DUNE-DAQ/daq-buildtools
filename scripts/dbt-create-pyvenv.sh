@@ -72,7 +72,7 @@ then
   error "Failed to load the virtual env. Exiting..." 
 fi
 
-python -m pip install -r ${PYENV_REQS}
+python -m pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org -r ${PYENV_REQS}
 test $? -eq 0 || error "Installing required modules failed. Exiting..." 
 
 deactivate
