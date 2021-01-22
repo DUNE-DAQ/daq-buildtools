@@ -60,6 +60,7 @@ DBT_FOUND_PYTHON_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMak
 # For when configuration files will be introduces
 # DBT_FOUND_SHARE_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*'  \( -path '*/schema' -or -path '*/config' \) -printf '%h ')
 DBT_FOUND_SHARE_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/schema' -printf '%h ')
+DBT_FOUND_MAN_PATH=$(find -L $BUILD_DIR -maxdepth 3 -type d -not -name '*CMakeFiles*' -path '*/doc/man')
 
 DBT_FOUND_APPS_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/apps')
 DBT_FOUND_LIB_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/src')
@@ -72,8 +73,9 @@ add_many_paths PYTHONPATH ${DBT_FOUND_PYTHON_PATH}
 add_many_paths LD_LIBRARY_PATH ${DBT_FOUND_LIB_PATH}
 add_many_paths CET_PLUGIN_PATH ${DBT_FOUND_PLUGS_PATH} ${DBT_FOUND_TEST_PLUGS_PATH}
 add_many_paths DUNEDAQ_SHARE_PATH ${DBT_FOUND_SHARE_PATH}
+add_many_paths MANPATH ${DBT_FOUND_MAN_PATH}
 
-unset DBT_FOUND_SCRIPT_PATH DBT_FOUND_TEST_SCRIPT_PATH DBT_FOUND_PYTHON_PATH DBT_FOUND_SHARE_PATH
+unset DBT_FOUND_SCRIPT_PATH DBT_FOUND_TEST_SCRIPT_PATH DBT_FOUND_PYTHON_PATH DBT_FOUND_SHARE_PATH DBT_FOUND_MAN_PATH
 unset DBT_FOUND_APPS_PATH DBT_FOUND_LIB_PATH DBT_FOUND_PLUGS_PATH DBT_FOUND_TEST_APPS_PATH DBT_FOUND_TEST_PLUGS_PATH
 
 export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH
