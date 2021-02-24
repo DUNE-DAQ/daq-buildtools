@@ -1,8 +1,3 @@
-#!/usr/bin/env bash
-set -o pipefail
-set -o nounset
-set +o errexit # we expect this file to be `source`d, prevent exiting user shell
-
 #------------------------------------------------------------------------------
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
@@ -17,7 +12,7 @@ fi
 # Import find_work_area function
 source ${HERE}/dbt-setup-tools.sh
 
-DBT_AREA_ROOT=$(find_work_area)
+export DBT_AREA_ROOT=$(find_work_area)
 
 echo "DBT_AREA_ROOT=${DBT_AREA_ROOT}"
 if [[ -z $DBT_AREA_ROOT ]]; then
@@ -68,3 +63,6 @@ fi
 export DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED=1
 echo "This script has been sourced successfully"
 echo
+
+
+

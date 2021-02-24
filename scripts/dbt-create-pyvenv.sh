@@ -1,6 +1,4 @@
-#!/usr/bin/env bash
-set -o errexit -o nounset -o pipefail
-IFS=$'\n\t\v'
+#!/bin/env bash
 
 #------------------------------------------------------------------------------
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
@@ -29,7 +27,7 @@ timenow="date \"+%D %T\""
 ###
 # Check if inside a virtualenv already
 ###
-if [[ "${VIRTUAL_ENV:-""}" != "" ]]
+if [[ "$VIRTUAL_ENV" != "" ]]
 then
   error "You are already in a virtual env. Please deactivate first. Exiting..."
 fi
@@ -38,7 +36,7 @@ fi
 # Check if python from cvmfs has been set up.
 # Add version check in the future.
 ###
-if [ -z "${SETUP_PYTHON:-}" ]; then    
+if [ -z "$SETUP_PYTHON" ]; then    
     echo -e "INFO [`eval $timenow`]: Python UPS product is not set, setting it from cvmfs now."
     # Source the area settings to determine what area where to get python from
     source ${DBT_AREA_ROOT}/${DBT_AREA_FILE}
@@ -69,7 +67,7 @@ fi
 
 source ${DBT_AREA_ROOT}/${DBT_VENV}/bin/activate
 
-if [[ "${VIRTUAL_ENV:-""}" == "" ]]
+if [[ "$VIRTUAL_ENV" == "" ]]
 then
   error "Failed to load the virtual env. Exiting..." 
 fi

@@ -1,14 +1,8 @@
-#!/usr/bin/env bash
-set -o pipefail
-set -o nounset
-set +o errexit # we expect this file to be `source`d, prevent exiting user shell
-
 #------------------------------------------------------------------------------
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
 # Import find_work_area function
 source ${HERE}/dbt-setup-tools.sh
-abort_if_not_sourced
 
 DBT_AREA_ROOT=$(find_work_area)
 
@@ -26,7 +20,7 @@ EOF
 
 fi
 
-if [[ -z ${DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED:-} ]]; then
+if [[ -z $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
       type dbt-setup-build-environment > /dev/null
       retval="$?"
 
@@ -60,28 +54,34 @@ script won't try to source it
 EOF
 fi
 
-DBT_FOUND_SCRIPT_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/scripts')
-DBT_FOUND_TEST_SCRIPT_PATH=$(find -L $BUILD_DIR -maxdepth 3 -type d -not -name '*CMakeFiles*' -path '*/test/scripts')
-DBT_FOUND_PYTHON_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/python')
-# For when configuration files will be introduces
-# DBT_FOUND_SHARE_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*'  \( -path '*/schema' -or -path '*/config' \) -printf '%h ')
-DBT_FOUND_SHARE_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/schema' -printf '%h ')
+# Convenience function for finding paths in the 
+function find_runtime_paths() {
+  find -L $BUILD_DIR -maxdepth $1 -type d -path "$2" -printf "%$3 "
+}
 
-DBT_FOUND_APPS_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/apps')
-DBT_FOUND_LIB_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '*/src')
-DBT_FOUND_PLUGS_PATH=$(find -L $BUILD_DIR -maxdepth 2 -type d -not -name '*CMakeFiles*' -path '/*plugins')
-DBT_FOUND_TEST_APPS_PATH=$(find -L $BUILD_DIR -maxdepth 3 -type d -not -name '*CMakeFiles*' -path '*/test/apps')
-DBT_FOUND_TEST_PLUGS_PATH=$(find -L $BUILD_DIR -maxdepth 3 -type d -not -name '*CMakeFiles*' -path '*/test/plugins')
+
+# Locate all the 
+DBT_FOUND_APPS_PATH=$(find_runtime_paths 2 '*/apps' 'p')
+DBT_FOUND_LIB_PATH=$(find_runtime_paths 2 '*/src' 'p')
+DBT_FOUND_PLUGS_PATH=$(find_runtime_paths 2 '*/plugins' 'p')
+DBT_FOUND_SCRIPT_PATH=$(find_runtime_paths 2 '*/scripts' 'p')
+DBT_FOUND_PYTHON_PATH=$(find_runtime_paths 2 '*/python' 'p')
+DBT_FOUND_SHARE_PATH=$(find_runtime_paths 2 '*/schema' 'h')
+
+DBT_FOUND_TEST_APPS_PATH=$(find_runtime_paths 3 '*/test/apps' 'p')
+DBT_FOUND_TEST_SCRIPT_PATH=$(find_runtime_paths 3 '*/test/scripts' 'p')
+DBT_FOUND_TEST_PLUGS_PATH=$(find_runtime_paths 3 '*/test/plugins' 'p')
+DBT_FOUND_TEST_SHARE_PATH=$(find_runtime_paths 3 '*/test/schema' 'h')
+
 
 add_many_paths PATH ${DBT_FOUND_APPS_PATH} ${DBT_FOUND_SCRIPT_PATH} ${DBT_FOUND_TEST_APPS_PATH} ${DBT_FOUND_TEST_SCRIPT_PATH}
 add_many_paths PYTHONPATH ${DBT_FOUND_PYTHON_PATH}
 add_many_paths LD_LIBRARY_PATH ${DBT_FOUND_LIB_PATH}
 add_many_paths CET_PLUGIN_PATH ${DBT_FOUND_PLUGS_PATH} ${DBT_FOUND_TEST_PLUGS_PATH}
-add_many_paths DUNEDAQ_SHARE_PATH ${DBT_FOUND_SHARE_PATH}
+add_many_paths DUNEDAQ_SHARE_PATH ${DBT_FOUND_SHARE_PATH} ${DBT_FOUND_TEST_SHARE_PATH}
 
-unset DBT_FOUND_SCRIPT_PATH DBT_FOUND_TEST_SCRIPT_PATH DBT_FOUND_PYTHON_PATH DBT_FOUND_SHARE_PATH
-unset DBT_FOUND_APPS_PATH DBT_FOUND_LIB_PATH DBT_FOUND_PLUGS_PATH DBT_FOUND_TEST_APPS_PATH DBT_FOUND_TEST_PLUGS_PATH
-
+unset DBT_FOUND_APPS_PATH DBT_FOUND_LIB_PATH DBT_FOUND_PLUGS_PATH DBT_FOUND_SCRIPT_PATH DBT_FOUND_PYTHON_PATH DBT_FOUND_SHARE_PATH
+unset DBT_FOUND_TEST_APPS_PATH DBT_FOUND_TEST_SCRIPT_PATH DBT_FOUND_TEST_PLUGS_PATH DBT_FOUND_TEST_SHARE_PATH
 export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH
 
 echo -e "${COL_GREEN}This script has been sourced successfully${COL_NULL}"

@@ -1,6 +1,7 @@
-#!/usr/bin/env bash
-set -o errexit -o nounset -o pipefail
-IFS=$'\n\t\v'
+#!/bin/bash
+# set -o errexit 
+set -o nounset 
+# set -o pipefail
 
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
@@ -21,11 +22,15 @@ clean_build=false
 debug_build=false
 verbose=false
 cmake_trace=false
+cmake_graphviz=false
+declare -i n_jobs=0
 perform_install=false
 lint=false
 package_to_lint=
 
 args=("$@")
+
+declare -i i_arg=0
 
 while ((i_arg < $#)); do
 
@@ -46,6 +51,7 @@ while ((i_arg < $#)); do
     echo " --install means that you want the code from your package(s) installed in the directory which was pointed to by the DBT_INSTALL_DIR environment variable before the most recent clean build"
     echo " --verbose means that you want verbose output from the compiler"
     echo " --cmake-trace enable cmake tracing"
+    echo " --cmake-graphviz geneates a target dependency graph"
 
     echo
     echo "All arguments are optional. With no arguments, CMake will typically just run "
@@ -60,23 +66,31 @@ while ((i_arg < $#)); do
   elif [[ "$arg" == "--unittest" ]]; then
     run_tests=true
     if [[ -n ${nextarg:-} && "$nextarg" =~ ^[^\-] ]]; then
-	package_to_test=$nextarg
-	i_arg=$((i_arg + 1))
+        package_to_test=$nextarg
+        i_arg=$((i_arg + 1))
     fi
   elif [[ "$arg" == "--lint" ]]; then
     lint=true
     if [[ -n ${nextarg:-} && "$nextarg" =~ ^[^\-] ]]; then
-	package_to_lint=$nextarg
-	i_arg=$((i_arg + 1))
+        package_to_lint=$nextarg
+        i_arg=$((i_arg + 1))
     fi
   elif [[ "$arg" == "--verbose" ]]; then
     verbose=true
   elif [[ "$arg" == "--cmake-trace" ]]; then
     cmake_trace=true
+  elif [[ "$arg" == "--cmake-graphviz" ]]; then
+    cmake_graphviz=true
+  elif [[ "$arg" == "--jobs" ]]; then
+    if [[ -n ${nextarg:-} && "$nextarg" =~ ^[^\-] ]]; then
+        n_jobs=$nextarg
+        i_arg=$((i_arg + 1))
+    fi
   elif [[ "$arg" == "--pkgname" ]]; then
     error "Use of --pkgname is deprecated; run with \" --help\" to see valid options. Exiting..."
   elif [[ "$arg" == "--install" ]]; then
     perform_install=true
+
   else
     error "Unknown argument provided; run with \" --help\" to see valid options. Exiting..."
   fi
@@ -94,14 +108,10 @@ EOF
 )"
 fi
 
-if ${debug_build:-} ; then
-    export DBT_DEBUG=true
-fi
-
-test -d ${BUILDDIR:-} || error "Expected build directory \"$BUILDDIR\" not found. Exiting..." 
+test -d $BUILDDIR || error "Expected build directory \"$BUILDDIR\" not found. Exiting..." 
 cd $BUILDDIR
 
-if ${clean_build:-}; then 
+if ${clean_build}; then 
   
    # Want to be damn sure of we're in the right directory, rm -rf * is no joke...
 
@@ -125,14 +135,10 @@ fi
 
 build_log=$LOGDIR/build_attempt_$( date | sed -r 's/[: ]+/_/g' ).log
 
-if [[ -n $( which unbuffer ) ]]; then
-  UB_CMAKE="unbuffer cmake"
-else
-  UB_CMAKE="cmake"
-fi
+CMAKE="cmake"
 
-if ${cmake_trace:-}; then
-  UB_CMAKE="${UB_CMAKE} --trace"
+if $cmake_trace; then
+  CMAKE="${CMAKE} --trace"
 fi
 
 
@@ -153,11 +159,13 @@ if ! [ -e CMakeCache.txt ]; then
   starttime_cfggen_d=$( date )
   starttime_cfggen_s=$( date +%s )
 
-# Will use $cmd if needed for error message
-cmd="${UB_CMAKE} -DMOO_CMD=$(which moo) -DDBT_ROOT=${DBT_ROOT} -DDBT_DEBUG=${DBT_DEBUG} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR" 
+  # Will use $cmd if needed for error message
+  cmd="${CMAKE} -DMOO_CMD=$(which moo) -DDBT_ROOT=${DBT_ROOT} -DDBT_DEBUG=${debug_build} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR" 
 
-${cmd} |& sed -e 's/\r/\n/g'|& tee $build_log
-
+  echo "Executing '$cmd'"
+  # Extra "set -o pipefail;" statement to push a cmake error out of the pipe
+  # Yes, it's black magic
+  script -qefc "set -o pipefail; ${cmd} |& sed -e 's/\r/\n/g' " $build_log
   retval=${PIPESTATUS[0]}  # Captures the return value of cmake, not tee
   endtime_cfggen_d=$( date )
   endtime_cfggen_s=$( date +%s )
@@ -191,6 +199,8 @@ Exiting...
 
 EOF
     )"
+
+  exit 40
   fi
 
 else
@@ -199,18 +209,25 @@ else
 
 fi # !-e CMakeCache.txt
 
-nprocs=$( grep -E "^processor\s*:\s*[0-9]+" /proc/cpuinfo  | wc -l )
-nprocs_argument=""
- 
-if [[ -n $nprocs && $nprocs =~ ^[0-9]+$ ]]; then
-  echo "This script believes you have $nprocs processors available on this system, and will use as many of them as it can"
-  nprocs_argument=" -j $nprocs"
-else
-  echo "Unable to determine the number of processors available, will not pass the \"-j <nprocs>\" argument on to the build stage" >&2
+if ${cmake_graphviz}; then
+  cmd="${CMAKE} --graphviz=graphviz/targets.dot ."
+  ${cmd}
+  exit $?
 fi
 
+nprocs=$( grep -E "^processor\s*:\s*[0-9]+" /proc/cpuinfo  | wc -l )
+nprocs_argument=""
 
-
+if (( $n_jobs <= 0)); then 
+  if [[ -n $nprocs && $nprocs =~ ^[0-9]+$ ]]; then
+    echo "This script believes you have $nprocs processors available on this system, and will use as many of them as it can"
+    nprocs_argument=" -j $nprocs"
+  else
+    echo "Unable to determine the number of processors available, will not pass the \"-j <nprocs>\" argument on to the build stage" >&2
+  fi
+else
+  nprocs_argument=" -j ${n_jobs}"
+fi
 
 starttime_build_d=$( date )
 starttime_build_s=$( date +%s )
@@ -220,14 +237,16 @@ if $verbose; then
   build_options="${build_options} --verbose"
 fi
 
-if ! $cmake_trace; then
+if ! $cmake_trace ; then
   build_options="${build_options} $nprocs_argument"
 fi
 
 # Will use $cmd if needed for error message
-cmd="${UB_CMAKE} --build . $build_options"
-
-${cmd} |& sed -e 's/\r/\n/g' |& tee -a $build_log
+cmd="${CMAKE} --build . $build_options"
+echo "Executing '$cmd'"
+# Extra "set -o pipefail;" statement to push a cmake error out of the pipe
+# Yes, it's black magic
+script -qefc "set -o pipefail; ${cmd} |& sed -e 's/\r/\n/g'" $build_log
 
 retval=${PIPESTATUS[0]}  # Captures the return value of cmake --build, not tee
 endtime_build_d=$( date )
@@ -262,7 +281,7 @@ num_estimated_warnings=$( grep "warning: " ${build_log} | wc -l )
 
 echo
 
-if [[ -n $cfggentime ]]; then
+if [[ -n ${cfggentime:-} ]]; then
   echo
   echo "config+generate stage took $cfggentime seconds"
   echo "Start time: $starttime_cfggen_d"
@@ -280,7 +299,7 @@ echo
 echo "   more ${build_log}"
 echo
 
-if [[ -n $cfggentime ]]; then
+if [[ -n ${cfggentime:-} ]]; then
   echo "CMake's config+generate+build stages all completed successfully"
   echo
 else
@@ -290,21 +309,19 @@ fi
 if $perform_install ; then
   cd $BUILDDIR
 
-# Will use $cmd if needed for error message
-cmd="cmake --build . --target install -- $nprocs_argument"
-     cmake --build . --target install -- $nprocs_argument
+  # Will use $cmd if needed for error message
+  cmd="cmake --build . --target install -- $nprocs_argument"
+  ${cmd}
  
   if [[ "$?" == "0" ]]; then
     echo 
     echo "Installation complete."
     echo "This implies your code successfully compiled before installation; you can either scroll up or run \"more $build_log\" to see build results"
   else
-      error "Installation failed. There was a problem running \"$cmd\". Exiting.."
-
+    error "Installation failed. There was a problem running \"$cmd\". Exiting.."
   fi
  
 fi
-
 
 
 if $run_tests ; then
@@ -319,10 +336,12 @@ if $run_tests ; then
 
   cd $BUILDDIR
 
+  source ${DBT_ROOT}/scripts/dbt-setup-runtime-environment.sh
+
   if [[ -z $package_to_test ]]; then
     package_list=$( find . -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles )
   else
-	  package_list=$package_to_test
+          package_list=$package_to_test
   fi
 
   for pkgname in $package_list ; do
