@@ -12,7 +12,7 @@ fi
 # Import find_work_area function
 source ${HERE}/dbt-setup-tools.sh
 
-DBT_AREA_ROOT=$(find_work_area)
+export DBT_AREA_ROOT=$(find_work_area)
 
 echo "DBT_AREA_ROOT=${DBT_AREA_ROOT}"
 if [[ -z $DBT_AREA_ROOT ]]; then
