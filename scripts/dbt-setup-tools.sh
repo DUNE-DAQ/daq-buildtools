@@ -34,14 +34,23 @@ function setup_ups_product_areas() {
 #------------------------------------------------------------------------------
 function setup_ups_products() {
 
-  if [ -z "${dune_products}" ]; then
-    echo "UPS products variable (dune_products_dirs) undefined";
+  if [ -z "${1}" ]; then
+    echo "Usage: setup_ups_products <product list name>";
   fi
 
-  # And another function here?
-  setup_returns=""
+  if [ -z "${!1}" ]; then
+    echo "Product list '${1}' doesn't exist";
+    return 5
+  fi
 
-  for prod in "${dune_products[@]}"; do
+
+  product_set_name=${1}
+  product_set="${product_set_name}[@]"
+
+  # And another function here?
+  setup_ups_returns=""
+
+  for prod in "${!product_set}"; do
       prodArr=(${prod})
 
       setup_cmd="setup -B ${prodArr[0]//-/_} ${prodArr[1]}"
@@ -50,8 +59,10 @@ function setup_ups_products() {
       fi
       echo $setup_cmd
       ${setup_cmd}
-      setup_returns=$setup_returns"$? "
+      setup_ups_returns=$setup_ups_returns"$? "
   done
+
+  # Adding code here make setup return disappear. Mhhh...
 }
 #------------------------------------------------------------------------------
 
