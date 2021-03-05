@@ -33,24 +33,19 @@ then
 fi
 
 ###
-# Check if python from cvmfs has been set up.
-# Add version check in the future.
+# Source dune system packages
 ###
-if [ -z "$SETUP_PYTHON" ]; then    
-    echo -e "INFO [`eval $timenow`]: Python UPS product is not set, setting it from cvmfs now."
-    # Source the area settings to determine what area where to get python from
-    source ${DBT_AREA_ROOT}/${DBT_AREA_FILE}
-    
-    test $? -eq 0 || error "There was a problem sourcing ${DBT_AREA_ROOT}/${DBT_AREA_FILE}. Exiting..."
 
-    setup_ups_product_areas
+# Source the area settings to determine the origin and version of system packages
+source ${DBT_AREA_ROOT}/${DBT_AREA_FILE}
 
-    setup -B python ${dune_python_version}
-    test $? -eq 0 || error "The \"setup -B python ${dune_python_version}\" call failed. Exiting..." 
+test $? -eq 0 || error "There was a problem sourcing ${DBT_AREA_ROOT}/${DBT_AREA_FILE}. Exiting..."
 
-else
-    echo -e "INFO [`eval $timenow`]: Python UPS product $PYTHON_VERSION has been set up."
-fi
+setup_ups_product_areas
+
+setup_ups_products dune_systems
+test $? -eq 0 || error "Failed to setup 'dune_system' products, required to build the python venv. Exiting..." 
+
 
 ###
 # Check existance/create the default virtual_env

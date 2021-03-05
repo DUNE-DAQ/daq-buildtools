@@ -42,21 +42,26 @@ while ((i_arg < $#)); do
   i_arg=$((i_arg + 1))
 
   if [[ "$arg" == "--help" ]]; then
-    echo "Usage: "./$( basename $0 )" --clean --debug --unittest <optional package name> --lint <optional package name> --install --verbose --help "
-    echo
-    echo " --clean means the contents of ./build are deleted and CMake's config+generate+build stages are run"
-    echo " --debug means you want to build your software with optimizations off and debugging info on"
-    echo " --unittest means that unit test executables found in ./build/<optional package name>/unittest are run, or all unit tests in ./build/*/unittest are run if no package name is provided"
-    echo " --lint means you check for deviations in ./sourcecode/<optional package name> from the DUNE style guide, https://github.com/DUNE-DAQ/styleguide/blob/develop/dune-daq-cppguide.md, or deviations in all local repos if no package name is provided"
-    echo " --install means that you want the code from your package(s) installed in the directory which was pointed to by the DBT_INSTALL_DIR environment variable before the most recent clean build"
-    echo " --verbose means that you want verbose output from the compiler"
-    echo " --cmake-trace enable cmake tracing"
-    echo " --cmake-graphviz geneates a target dependency graph"
+    cat << EOF
 
-    echo
-    echo "All arguments are optional. With no arguments, CMake will typically just run "
-    echo "build, unless build/CMakeCache.txt is missing"
-    echo
+      Usage: "./$( basename $0 )" --clean --debug --jobs <number parallel build jobs> --unittest <optional package name> --lint <optional package name> --install --verbose --help 
+      
+       --clean means the contents of ./build are deleted and CMake's config+generate+build stages are run
+       --debug means you want to build your software with optimizations off and debugging info on
+       --jobs means you want to specify the number of jobs used by cmake to build the project
+       --unittest means that unit test executables found in ./build/<optional package name>/unittest are run, or all unit tests in ./build/*/unittest are run if no package name is provided
+       --lint means you check for deviations in ./sourcecode/<optional package name> from the DUNE style guide, https://github.com/DUNE-DAQ/styleguide/blob/develop/dune-daq-cppguide.md, or deviations in all local repos if no package name is provided
+       --install means that you want the code from your package(s) installed in the directory which was pointed to by the DBT_INSTALL_DIR environment variable before the most recent clean build
+       --verbose means that you want verbose output from the compiler
+       --cmake-trace enable cmake tracing
+       --cmake-graphviz geneates a target dependency graph
+
+    
+    All arguments are optional. With no arguments, CMake will typically just run 
+    build, unless build/CMakeCache.txt is missing    
+    
+EOF
+
     exit 0    
 
   elif [[ "$arg" == "--clean" ]]; then
