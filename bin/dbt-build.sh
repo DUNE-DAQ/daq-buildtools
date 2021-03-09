@@ -198,7 +198,7 @@ $cmd
 from $BUILDDIR (i.e., CMake's config+generate stages). 
 Scroll up for details or look at the build log via 
 
-more ${build_log}
+less -R ${build_log}
 
 Exiting...
 
@@ -272,7 +272,7 @@ $cmd
 from $BUILDDIR (i.e.,
 CMake's build stage). Scroll up for details or look at the build log via 
 
-more ${build_log}
+less -R ${build_log}
 
 Exiting...
 
@@ -301,7 +301,7 @@ echo "End time:   $endtime_build_d"
 echo
 echo "Output of build contains an estimated $num_estimated_warnings warnings, and can be viewed later via: "
 echo 
-echo "   more ${build_log}"
+echo "   less -R ${build_log}"
 echo
 
 if [[ -n ${cfggentime:-} ]]; then
@@ -321,7 +321,7 @@ if $perform_install ; then
   if [[ "$?" == "0" ]]; then
     echo 
     echo "Installation complete."
-    echo "This implies your code successfully compiled before installation; you can either scroll up or run \"more $build_log\" to see build results"
+    echo "This implies your code successfully compiled before installation; you can either scroll up or run \"less -R $build_log\" to see build results"
   else
     error "Installation failed. There was a problem running \"$cmd\". Exiting.."
   fi

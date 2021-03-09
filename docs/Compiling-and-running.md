@@ -130,7 +130,7 @@ You can see all the options listed if you run the script with the `--help` comma
 ```
 dbt-build.sh --help
 ```
-Finally, note that both the output of your builds and your unit tests are logged to files in the `./log` subdirectory. These files may have ASCII color codes which make them difficult to read with some tools; `more` or `cat`, however, will display the colors and not the codes themselves. 
+Finally, note that both the output of your builds and your unit tests are logged to files in the `./log` subdirectory. These files may have ASCII color codes which make them difficult to read with some tools; `less -R <logfile name>`, however, will display the colors and not the codes themselves. 
 
 </details>
 
