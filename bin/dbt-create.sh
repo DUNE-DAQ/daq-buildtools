@@ -11,11 +11,11 @@ Usage
 
 To create a new DUNE DAQ development area:
       
-    $( basename $0 ) -r/--release-path <path to release area> <dunedaq-release> <target directory>
+    $( basename $0 ) [-r/--release-path <path to release area>] <dunedaq-release> <target directory>
 
 To list the available DUNE DAQ releases:
 
-    $( basename $0 ) --list
+    $( basename $0 ) -l/--list [-r/--release-path <path to release area>]
 
 Arguments and options:
 
