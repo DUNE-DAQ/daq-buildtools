@@ -170,7 +170,8 @@ if ! [ -e CMakeCache.txt ]; then
   echo "Executing '$cmd'"
   # Extra "set -o pipefail;" statement to push a cmake error out of the pipe
   # Yes, it's black magic
-  script -qefc "set -o pipefail; ${cmd} |& sed -e 's/\r/\n/g' " $build_log
+  # script -qefc "set -o pipefail; ${cmd} |& sed -e 's/\r/\n/g' " $build_log
+  pytee.py -l $build_log -- ${cmd}
   retval=${PIPESTATUS[0]}  # Captures the return value of cmake, not tee
   endtime_cfggen_d=$( date )
   endtime_cfggen_s=$( date +%s )
@@ -251,7 +252,8 @@ cmd="${CMAKE} --build . $build_options"
 echo "Executing '$cmd'"
 # Extra "set -o pipefail;" statement to push a cmake error out of the pipe
 # Yes, it's black magic
-script -qefc "set -o pipefail; ${cmd} |& sed -e 's/\r/\n/g'" $build_log
+# script -qefc "set -o pipefail; ${cmd} |& sed -e 's/\r/\n/g'" $build_log
+pytee.py -l $build_log -- ${cmd}
 
 retval=${PIPESTATUS[0]}  # Captures the return value of cmake --build, not tee
 endtime_build_d=$( date )
