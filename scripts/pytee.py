@@ -2,7 +2,7 @@
 
 import pexpect
 import click
-import os
+import shutil
 
 
 
@@ -27,7 +27,8 @@ def run(cmd, args, log):
     if log:
         logfile = open(log,'w')
 
-    cols, rows = os.get_terminal_size()
+
+    cols, rows = shutil.get_terminal_size(fallback=(400, 100))
 
     process = pexpect.spawn(
         f'{cmd} {" ".join(args)}',
