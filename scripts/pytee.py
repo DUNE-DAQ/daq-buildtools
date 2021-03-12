@@ -48,7 +48,7 @@ def run(cmd, args, log):
         # print(index)
         if index == 0:
             text=process.before.decode('utf-8')
-            print(text)
+            print(text,flush=True)
             if log:
                 print(text, file=logfile)
 
@@ -56,7 +56,7 @@ def run(cmd, args, log):
             if not process.before:
                 continue
             text=process.before.decode('utf-8')
-            print(text)
+            print(text,flush=True)
             if log:
                 print(text, file=logfile)
         else:

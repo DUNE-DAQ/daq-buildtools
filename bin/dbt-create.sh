@@ -101,7 +101,7 @@ if [ ! -d "${TARGETDIR}" ] ; then
     mkdir -p ${TARGETDIR}
 fi
 
-TARGETDIR=$(cd $TARGETDIR && pwd)
+TARGETDIR=$(cd $TARGETDIR >/dev/null && pwd)  # redirect cd to /dev/null b/c CDPATH may be used
 
 cd ${TARGETDIR}
 
