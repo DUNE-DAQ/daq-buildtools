@@ -35,7 +35,7 @@ Once you've sourced `dbt-setup-env.sh`, you're now ready to create a development
 ```sh
 dbt-create.sh <release> <your work area subdirectory> # dunedaq-v2.3.0 is the most recent release as of Mar-2-2021
 ```
-which will set up an area to place the repos you wish to build. Note that if you didn't specify the name of the work area, it would just be named after the release. 
+which will set up an area to place the repos you wish to build. Remember to cd into the subdirectory you just created after `dbt-create.sh` finishes running. 
 
 ```txt
 MyTopDir
