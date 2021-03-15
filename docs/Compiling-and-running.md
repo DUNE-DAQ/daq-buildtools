@@ -31,11 +31,11 @@ Each time that you want to work with a DUNE DAQ development area in a fresh Linu
 
 ## Creating a development area (AKA work area)
 
-Once you've sourced `dbt-setup-env.sh`, you're now ready to create a development area. Create an empty directory (give it any name, but we'll refer to it as "MyTopDir" on this wiki) and 'cd' into it. Then run:
+Once you've sourced `dbt-setup-env.sh`, you're now ready to create a development area. Find a directory in which you want your development area to be a subdirectory, and cd into it. Then think of a good name for the area (give it any name, but we'll refer to it as "MyTopDir" on this wiki). Then you can run:
 ```sh
-dbt-create.sh <release>  # dunedaq-v2.3.0 is the most recent release as of Mar-2-2021
+dbt-create.sh <release> <your work area subdirectory> # dunedaq-v2.3.0 is the most recent release as of Mar-2-2021
 ```
-which will set up an area to place the repos you wish to build.
+which will set up an area to place the repos you wish to build. Note that if you didn't specify the name of the work area, it would just be named after the release. 
 
 ```txt
 MyTopDir
