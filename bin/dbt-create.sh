@@ -162,6 +162,10 @@ test $? -eq 0 || error "There was a problem copying \"$superproject_buildorder\"
 cp ${RELEASE_PATH}/${UPS_PKGLIST} $TARGETDIR/${DBT_AREA_FILE}
 test $? -eq 0 || error "There was a problem copying over the daq area signature file. Exiting..." 
 
+# Create the daq area signature file
+dbt_setup_env_script=${DBT_ROOT}/dbt-setup-env.sh
+ln -s ${dbt_setup_env_script} $TARGETDIR
+test $? -eq 0 || error "There was a problem linking the daq-buildtools setup file. Exiting..."
 
 echo "Setting up the Python subsystem"
 ${DBT_ROOT}/scripts/dbt-create-pyvenv.sh ${RELEASE_PATH}/${PY_PKGLIST}
