@@ -63,8 +63,8 @@ for p in ${DBT_PACKAGES}; do
   PNAME=${p^^}
   PKG_BLD_PATH=${BUILD_DIR}/${p}
   # Share
-  declare -xg "${PNAME}_SHARE"="${BUILD_DIR}/${p}"
-  export "${PNAME}_SHARE"
+  pkg_share="${PNAME//-/_}_SHARE"
+  declare -xg "${pkg_share}"="${BUILD_DIR}/${p}"
 
   add_many_paths_if_exist PATH "${PKG_BLD_PATH}/apps" "${PKG_BLD_PATH}/scripts" "${PKG_BLD_PATH}/test/apps" "${PKG_BLD_PATH}/test/scripts"
   add_many_paths_if_exist PYTHONPATH "${PKG_BLD_PATH}/python"
