@@ -70,7 +70,7 @@ for p in ${DBT_PACKAGES}; do
   add_many_paths_if_exist PYTHONPATH "${PKG_BLD_PATH}/python"
   add_many_paths_if_exist LD_LIBRARY_PATH "${PKG_BLD_PATH}/src"  "${PKG_BLD_PATH}/plugins"  "${PKG_BLD_PATH}/test/plugins"
   add_many_paths_if_exist CET_PLUGIN_PATH "${PKG_BLD_PATH}/plugins" "${PKG_BLD_PATH}/test/plugins"
-  add_many_paths_if_exist DUNEDAQ_SHARE_PATH  "${PKG_BLD_PATH}/share" "${PKG_BLD_PATH}/test/share"
+  add_many_paths_if_exist DUNEDAQ_SHARE_PATH  "${PKG_BLD_PATH}" "${PKG_BLD_PATH}/test/share"
 
 done
 
