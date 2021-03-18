@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
+HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE[0]:-$0})) && pwd)
 
 if [[ -z "${DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED}" ]]; then
     echo "This script hasn't yet been sourced (successfully) in this shell; setting up the build environment"

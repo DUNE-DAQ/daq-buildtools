@@ -1,7 +1,7 @@
 #!/bin/env bash
 
 #------------------------------------------------------------------------------
-HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
+HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE[0]:-$0})) && pwd)
 
 # Import find_work_area function
 source ${HERE}/dbt-setup-tools.sh
