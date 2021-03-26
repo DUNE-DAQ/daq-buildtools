@@ -1,6 +1,6 @@
 #!/bin/sh
 #------------------------------------------------------------------------------
-HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
+HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE[0]:-$0})) && pwd)
 
 export DBT_ROOT=${HERE}
 

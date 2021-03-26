@@ -3,7 +3,7 @@
 set -o nounset 
 # set -o pipefail
 
-HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
+HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE[0]:-$0})) && pwd)
 
 # Import find_work_area function
 source ${DBT_ROOT}/scripts/dbt-setup-tools.sh

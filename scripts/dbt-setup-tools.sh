@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
+HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE[0]:-$0})) && pwd)
 
 #------------------------------------------------------------------------------
 # Constants
@@ -73,7 +73,7 @@ function find_work_area() {
 
   SEARCH_PATH=${PWD}
   WA_PATH=""
-  for(( i=${#SLASHES}; i>0; i--)); do
+  for (( i=${#SLASHES}; i>0; i--)); do
     WA_SEARCH_PATH="${SEARCH_PATH}/${DBT_AREA_FILE}"
     # echo "Looking for $WA_SEARCH_PATH"
     if [ -f "${WA_SEARCH_PATH}" ]; then
@@ -107,7 +107,7 @@ function add_path() {
     return 1
   fi
   PATH_NAME=$1
-  PATH_VAL=${!1}
+  PATH_VAL=$(eval echo \$$PATH_NAME)
   PATH_ADD=$2
 
   # Add the new path only if it is not already there
