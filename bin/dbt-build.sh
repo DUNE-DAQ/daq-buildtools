@@ -168,10 +168,8 @@ if ! [ -e CMakeCache.txt ]; then
   cmd="${CMAKE} -DMOO_CMD=$(which moo) -DDBT_ROOT=${DBT_ROOT} -DDBT_DEBUG=${debug_build} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR" 
 
   echo "Executing '$cmd'"
-  # Extra "set -o pipefail;" statement to push a cmake error out of the pipe
-  # Yes, it's black magic
-  script -qefc "set -o pipefail; ${cmd} |& sed -e 's/\r/\n/g' " $build_log
-  retval=${PIPESTATUS[0]}  # Captures the return value of cmake, not tee
+  pytee.py -l $build_log -- ${cmd}
+  retval=$?  # Captures the return value of cmake, not tee
   endtime_cfggen_d=$( date )
   endtime_cfggen_s=$( date +%s )
 
@@ -198,7 +196,7 @@ $cmd
 from $BUILDDIR (i.e., CMake's config+generate stages). 
 Scroll up for details or look at the build log via 
 
-more ${build_log}
+less -R ${build_log}
 
 Exiting...
 
@@ -249,11 +247,9 @@ fi
 # Will use $cmd if needed for error message
 cmd="${CMAKE} --build . $build_options"
 echo "Executing '$cmd'"
-# Extra "set -o pipefail;" statement to push a cmake error out of the pipe
-# Yes, it's black magic
-script -qefc "set -o pipefail; ${cmd} |& sed -e 's/\r/\n/g'" $build_log
+pytee.py -l $build_log -- ${cmd}
 
-retval=${PIPESTATUS[0]}  # Captures the return value of cmake --build, not tee
+retval=$?  # Captures the return value of cmake --build, not tee
 endtime_build_d=$( date )
 endtime_build_s=$( date +%s )
 
@@ -272,7 +268,7 @@ $cmd
 from $BUILDDIR (i.e.,
 CMake's build stage). Scroll up for details or look at the build log via 
 
-more ${build_log}
+less -R ${build_log}
 
 Exiting...
 
@@ -301,7 +297,7 @@ echo "End time:   $endtime_build_d"
 echo
 echo "Output of build contains an estimated $num_estimated_warnings warnings, and can be viewed later via: "
 echo 
-echo "   more ${build_log}"
+echo "   less -R ${build_log}"
 echo
 
 if [[ -n ${cfggentime:-} ]]; then
@@ -321,7 +317,7 @@ if $perform_install ; then
   if [[ "$?" == "0" ]]; then
     echo 
     echo "Installation complete."
-    echo "This implies your code successfully compiled before installation; you can either scroll up or run \"more $build_log\" to see build results"
+    echo "This implies your code successfully compiled before installation; you can either scroll up or run \"less -R $build_log\" to see build results"
   else
     error "Installation failed. There was a problem running \"$cmd\". Exiting.."
   fi

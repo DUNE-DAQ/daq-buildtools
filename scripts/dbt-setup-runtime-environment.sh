@@ -6,6 +6,7 @@ source ${HERE}/dbt-setup-tools.sh
 
 DBT_AREA_ROOT=$(find_work_area)
 
+SOURCE_DIR="${DBT_AREA_ROOT}/sourcecode"
 BUILD_DIR="${DBT_AREA_ROOT}/build"
 if [ ! -d "$BUILD_DIR" ]; then
     
@@ -54,34 +55,25 @@ script won't try to source it
 EOF
 fi
 
-# Convenience function for finding paths in the 
-function find_runtime_paths() {
-  find -L $BUILD_DIR -maxdepth $1 -type d -path "$2" -printf "%$3 "
-}
+
+DBT_PACKAGES=$(find -L ${SOURCE_DIR}/ -mindepth 2 -maxdepth 2 -name CMakeLists.txt | sed "s#${SOURCE_DIR}/\(.*\)/CMakeLists.txt#\1#")
 
 
-# Locate all the 
-DBT_FOUND_APPS_PATH=$(find_runtime_paths 2 '*/apps' 'p')
-DBT_FOUND_LIB_PATH=$(find_runtime_paths 2 '*/src' 'p')
-DBT_FOUND_PLUGS_PATH=$(find_runtime_paths 2 '*/plugins' 'p')
-DBT_FOUND_SCRIPT_PATH=$(find_runtime_paths 2 '*/scripts' 'p')
-DBT_FOUND_PYTHON_PATH=$(find_runtime_paths 2 '*/python' 'p')
-DBT_FOUND_SHARE_PATH=$(find_runtime_paths 2 '*/schema' 'h')
+for p in ${DBT_PACKAGES}; do
+  PNAME=${p^^}
+  PKG_BLD_PATH=${BUILD_DIR}/${p}
+  # Share
+  pkg_share="${PNAME//-/_}_SHARE"
+  declare -xg "${pkg_share}"="${BUILD_DIR}/${p}"
 
-DBT_FOUND_TEST_APPS_PATH=$(find_runtime_paths 3 '*/test/apps' 'p')
-DBT_FOUND_TEST_SCRIPT_PATH=$(find_runtime_paths 3 '*/test/scripts' 'p')
-DBT_FOUND_TEST_PLUGS_PATH=$(find_runtime_paths 3 '*/test/plugins' 'p')
-DBT_FOUND_TEST_SHARE_PATH=$(find_runtime_paths 3 '*/test/schema' 'h')
+  add_many_paths_if_exist PATH "${PKG_BLD_PATH}/apps" "${PKG_BLD_PATH}/scripts" "${PKG_BLD_PATH}/test/apps" "${PKG_BLD_PATH}/test/scripts"
+  add_many_paths_if_exist PYTHONPATH "${PKG_BLD_PATH}/python"
+  add_many_paths_if_exist LD_LIBRARY_PATH "${PKG_BLD_PATH}/src"  "${PKG_BLD_PATH}/plugins"  "${PKG_BLD_PATH}/test/plugins"
+  add_many_paths_if_exist CET_PLUGIN_PATH "${PKG_BLD_PATH}/plugins" "${PKG_BLD_PATH}/test/plugins"
+  add_many_paths_if_exist DUNEDAQ_SHARE_PATH  "${PKG_BLD_PATH}" "${PKG_BLD_PATH}/test/share"
 
+done
 
-add_many_paths PATH ${DBT_FOUND_APPS_PATH} ${DBT_FOUND_SCRIPT_PATH} ${DBT_FOUND_TEST_APPS_PATH} ${DBT_FOUND_TEST_SCRIPT_PATH}
-add_many_paths PYTHONPATH ${DBT_FOUND_PYTHON_PATH}
-add_many_paths LD_LIBRARY_PATH ${DBT_FOUND_LIB_PATH} ${DBT_FOUND_PLUGS_PATH} ${DBT_FOUND_TEST_PLUGS_PATH}
-add_many_paths CET_PLUGIN_PATH ${DBT_FOUND_PLUGS_PATH} ${DBT_FOUND_TEST_PLUGS_PATH}
-add_many_paths DUNEDAQ_SHARE_PATH ${DBT_FOUND_SHARE_PATH} ${DBT_FOUND_TEST_SHARE_PATH}
-
-unset DBT_FOUND_APPS_PATH DBT_FOUND_LIB_PATH DBT_FOUND_PLUGS_PATH DBT_FOUND_SCRIPT_PATH DBT_FOUND_PYTHON_PATH DBT_FOUND_SHARE_PATH
-unset DBT_FOUND_TEST_APPS_PATH DBT_FOUND_TEST_SCRIPT_PATH DBT_FOUND_TEST_PLUGS_PATH DBT_FOUND_TEST_SHARE_PATH
 export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH
 
 echo -e "${COL_GREEN}This script has been sourced successfully${COL_NULL}"
