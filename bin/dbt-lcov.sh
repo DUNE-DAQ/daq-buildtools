@@ -34,6 +34,6 @@ dbt-build.sh --unittest
 
 lcov -d . --capture --output-file dunedaq.info
 lcov -a dunedaq.base -a dunedaq.info --output-file dunedaq.total
-lcov --remove dunedaq.total */products/* /usr/include/curl/* --output-file dunedaq.info.cleaned
+lcov --remove dunedaq.total '*/products/*' '/usr/include/*' '/cvmfs/*' "$DBT_AREA_ROOT/build/*" --output-file dunedaq.info.cleaned
 genhtml -o coverage dunedaq.info.cleaned
 #genhtml -o coverage dunedaq.info
