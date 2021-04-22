@@ -367,7 +367,7 @@ if $run_tests ; then
         if [[ -x $unittest ]]; then
           echo
           echo -e "${COL_YELLOW}Start of unit test suite \"$unittest\"${COL_NULL}" |& tee -a $test_log
-          $unittest -l all |& tee -a $test_log
+          $unittest -l test_suite |& tee -a $test_log
           echo -e "${COL_YELLOW}End of unit test suite \"$unittest\"${COL_NULL}" |& tee -a $test_log
           num_unit_tests=$((num_unit_tests + 1))
         fi
