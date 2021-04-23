@@ -356,6 +356,10 @@ if $run_tests ; then
       continue
     fi
 
+    if [[ -z $BOOST_TEST_LOG_LEVEL ]]; then
+       export BOOST_TEST_LOG_LEVEL=all
+    fi
+
     num_unit_tests=0
 
     for unittestdir in $unittestdirs; do
@@ -367,7 +371,7 @@ if $run_tests ; then
         if [[ -x $unittest ]]; then
           echo
           echo -e "${COL_YELLOW}Start of unit test suite \"$unittest\"${COL_NULL}" |& tee -a $test_log
-          $unittest -l test_suite |& tee -a $test_log
+          $unittest |& tee -a $test_log
           echo -e "${COL_YELLOW}End of unit test suite \"$unittest\"${COL_NULL}" |& tee -a $test_log
           num_unit_tests=$((num_unit_tests + 1))
         fi
