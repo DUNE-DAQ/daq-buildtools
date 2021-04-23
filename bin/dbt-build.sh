@@ -387,6 +387,8 @@ fi
 if $lint; then
   cd $BASEDIR
 
+  lint_log=$LOGDIR/linting_$( date | sed -r 's/[: ]+/_/g' ).log
+
   if [[ ! -d ./styleguide ]]; then
     echo "Cloning styleguide into $BASEDIR so linting can be applied"
     git clone https://github.com/DUNE-DAQ/styleguide.git
@@ -400,7 +402,7 @@ if $lint; then
 
   for pkgdir in $package_list; do
     pkgname=$( echo $pkgdir | sed -r 's!.*/(.*)!\1!' )
-    ./styleguide/cpplint/dune-cpp-style-check.sh build sourcecode/$pkgname
+    ./styleguide/cpplint/dune-cpp-style-check.sh build sourcecode/$pkgname |& tee -a $lint_log
   done
 fi
 
