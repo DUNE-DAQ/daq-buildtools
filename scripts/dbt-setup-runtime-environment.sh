@@ -27,17 +27,17 @@ if [[ -z $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
 
       if [[ $retval -eq 0 ]]; then
           echo "Lines between the ='s are the output of running dbt-setup-build-environment"
-    echo "======================================================================"
-          dbt-setup-build-environment 
-    retval="$?"
-    echo "======================================================================"
-    if ! [[ $retval -eq 0 ]]; then
-        error "There was a problem running dbt-setup-build-environment. Exiting..." 
-        return $retval
-    fi
-      else
+      echo "======================================================================"
+            dbt-setup-build-environment $@
+      retval="$?"
+      echo "======================================================================"
+      if ! [[ $retval -eq 0 ]]; then
+          error "There was a problem running dbt-setup-build-environment. Exiting..." 
+          return $retval
+      fi
+        else
 
-    error "$( cat<<EOF 
+      error "$( cat<<EOF 
 
 Error: this script tried to execute "dbt-setup-build-environment" but was unable 
 to find it. Either the daq-buildtools environment hasn't yet been set up, or 
