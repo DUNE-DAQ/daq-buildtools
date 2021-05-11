@@ -165,7 +165,7 @@ if ! [ -e CMakeCache.txt ]; then
   starttime_cfggen_s=$( date +%s )
 
   # Will use $cmd if needed for error message
-  cmd="${CMAKE} -DMOO_CMD=$(which moo) -DDBT_ROOT=${DBT_ROOT} -DDBT_DEBUG=${debug_build} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR" 
+  cmd="${CMAKE} -DCMAKE_MESSAGE_LOG_LEVEL=NOTICE -DMOO_CMD=$(which moo) -DDBT_ROOT=${DBT_ROOT} -DDBT_DEBUG=${debug_build} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR" 
 
   echo "Executing '$cmd'"
   pytee.py -l $build_log -- ${cmd}
