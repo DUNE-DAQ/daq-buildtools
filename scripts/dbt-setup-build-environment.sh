@@ -11,7 +11,7 @@ HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 scriptname=$(basename $(readlink -f ${BASH_SOURCE}))
 
 found_calling_script=false
-desired_calling_script=dbt-setup-runtime-environment.sh
+desired_calling_script=dbt-refresh-work-env.sh
 
 for dbt_file in "${BASH_SOURCE[@]}"; do
     if [[ "$dbt_file" =~ .*$desired_calling_script ]]; then
