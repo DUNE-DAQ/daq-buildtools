@@ -1,5 +1,4 @@
 #------------------------------------------------------------------------------
-HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
 if [[ -z "${DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED}" ]]; then
     echo "This script hasn't yet been sourced (successfully) in this shell; setting up the build environment"
@@ -8,6 +7,30 @@ else
     return 10
 fi
 
+HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
+scriptname=$(basename $(readlink -f ${BASH_SOURCE}))
+
+found_calling_script=false
+desired_calling_script=dbt-setup-runtime-environment.sh
+
+for dbt_file in "${BASH_SOURCE[@]}"; do
+    if [[ "$dbt_file" =~ .*$desired_calling_script ]]; then
+	found_calling_script=true
+	break
+    fi
+done
+
+if ! $found_calling_script; then
+
+    cat<<EOF >&2
+
+WARNING: the $scriptname script is being sourced by an entity other
+than $desired_calling_script. This use is deprecated.
+
+EOF
+    sleep 5
+    
+fi
 
 # Import find_work_area function
 source ${HERE}/dbt-setup-tools.sh

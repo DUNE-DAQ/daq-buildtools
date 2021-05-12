@@ -13,7 +13,7 @@ if [ ! -d "$BUILD_DIR" ]; then
     error "$( cat <<EOF 
 
 There doesn't appear to be a "build" subdirectory in ${DBT_AREA_ROOT}.
-Please run a copy of this script from the base directory of a development area installed with dbt-init.sh
+Please run a copy of this script from the base directory of a development area installed with dbt-create.sh
 Returning...
 EOF
 )"
