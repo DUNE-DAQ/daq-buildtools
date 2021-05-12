@@ -27,7 +27,7 @@ Added /your/path/to/daq-buildtools/bin to PATH
 Added /your/path/to/daq-buildtools/scripts to PATH
 DBT setuptools loaded
 ```
-The commands include `dbt-create.sh`, `dbt-build.sh`, `dbt-setup-build-environment` and `dbt-setup-runtime-environment`; these are all described in the following sections.
+The commands include `dbt-create.sh`, `dbt-build.sh`, and `dbt-setup-runtime-environment`; these are all described in the following sections.
 
 Each time that you want to work with a DUNE DAQ work area in a fresh Linux shell, you'll need to set up daq-buildtools using the `dbt-setup-env.sh` script, as described above.
 
@@ -125,15 +125,15 @@ dune_systems=(
     "package_declared_by_user v1_2_3 e19:prof"
     )
 ```
-As the names suggest, `dune_products_dirs` contains the list of UPS product pools and `dune_daqpackages` contains a list of UPS products sourced by `dbt-setup-build-environment` (described below). If you've already sourced `dbt-setup-build-environment` before editing the `dbt-settings` file, you'll need to log into a fresh shell and source `dbt-setup-env.sh` and `dbt-setup-build-environment` again. 
+As the names suggest, `dune_products_dirs` contains the list of UPS product pools and `dune_daqpackages` contains a list of UPS products sourced by `dbt-setup-runtime-environment` (described below). If you've already sourced `dbt-setup-runtime-environment` before editing the `dbt-settings` file, you'll need to log into a fresh shell and source `dbt-setup-env.sh` and `dbt-setup-runtime-environment` again. 
 
 
 # Compiling
-We're about to build and install the `listrev` package. (&#x1F534; Note: if you are working with other packages, have a look at the [Working with more repos](#working-with-more-repos) subsection before running the following build command.) By default, the scripts will create a subdirectory of MyTopDir called `./install `and install any packages you build off your repos there. If you wish to install them in another location, you'll want to set the environment variable `DBT_INSTALL_DIR` to the desired installation path after the `dbt-setup-build-environment` command described below, but before the `dbt-build.sh` command. 
+We're about to build and install the `listrev` package. (&#x1F534; Note: if you are working with other packages, have a look at the [Working with more repos](#working-with-more-repos) subsection before running the following build command.) By default, the scripts will create a subdirectory of MyTopDir called `./install `and install any packages you build off your repos there. If you wish to install them in another location, you'll want to set the environment variable `DBT_INSTALL_DIR` to the desired installation path after the `dbt-setup-runtime-environment` command described below, but before the `dbt-build.sh` command. 
 
 Now, do the following:
 ```sh
-dbt-setup-build-environment  # Only needs to be done once in a given shell
+dbt-setup-runtime-environment 
 dbt-build.sh --install
 ```
 ...and this will build `listrev` in the local `./build` subdirectory and then install it as a package either in the local `./install` subdirectory or in whatever you pointed `DBT_INSTALL_DIR` to. 
@@ -177,18 +177,18 @@ Finally, note that both the output of your builds and your unit tests are logged
 
 # Running
 
-In order to access the applications, libraries and plugins built in your `./build` area during the above procedure, the system needs to be instructed on where to look for them. This is handled by the `dbt-setup-runtime-environment` script which was placed in MyTopDir when you ran `dbt-create.sh`; all you need to do is the following:
+In order to access the applications, libraries and plugins built in your `./build` area during the above procedure, the system needs to be instructed on where to look for them. This is handled by again running `dbt-setup-runtime-environment`:
 ```
 dbt-setup-runtime-environment
 ```
 
-Note that if you add a new repo to your work area, after building your new code - and hence putting its output in `./build` - you'll need to run the script again. Also note that `dbt-setup-runtime-environment` is a superset of `dbt-setup-build-environment` in that if it sees that `dbt-setup-build-environment` hasn't already been sourced, it will source it for you. 
+Note that in general if you add a new repo to your work area, after building your new code - and hence putting its output in `./build` - you'll need to run `dbt-setup-runtime-environment`. 
 
 Once the runtime environment is set, just run the application you need. listrev, however, has no applications; it's just a set of DAQ module plugins which get added to CET_PLUGIN_PATH.  
 
 We're now going to go through a demo in which we'll use a DAQ module from listrev called RandomDataListGenerator to generate vectors of random numbers and then reverse them with listrev's ListReverser module.  
 
-One of the packages that's part of the standard DUNE DAQ package suite which gets set up when you run `dbt-setup-build-environment` is cmdlib. This package comes with a basic implementation that is capable of sending available command objects from a pre-loaded file, by typing their command IDs to standard input. This command facility is useful for local, test oriented use-cases. In the same runtime area, launch the application like this:
+One of the packages that's part of the standard DUNE DAQ package suite which gets set up the first time you run `dbt-setup-runtime-environment` is cmdlib. This package comes with a basic implementation that is capable of sending available command objects from a pre-loaded file, by typing their command IDs to standard input. This command facility is useful for local, test oriented use-cases. In the same runtime area, launch the application like this:
 ```
 daq_application -n <some name for the application instance> -c stdin://sourcecode/listrev/test/list-reversal-app.json
 ```

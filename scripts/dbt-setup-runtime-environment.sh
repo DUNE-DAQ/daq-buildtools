@@ -22,35 +22,36 @@ EOF
 fi
 
 if [[ -z $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
-      type dbt-setup-build-environment > /dev/null
-      retval="$?"
 
-      if [[ $retval -eq 0 ]]; then
-          echo "Lines between the ='s are the output of running dbt-setup-build-environment"
-    echo "======================================================================"
-          dbt-setup-build-environment 
-    retval="$?"
-    echo "======================================================================"
-    if ! [[ $retval -eq 0 ]]; then
-        error "There was a problem running dbt-setup-build-environment. Exiting..." 
-        return $retval
-    fi
-      else
+    build_env_script=${DBT_ROOT}/scripts/dbt-setup-build-environment.sh
+    
+    if [[ ! -f $build_env_script ]]; then
 
-    error "$( cat<<EOF 
+	  error "$( cat<<EOF 
 
-Error: this script tried to execute "dbt-setup-build-environment" but was unable 
-to find it. Either the daq-buildtools environment hasn't yet been set up, or 
-an assumption in the daq-buildtools framework is being broken somewhere. Returning...
+Error: this script is trying to source
+$build_env_script but is unable to
+find it. It's likely an assumption in the daq-buildtools framework is
+being broken somewhere. Returning...
 
 EOF
 )"
     return 20
-      fi    
+    fi
+
+    echo "Lines between the ='s are the output of sourcing $build_env_script"
+    echo "======================================================================"
+    . $build_env_script
+    retval="$?"
+    echo "======================================================================"
+    if ! [[ $retval -eq 0 ]]; then
+        error "There was a problem sourcing $build_env_script. Exiting..." 
+        return $retval
+    fi
+
 else
     cat <<EOF
-The build environment setup script already appears to have been sourced, so this 
-script won't try to source it
+The build environment setup script already appears to have been sourced, so this script doesn't need to source it again.
 
 EOF
 fi
