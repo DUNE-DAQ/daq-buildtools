@@ -14,10 +14,11 @@ source ${HERE}/dbt-setup-tools.sh
 
 export DBT_AREA_ROOT=$(find_work_area)
 
-echo "DBT_AREA_ROOT=${DBT_AREA_ROOT}"
 if [[ -z $DBT_AREA_ROOT ]]; then
-    error "Expected work area directory $DBT_AREA_ROOT not found. Returning..." 
+    error "Expected work area directory not found. Returning..." 
     return 1
+else
+  echo "Work area: '${DBT_AREA_ROOT}'"
 fi
 
 # 1. Load the UPS area information from the local area file

@@ -73,7 +73,7 @@ function find_work_area() {
 
   SEARCH_PATH=${PWD}
   WA_PATH=""
-  for(( i=${#SLASHES}; i>0; i--)); do
+  for(( i=${#SLASHES}-1; i>0; i--)); do
     WA_SEARCH_PATH="${SEARCH_PATH}/${DBT_AREA_FILE}"
     # echo "Looking for $WA_SEARCH_PATH"
     if [ -f "${WA_SEARCH_PATH}" ]; then
@@ -83,6 +83,9 @@ function find_work_area() {
     SEARCH_PATH=$(dirname ${SEARCH_PATH})
   done
 
+  if [[ -z ${WA_PATH} ]]; then
+    return
+  fi
   echo $(dirname ${WA_PATH})
 }
 #------------------------------------------------------------------------------
@@ -149,6 +152,19 @@ function add_many_paths_if_exist() {
 }
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+function backtrace () {
+    local deptn=${#FUNCNAME[@]}
+
+    for ((i=1; i<$deptn; i++)); do
+        local func="${FUNCNAME[$i]}"
+        local line="${BASH_LINENO[$((i-1))]}"
+        local src="${BASH_SOURCE[$((i))]}"
+        printf '%*s' $i '' # indent
+        echo "at: $func(), $src, line $line"
+    done
+}
+#------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 function error_preface() {
@@ -156,13 +172,13 @@ function error_preface() {
   for dbt_file in "${BASH_SOURCE[@]}"; do
     if ! [[ "${BASH_SOURCE[0]}" =~ "$dbt_file" ]]; then
 	    break
-	   fi
+    fi
   done
 
-  dbt_file=$( basename $dbt_file )
+  dbt_file=$( basename ${BASH_SOURCE[2]} )
 
   timenow="date \"+%D %T\""
-  echo -n "ERROR: [`eval $timenow`] [${dbt_file}]:" >&2
+  echo -n "ERROR: [`eval $timenow`] [${dbt_file}:${BASH_LINENO[1]}]:" >&2
 }
 #------------------------------------------------------------------------------
 
@@ -172,7 +188,7 @@ function error() {
     error_preface
     echo -e " ${COL_RED} ${1} ${COL_NULL} " >&2
 
-    if [[ -x ${BASH_SOURCE[-1]} ]]; then
+    if [[ "${FUNCNAME[-1]}" == "main" ]]; then
         exit 100
     fi
 }
