@@ -7,18 +7,18 @@ source ${HERE}/dbt-setup-tools.sh
 
 if [[ -n $1 ]]; then
     if [[ "$1" =~ "--refresh" ]]; then
-	if [[ -z "${DBT_WORKAREA_ENV_SCRIPT_SOURCED}" ]]; then
-	    error "This script hasn't yet been sourced (successfully) in this shell; please run it without arguments. Returning..."
-	    return 30
-	fi
+        if [[ -z "${DBT_WORKAREA_ENV_SCRIPT_SOURCED}" ]]; then
+            error "This script hasn't yet been sourced (successfully) in this shell; please run it without arguments. Returning..."
+            return 30
+        fi
     else
-	error "Unknown argument(s) passed to ${BASH_SOURCE}; returning..."
-	return 40
+        error "Unknown argument(s) passed to ${BASH_SOURCE}; returning..."
+        return 40
     fi
 else
     if [[ -n "${DBT_WORKAREA_ENV_SCRIPT_SOURCED}" ]]; then
-	error "This script has already been sourced (successfully) in this shell; to source it again please pass it the \"--refresh\" argument. Returning..."
-	return 50
+        error "This script has already been sourced (successfully) in this shell; to source it again please pass it the \"--refresh\" argument. Returning..."
+        return 50
     fi
 fi
 
@@ -46,7 +46,7 @@ if [[ -z $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
     
     if [[ ! -f $build_env_script ]]; then
 
-	  error "$( cat<<EOF 
+        error "$( cat<<EOF 
 
 Error: this script is trying to source
 $build_env_script but is unable to
@@ -55,7 +55,7 @@ being broken somewhere. Returning...
 
 EOF
 )"
-    return 20
+        return 20
     fi
 
     echo "Lines between the ='s are the output of sourcing $build_env_script"
@@ -80,18 +80,17 @@ DBT_PACKAGES=$(find -L ${SOURCE_DIR}/ -mindepth 2 -maxdepth 2 -name CMakeLists.t
 
 
 for p in ${DBT_PACKAGES}; do
-  PNAME=${p^^}
-  PKG_BLD_PATH=${BUILD_DIR}/${p}
-  # Share
-  pkg_share="${PNAME//-/_}_SHARE"
-  declare -xg "${pkg_share}"="${BUILD_DIR}/${p}"
+    PNAME=${p^^}
+    PKG_BLD_PATH=${BUILD_DIR}/${p}
+    # Share
+    pkg_share="${PNAME//-/_}_SHARE"
+    declare -xg "${pkg_share}"="${BUILD_DIR}/${p}"
 
-  add_many_paths_if_exist PATH "${PKG_BLD_PATH}/apps" "${PKG_BLD_PATH}/scripts" "${PKG_BLD_PATH}/test/apps" "${PKG_BLD_PATH}/test/scripts"
-  add_many_paths_if_exist PYTHONPATH "${PKG_BLD_PATH}/python"
-  add_many_paths_if_exist LD_LIBRARY_PATH "${PKG_BLD_PATH}/src"  "${PKG_BLD_PATH}/plugins"  "${PKG_BLD_PATH}/test/plugins"
-  add_many_paths_if_exist CET_PLUGIN_PATH "${PKG_BLD_PATH}/plugins" "${PKG_BLD_PATH}/test/plugins"
-  add_many_paths_if_exist DUNEDAQ_SHARE_PATH  "${PKG_BLD_PATH}" "${PKG_BLD_PATH}/test/share"
-
+    add_many_paths_if_exist PATH "${PKG_BLD_PATH}/apps" "${PKG_BLD_PATH}/scripts" "${PKG_BLD_PATH}/test/apps" "${PKG_BLD_PATH}/test/scripts"
+    add_many_paths_if_exist PYTHONPATH "${PKG_BLD_PATH}/python"
+    add_many_paths_if_exist LD_LIBRARY_PATH "${PKG_BLD_PATH}/src"  "${PKG_BLD_PATH}/plugins"  "${PKG_BLD_PATH}/test/plugins"
+    add_many_paths_if_exist CET_PLUGIN_PATH "${PKG_BLD_PATH}/plugins" "${PKG_BLD_PATH}/test/plugins"
+    add_many_paths_if_exist DUNEDAQ_SHARE_PATH  "${PKG_BLD_PATH}" "${PKG_BLD_PATH}/test/share"
 done
 
 export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH
