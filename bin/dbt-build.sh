@@ -200,11 +200,11 @@ fi
 # 
 # done
 
-if [[ -z ${DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED:-} ]]; then
+if [[ -z ${DBT_WORK_ENV_SCRIPT_SOURCED:-} ]]; then
  
 error "$( cat<<EOF
 
-It appears you haven't yet executed "dbt-setup-build-environment"; please do so before running this 
+It appears you haven't yet executed "dbt-work-env"; please do so before running this 
 script. Exiting...
 
 EOF
