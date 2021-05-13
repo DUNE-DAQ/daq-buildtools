@@ -13,7 +13,7 @@ Each cloned daq-buildtools can serve as many work areas as the developer wishes.
 
 The repository can simply be cloned via
 ```bash
-git clone https://github.com/DUNE-DAQ/daq-buildtools.git -b dunedaq-v2.4.0
+git clone https://github.com/DUNE-DAQ/daq-buildtools.git -b dunedaq-v2.5.0
 ```
 This step doesn't have to be run more than once per daq-buildtools version. 
 
@@ -27,7 +27,7 @@ Added /your/path/to/daq-buildtools/bin to PATH
 Added /your/path/to/daq-buildtools/scripts to PATH
 DBT setuptools loaded
 ```
-The commands include `dbt-create.sh`, `dbt-build.sh`, `dbt-setup-build-environment` and `dbt-setup-runtime-environment`; these are all described in the following sections.
+The commands include `dbt-create.sh`, `dbt-build.sh`, and `dbt-workarea-env`; these are all described in the following sections.
 
 Each time that you want to work with a DUNE DAQ work area in a fresh Linux shell, you'll need to set up daq-buildtools using the `dbt-setup-env.sh` script, as described above.
 
@@ -35,7 +35,7 @@ Each time that you want to work with a DUNE DAQ work area in a fresh Linux shell
 
 Once you've sourced `dbt-setup-env.sh`, you're now ready to create a work area. Find a directory in which you want your work area to be a subdirectory, and cd into it. Then think of a good name for the area (give it any name, but we'll refer to it as "MyTopDir" on this wiki). Then you can run:
 ```sh
-dbt-create.sh <release> <your work area subdirectory> # dunedaq-v2.4.0 is the most recent release as of Mar-24-2021
+dbt-create.sh <release> <your work area subdirectory> # dunedaq-v2.5.0 is the most recent release as of [release date?]
 ```
 which will set up an area to place the repos you wish to build. Remember to cd into the subdirectory you just created after `dbt-create.sh` finishes running. 
 
@@ -54,10 +54,10 @@ MyTopDir
 For the purposes of instruction, let's build the `listrev` package. Downloading it is simple:
 ```
 cd sourcecode
-git clone https://github.com/DUNE-DAQ/listrev.git -b dunedaq-v2.4.0 
+git clone https://github.com/DUNE-DAQ/listrev.git -b dunedaq-v2.5.0 
 cd ..
 ```
-Note the assumption above is that you aren't developing listrev; if you were, then you'd want to replace `-b dunedaq-v2.4.0` with `-b <branch you want to work on>`.
+Note the assumption above is that you aren't developing listrev; if you were, then you'd want to replace `-b dunedaq-v2.5.0` with `-b <branch you want to work on>`.
 
 # Adding extra UPS products and product pools
 
@@ -125,21 +125,21 @@ dune_systems=(
     "package_declared_by_user v1_2_3 e19:prof"
     )
 ```
-As the names suggest, `dune_products_dirs` contains the list of UPS product pools and `dune_daqpackages` contains a list of UPS products sourced by `dbt-setup-build-environment` (described below). If you've already sourced `dbt-setup-build-environment` before editing the `dbt-settings` file, you'll need to log into a fresh shell and source `dbt-setup-env.sh` and `dbt-setup-build-environment` again. 
+As the names suggest, `dune_products_dirs` contains the list of UPS product pools and `dune_daqpackages` contains a list of UPS products sourced when you first run `dbt-workarea-env` (described below). If you've already run `dbt-workarea-env` before editing the `dbt-settings` file, you'll need to log into a fresh shell and source `dbt-setup-env.sh` and run `dbt-workarea-env` again. 
 
 
 # Compiling
-We're about to build and install the `listrev` package. (&#x1F534; Note: if you are working with other packages, have a look at the [Working with more repos](#working-with-more-repos) subsection before running the following build command.) By default, the scripts will create a subdirectory of MyTopDir called `./install `and install any packages you build off your repos there. If you wish to install them in another location, you'll want to set the environment variable `DBT_INSTALL_DIR` to the desired installation path after the `dbt-setup-build-environment` command described below, but before the `dbt-build.sh` command. 
+We're about to build and install the `listrev` package. (&#x1F534; Note: if you are working with other packages, have a look at the [Working with more repos](#working-with-more-repos) subsection before running the following build command.) By default, the scripts will create a subdirectory of MyTopDir called `./install `and install any packages you build off your repos there. If you wish to install them in another location, you'll want to set the environment variable `DBT_INSTALL_DIR` to the desired installation path after the `dbt-workarea-env` command described below, but before the `dbt-build.sh` command. 
 
 Now, do the following:
 ```sh
-dbt-setup-build-environment  # Only needs to be done once in a given shell
+dbt-workarea-env  # If you haven't already run this
 dbt-build.sh --install
 ```
 ...and this will build `listrev` in the local `./build` subdirectory and then install it as a package either in the local `./install` subdirectory or in whatever you pointed `DBT_INSTALL_DIR` to. 
 
 ## Working with more repos
-To work with more repos, add them to the `./sourcecode` subdirectory as we did with listrev. Be aware, though: if you're developing a new repo which itself depends on another new repo, daq-buildtools may not already know about this dependency. "New" in this context means "not found in /cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.4.0/dbt-build-order.cmake". If this is the case, you have one of two options:
+To work with more repos, add them to the `./sourcecode` subdirectory as we did with listrev. Be aware, though: if you're developing a new repo which itself depends on another new repo, daq-buildtools may not already know about this dependency. "New" in this context means "not found in /cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.5.0/dbt-build-order.cmake". If this is the case, you have one of two options:
 
 * (Recommended) Add the names of your new packages to the `build_order` list found in `./sourcecode/dbt-build-order.cmake`, placing them in the list in the relative order in which you want them to be built. 
 * First clone, build and install your new base repo, and THEN clone, build and install your other new repo which depends on your new base repo. 
@@ -179,10 +179,10 @@ Finally, note that both the output of your builds and your unit tests are logged
 
 In order to access the applications, libraries and plugins built in your `./build` area during the above procedure, the system needs to be instructed on where to look for them. This is handled by the `dbt-setup-runtime-environment` script which was placed in MyTopDir when you ran `dbt-create.sh`; all you need to do is the following:
 ```
-dbt-setup-runtime-environment
+dbt-workarea-env --refresh
 ```
 
-Note that if you add a new repo to your work area, after building your new code - and hence putting its output in `./build` - you'll need to run the script again. Also note that `dbt-setup-runtime-environment` is a superset of `dbt-setup-build-environment` in that if it sees that `dbt-setup-build-environment` hasn't already been sourced, it will source it for you. 
+Note that if you add a new repo to your work area, after building your new code - and hence putting its output in `./build` - you'll need to rerun `dbt-workarea-env --refresh`. 
 
 Once the runtime environment is set, just run the application you need. listrev, however, has no applications; it's just a set of DAQ module plugins which get added to CET_PLUGIN_PATH.  
 
