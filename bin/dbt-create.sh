@@ -20,6 +20,7 @@ To list the available DUNE DAQ releases:
 Arguments and options:
 
     dunedaq-release: is the name of the release the new work area will be based on (e.g. dunedaq-v2.0.0)
+    -n/--nightly: switch to nightly releases
     -l/--list: show the list of available releases
     -r/--release-path: is the path to the release archive (RELEASE_BASEPATH var; default: /cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/releases)
 
@@ -28,9 +29,12 @@ EOU
 
 
 EMPTY_DIR_CHECK=true
-RELEASE_BASEPATH="/cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/releases"
+PROD_BASEPATH="/cvmfs/dunedaq.opensciencegrid.org/releases"
+NIGHTLY_BASEPATH="/cvmfs/dunedaq-development.opensciencegrid.org/nightly"
+CUSTOM_BASEPATH=""
 # TARGETDIR=""
 SHOW_RELEASE_LIST=false
+NIGHTLY=false
 
 # Define usage function here
 
@@ -45,17 +49,20 @@ PY_PKGLIST="pyvenv_requirements.txt"
 DAQ_BUILDORDER_PKGLIST="dbt-build-order.cmake"
 
 # We use "$@" instead of $* to preserve argument-boundary information
-options=$(getopt -o 'hlr:' -l ',help,list,release-base-path:' -- "$@") || exit
+options=$(getopt -o 'hnlr:' -l ',help,nightly,list,release-base-path:' -- "$@") || exit
 eval "set -- $options"
 
 while true; do
     case $1 in
+        (-n|--nightly)
+            NIGHTLY=true
+            shift;;
         (-l|--list)
             # List available releases
             SHOW_RELEASE_LIST=true
             shift;;
         (-r|--release-path)
-            RELEASE_BASEPATH=$2
+            CUSTOM_BASEPATH=$2
             shift 2;;
         (-h|--help)
             print_usage
@@ -69,12 +76,20 @@ done
 
 ARGS=("$@")
 
+if [[ ! -z "${CUSTOM_BASEPATH}" ]]; then
+    RELEASE_BASEPATH="${CUSTOM_BASEPATH}"
+elif [ "${NIGHTLY}" = false ]; then
+    RELEASE_BASEPATH="${PROD_BASEPATH}"
+else
+    RELEASE_BASEPATH="${NIGHTLY_BASEPATH}"
+fi
+
 if [[ "${SHOW_RELEASE_LIST}" == true ]]; then
     list_releases
     exit 0;
 fi
 
-test ${#ARGS[@]} -eq 2 || error "Wrong number of arguments. Try '$( basename $0 ) -h' for more information." 
+test ${#ARGS[@]} -eq 2 || error "Wrong number of arguments. Run '$( basename $0 ) -h' for more information." 
 
 
 RELEASE=${ARGS[0]}
