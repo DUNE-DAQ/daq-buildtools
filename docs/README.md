@@ -152,7 +152,7 @@ And if, after the build, you want to run the unit tests, just add the `--unittes
 ```
 dbt-build.sh --clean --install --unittest  # Blow away the contents of ./build, run config+generate+build, and then run the unit tests
 ```
-..where in the above case, you blow away the contents of `./build`,  run config+generate+build, install the result in `./install` and then run the unit tests. Be aware that for many packages, unit tests will only (fully) work if you've also set up their runtime environment; how to do this is described below in the "Running" section of this document. 
+..where in the above case, you blow away the contents of `./build`,  run config+generate+build, install the result in `./install` and then run the unit tests. Be aware that for many packages, unit tests will only (fully) work if you've also rerun `dbt-workarea-env` with the argument `--refresh` added. 
 
 To check for deviations from the coding rules described in the [DUNE C++ Style Guide](https://dune-daq-sw.readthedocs.io/en/latest/packages/styleguide/), run with the `--lint` option:
 ```
@@ -177,7 +177,7 @@ Finally, note that both the output of your builds and your unit tests are logged
 
 # Running
 
-In order to access the applications, libraries and plugins built in your `./build` area during the above procedure, the system needs to be instructed on where to look for them. This is handled by the `dbt-setup-runtime-environment` script which was placed in MyTopDir when you ran `dbt-create.sh`; all you need to do is the following:
+In order to access the applications, libraries and plugins built in your `./build` area during the above procedure, the system needs to be instructed on where to look for them. All you need to do is the following:
 ```
 dbt-workarea-env --refresh
 ```
@@ -209,10 +209,10 @@ For a more realistic use-case where you can send commands to the application fro
 ```sh
 daq_application -n <some name for the application instance> --commandFacility rest://localhost:12345
 ```
-To control it, let's open up a second terminal, set up the daq-buildtools' dbt-setup-env.sh script as you did in the first terminal, and start sending daq_application commands:
+To control it, let's open up a second terminal, set up the daq-buildtools' `dbt-setup-env.sh` script as you did in the first terminal, and start sending daq_application commands:
 ```sh
 cd MyTopDir
-dbt-setup-runtime-environment
+dbt-workarea-env
 curl -O https://raw.githubusercontent.com/DUNE-DAQ/restcmd/v1.1.0/scripts/send-restcmd.py
 python ./send-restcmd.py --interactive --file ./sourcecode/listrev/test/list-reversal-app.json
 ```
