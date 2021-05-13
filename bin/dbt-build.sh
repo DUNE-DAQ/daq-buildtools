@@ -200,11 +200,11 @@ fi
 # 
 # done
 
-if [[ -z ${DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED:-} ]]; then
+if [[ -z ${DBT_WORKAREA_ENV_SCRIPT_SOURCED:-} ]]; then
  
 error "$( cat<<EOF
 
-It appears you haven't yet executed "dbt-setup-build-environment"; please do so before running this 
+It appears you haven't yet executed "dbt-workarea-env"; please do so before running this 
 script. Exiting...
 
 EOF
@@ -435,7 +435,7 @@ if $run_tests ; then
 
   cd $BUILDDIR
 
-  source ${DBT_ROOT}/scripts/dbt-setup-runtime-environment.sh
+  source ${DBT_ROOT}/scripts/dbt-workarea-env.sh --refresh
 
   if [[ -z $package_to_test ]]; then
     package_list=$( find . -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles )
