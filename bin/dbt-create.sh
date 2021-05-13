@@ -22,7 +22,7 @@ Arguments and options:
     dunedaq-release: is the name of the release the new work area will be based on (e.g. dunedaq-v2.0.0)
     -n/--nightly: switch to nightly releases
     -l/--list: show the list of available releases
-    -r/--release-path: is the path to the release archive (RELEASE_BASEPATH var; default: /cvmfs/dune.opensciencegrid.org/dunedaq/DUNE/releases)
+    -r/--release-path: is the path to the release archive (RELEASE_BASEPATH var; default: /cvmfs/dunedaq.opensciencegrid.org/releases)
 
 EOU
 }
