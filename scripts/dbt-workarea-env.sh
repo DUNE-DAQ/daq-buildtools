@@ -43,18 +43,18 @@ fi
 if [[ -z $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
 
     build_env_script=${DBT_ROOT}/scripts/dbt-setup-build-environment.sh
-    
+        
     if [[ ! -f $build_env_script ]]; then
 
         error "$( cat<<EOF 
 
-Error: this script is trying to source
-$build_env_script but is unable to
-find it. It's likely an assumption in the daq-buildtools framework is
-being broken somewhere. Returning...
+    Error: this script is trying to source
+    $build_env_script but is unable to
+    find it. It's likely an assumption in the daq-buildtools framework is
+    being broken somewhere. Returning...
 
 EOF
-)"
+    )"
         return 20
     fi
 
@@ -74,6 +74,9 @@ The build environment setup script already appears to have been sourced, so this
 
 EOF
 fi
+# unset DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED
+
+echo -e "${COL_GREEN}Updating paths...${COL_RESET}"
 
 
 DBT_PACKAGES=$(find -L ${SOURCE_DIR}/ -mindepth 2 -maxdepth 2 -name CMakeLists.txt | sed "s#${SOURCE_DIR}/\(.*\)/CMakeLists.txt#\1#")
@@ -94,8 +97,8 @@ for p in ${DBT_PACKAGES}; do
 done
 
 export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH
+echo -e "${COL_GREEN}...done${COL_RESET}"
+echo
 
-export DBT_WORKAREA_ENV_SCRIPT_SOURCED=1
-
-echo -e "${COL_GREEN}This script has been sourced successfully${COL_NULL}"
+echo -e "${COL_GREEN}This script has been sourced successfully${COL_RESET}"
 echo
