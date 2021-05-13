@@ -7,7 +7,7 @@ source ${HERE}/dbt-setup-tools.sh
 
 if [[ -n $1 ]]; then
     if [[ "$1" =~ "--refresh" ]]; then
-	if [[ -z "${DBT_WORK_ENV_SCRIPT_SOURCED}" ]]; then
+	if [[ -z "${DBT_WORKAREA_ENV_SCRIPT_SOURCED}" ]]; then
 	    error "This script hasn't yet been sourced (successfully) in this shell; please run it without arguments. Returning..."
 	    return 30
 	fi
@@ -16,7 +16,7 @@ if [[ -n $1 ]]; then
 	return 40
     fi
 else
-    if [[ -n "${DBT_WORK_ENV_SCRIPT_SOURCED}" ]]; then
+    if [[ -n "${DBT_WORKAREA_ENV_SCRIPT_SOURCED}" ]]; then
 	error "This script has already been sourced (successfully) in this shell; to source it again please pass it the \"--refresh\" argument. Returning..."
 	return 50
     fi
@@ -96,7 +96,7 @@ done
 
 export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH
 
-export DBT_WORK_ENV_SCRIPT_SOURCED=1
+export DBT_WORKAREA_ENV_SCRIPT_SOURCED=1
 
 echo -e "${COL_GREEN}This script has been sourced successfully${COL_NULL}"
 echo
