@@ -3,6 +3,30 @@
 set -o nounset 
 # set -o pipefail
 
+function print_usage() {
+                cat << EOU
+Usage
+-----
+
+      "./$( basename $0 )" [-c/--clean] [-d/--debug] [-j<n>/--jobs <number parallel build jobs>] [--unittest <optional package name>] [--lint <optional package name>] [-i/--install] [-v/--cpp-verbose] [-h/--help]
+      
+        -c/--clean means the contents of ./build are deleted and CMake's config+generate+build stages are run
+        -d/--debug means you want to build your software with optimizations off and debugging info on
+        -j/--jobs means you want to specify the number of jobs used by cmake to build the project
+        --unittest means that unit test executables found in ./build/<optional package name>/unittest are run, or all unit tests in ./build/*/unittest are run if no package name is provided
+        --lint means you check for deviations in ./sourcecode/<optional package name> from the DUNE style guide, https://github.com/DUNE-DAQ/styleguide/blob/develop/dune-daq-cppguide.md, or deviations in all local repos if no package name is provided
+        -i/--install means that you want the code from your package(s) installed in the directory which was pointed to by the DBT_INSTALL_DIR environment variable before the most recent clean build
+        -v/--cpp-verbose means that you want verbose output from the compiler
+        --cmake-trace enable cmake tracing
+        --cmake-graphviz geneates a target dependency graph
+
+    
+    All arguments are optional. With no arguments, CMake will typically just run 
+    build, unless build/CMakeCache.txt is missing    
+    
+EOU
+}
+
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
 # Import find_work_area function
@@ -20,7 +44,8 @@ run_tests=false
 package_to_test=
 clean_build=false 
 debug_build=false
-verbose=false
+cpp_verbose=false
+cmake_msg_level="NOTICE"
 cmake_trace=false
 cmake_graphviz=false
 declare -i n_jobs=0
@@ -28,79 +53,151 @@ perform_install=false
 lint=false
 package_to_lint=
 
-args=("$@")
+# args=("$@")
 
-declare -i i_arg=0
+# declare -i i_arg=0
 
-while ((i_arg < $#)); do
+declare -a ARGS=()
 
-  arg=${args[$i_arg]}
-  nextarg=
-  if ((i_arg + 1 < $#)); then
-      nextarg=${args[$((i_arg+1))]}
-  fi
-  i_arg=$((i_arg + 1))
+options=$(getopt -o 'hcdvj:i' -l ',help,clean,debug,unittest::,lint::,cpp-verbose,jobs:,install,cmake-msg-lvl:,cmake-trace,cmake-graphviz' -- "$@") || exit
+eval "set -- $options"
 
-  if [[ "$arg" == "--help" ]]; then
-    cat << EOF
-
-      Usage: "./$( basename $0 )" --clean --debug --jobs <number parallel build jobs> --unittest <optional package name> --lint <optional package name> --install --verbose --help 
-      
-       --clean means the contents of ./build are deleted and CMake's config+generate+build stages are run
-       --debug means you want to build your software with optimizations off and debugging info on
-       --jobs means you want to specify the number of jobs used by cmake to build the project
-       --unittest means that unit test executables found in ./build/<optional package name>/unittest are run, or all unit tests in ./build/*/unittest are run if no package name is provided
-       --lint means you check for deviations in ./sourcecode/<optional package name> from the DUNE style guide, https://github.com/DUNE-DAQ/styleguide/blob/develop/dune-daq-cppguide.md, or deviations in all local repos if no package name is provided
-       --install means that you want the code from your package(s) installed in the directory which was pointed to by the DBT_INSTALL_DIR environment variable before the most recent clean build
-       --verbose means that you want verbose output from the compiler
-       --cmake-trace enable cmake tracing
-       --cmake-graphviz geneates a target dependency graph
-
-    
-    All arguments are optional. With no arguments, CMake will typically just run 
-    build, unless build/CMakeCache.txt is missing    
-    
-EOF
-
-    exit 0    
-
-  elif [[ "$arg" == "--clean" ]]; then
-    clean_build=true
-  elif [[ "$arg" == "--debug" ]]; then
-    debug_build=true
-  elif [[ "$arg" == "--unittest" ]]; then
-    run_tests=true
-    if [[ -n ${nextarg:-} && "$nextarg" =~ ^[^\-] ]]; then
-        package_to_test=$nextarg
-        i_arg=$((i_arg + 1))
-    fi
-  elif [[ "$arg" == "--lint" ]]; then
-    lint=true
-    if [[ -n ${nextarg:-} && "$nextarg" =~ ^[^\-] ]]; then
-        package_to_lint=$nextarg
-        i_arg=$((i_arg + 1))
-    fi
-  elif [[ "$arg" == "--verbose" ]]; then
-    verbose=true
-  elif [[ "$arg" == "--cmake-trace" ]]; then
-    cmake_trace=true
-  elif [[ "$arg" == "--cmake-graphviz" ]]; then
-    cmake_graphviz=true
-  elif [[ "$arg" == "--jobs" ]]; then
-    if [[ -n ${nextarg:-} && "$nextarg" =~ ^[^\-] ]]; then
-        n_jobs=$nextarg
-        i_arg=$((i_arg + 1))
-    fi
-  elif [[ "$arg" == "--pkgname" ]]; then
-    error "Use of --pkgname is deprecated; run with \" --help\" to see valid options. Exiting..."
-  elif [[ "$arg" == "--install" ]]; then
-    perform_install=true
-
-  else
-    error "Unknown argument provided; run with \" --help\" to see valid options. Exiting..."
-  fi
-
+while true; do
+    case $1 in
+        (-h|--help)
+            print_usage
+            exit 0;;
+        (-c|--clean)
+            clean_build=true
+            shift;;
+        (-d|--debug)
+            debug_build=true
+            shift;;
+        (-v|--cpp-verbose)
+            cpp_verbose=true
+            shift;;
+        (-j|--jobs)
+            n_jobs=$2
+            shift 2;;
+        (--unittest)
+            run_tests=true
+            package_to_test=$2
+            shift 2;;
+        (--lint)
+            lint=true
+            package_to_lint=$2
+            shift 2;;
+        (-i|--install)
+            perform_install=true
+            shift;;
+        (--cmake-msg-lvl)
+            cmake_msg_level=$2
+            shift 2;;
+        (--cmake-trace)
+            cmake_trace=true
+            shift;;
+        (--cmake-graphviz)
+            cmake_graphviz=true
+            shift;;      
+        (--)  shift; break;;
+        (*) 
+            echo "ERROR $@"  
+            exit 1;;           # error
+    esac
 done
+
+ARGS=("$@")
+
+if false; then
+  echo "- run_tests '$run_tests'"
+  echo "- package_to_test '$package_to_test'"
+  echo "- clean_build '$clean_build'"
+  echo "- debug_build '$debug_build'"
+  echo "- cpp_verbose '$cpp_verbose'"
+  echo "- cmake_msg_level '$cmake_msg_level'"
+  echo "- cmake_trace '$cmake_trace'"
+  echo "- cmake_graphviz '$cmake_graphviz'"
+  echo "- n_jobs '$n_jobs'"
+  echo "- perform_install '$perform_install'"
+  echo "- lint '$lint'"
+  echo "- package_to_lint '$package_to_lint'"
+
+  echo ${ARGS[@]}
+fi
+
+if [[ ! -z "${ARGS:-}" ]]; then
+    error "Unknown arguments '${ARGS[@]}' provided; run with \" --help\" to see valid options. Exiting..."  
+fi
+
+# while ((i_arg < $#)); do
+
+#   arg=${args[$i_arg]}
+#   nextarg=
+#   if ((i_arg + 1 < $#)); then
+#       nextarg=${args[$((i_arg+1))]}
+#   fi
+#   i_arg=$((i_arg + 1))
+
+#   if [[ "$arg" == "--help" ]]; then
+#     cat << EOF
+
+#       Usage: "./$( basename $0 )" --clean --debug --jobs <number parallel build jobs> --unittest <optional package name> --lint <optional package name> --install --verbose --help 
+      
+#        --clean means the contents of ./build are deleted and CMake's config+generate+build stages are run
+#        --debug means you want to build your software with optimizations off and debugging info on
+#        --jobs means you want to specify the number of jobs used by cmake to build the project
+#        --unittest means that unit test executables found in ./build/<optional package name>/unittest are run, or all unit tests in ./build/*/unittest are run if no package name is provided
+#        --lint means you check for deviations in ./sourcecode/<optional package name> from the DUNE style guide, https://github.com/DUNE-DAQ/styleguide/blob/develop/dune-daq-cppguide.md, or deviations in all local repos if no package name is provided
+#        --install means that you want the code from your package(s) installed in the directory which was pointed to by the DBT_INSTALL_DIR environment variable before the most recent clean build
+#        --verbose means that you want verbose output from the compiler
+#        --cmake-trace enable cmake tracing
+#        --cmake-graphviz geneates a target dependency graph
+
+    
+#     All arguments are optional. With no arguments, CMake will typically just run 
+#     build, unless build/CMakeCache.txt is missing    
+    
+# EOF
+
+#     exit 0    
+
+#   elif [[ "$arg" == "--clean" ]]; then
+#     clean_build=true
+#   elif [[ "$arg" == "--debug" ]]; then
+#     debug_build=true
+#   elif [[ "$arg" == "--unittest" ]]; then
+#     run_tests=true
+#     if [[ -n ${nextarg:-} && "$nextarg" =~ ^[^\-] ]]; then
+#         package_to_test=$nextarg
+#         i_arg=$((i_arg + 1))
+#     fi
+#   elif [[ "$arg" == "--lint" ]]; then
+#     lint=true
+#     if [[ -n ${nextarg:-} && "$nextarg" =~ ^[^\-] ]]; then
+#         package_to_lint=$nextarg
+#         i_arg=$((i_arg + 1))
+#     fi
+#   elif [[ "$arg" == "--verbose" ]]; then
+#     cpp_verbose=true
+#   elif [[ "$arg" == "--cmake-trace" ]]; then
+#     cmake_trace=true
+#   elif [[ "$arg" == "--cmake-graphviz" ]]; then
+#     cmake_graphviz=true
+#   elif [[ "$arg" == "--jobs" ]]; then
+#     if [[ -n ${nextarg:-} && "$nextarg" =~ ^[^\-] ]]; then
+#         n_jobs=$nextarg
+#         i_arg=$((i_arg + 1))
+#     fi
+#   elif [[ "$arg" == "--pkgname" ]]; then
+#     error "Use of --pkgname is deprecated; run with \" --help\" to see valid options. Exiting..."
+#   elif [[ "$arg" == "--install" ]]; then
+#     perform_install=true
+
+#   else
+#     error "Unknown argument provided; run with \" --help\" to see valid options. Exiting..."
+#   fi
+# 
+# done
 
 if [[ -z ${DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED:-} ]]; then
  
@@ -165,7 +262,7 @@ if ! [ -e CMakeCache.txt ]; then
   starttime_cfggen_s=$( date +%s )
 
   # Will use $cmd if needed for error message
-  cmd="${CMAKE} -DCMAKE_MESSAGE_LOG_LEVEL=NOTICE -DMOO_CMD=$(which moo) -DDBT_ROOT=${DBT_ROOT} -DDBT_DEBUG=${debug_build} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR" 
+  cmd="${CMAKE} -DCMAKE_MESSAGE_LOG_LEVEL=${cmake_msg_level} -DMOO_CMD=$(which moo) -DDBT_ROOT=${DBT_ROOT} -DDBT_DEBUG=${debug_build} -DCMAKE_INSTALL_PREFIX=$DBT_INSTALL_DIR ${generator_arg} $SRCDIR" 
 
   echo "Executing '$cmd'"
   pytee.py -l $build_log -- ${cmd}
@@ -236,7 +333,7 @@ starttime_build_d=$( date )
 starttime_build_s=$( date +%s )
 
 build_options=""
-if $verbose; then
+if $cpp_verbose; then
   build_options="${build_options} --verbose"
 fi
 
