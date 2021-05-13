@@ -17,6 +17,7 @@ Usage
         --lint means you check for deviations in ./sourcecode/<optional package name> from the DUNE style guide, https://github.com/DUNE-DAQ/styleguide/blob/develop/dune-daq-cppguide.md, or deviations in all local repos if no package name is provided
         -i/--install means that you want the code from your package(s) installed in the directory which was pointed to by the DBT_INSTALL_DIR environment variable before the most recent clean build
         -v/--cpp-verbose means that you want verbose output from the compiler
+        --cmake-msg-lvl setting "CMAKE_MESSAGE_LOG_LEVEL", default is "NOTICE", choices are ERROR|WARNING|NOTICE|STATUS|VERBOSE|DEBUG|TRACE.
         --cmake-trace enable cmake tracing
         --cmake-graphviz geneates a target dependency graph
 
