@@ -68,7 +68,7 @@ echo "Products ${dune_products[@]}"
 setup_ups_product_areas
 
 # 2. Setup the python environment
-setup python ${dune_python_version}
+setup_ups_products dune_systems
 
 if ! [[ $? -eq 0 ]]; then
     error "The \"setup python ${dune_python_version}\" call failed. Returning..." 
