@@ -1,5 +1,41 @@
 #------------------------------------------------------------------------------
 
+
+
+DBT_PKG_SETS=( devtools systems externals daqpackages )
+
+# We use "$@" instead of $* to preserve argument-boundary information
+options=$(getopt -o 'hs:' -l 'help, subset:' -- "$@") || exit
+eval "set -- $options"
+
+DBT_PKG_SET="${DBT_PKG_SETS[-1]}"
+while true; do
+    case $1 in
+        (-s|--subset)
+            DBT_PKG_SET=$2
+            shift 2;;
+        (-h|--help)
+            cat << EOU
+Usage
+-----
+
+  dbt-setup-build-environment [-h/--help] [-s/--set [devtools systems externals daqpackages]]
+
+  Sets up the environment of a dbt development area
+
+  Arguments and options:
+
+    -s/--subset: optional set of ups packages to load. [choices: ${DBT_PKG_SETS[@]}]
+    
+EOU
+            return 0;;           # error
+        (--)  shift; break;;
+        (*) 
+            echo "ERROR $@"  
+            return 1;;           # error
+    esac
+done
+
 if [[ -z "${DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED}" ]]; then
     echo "This script hasn't yet been sourced (successfully) in this shell; setting up the build environment"
 else
@@ -72,14 +108,15 @@ then
 fi
 
 all_setup_returns=""
-setup_ups_products dune_devtools
-all_setup_returns="${setup_ups_returns} ${all_setup_returns}"
-setup_ups_products dune_systems
-all_setup_returns="${setup_ups_returns} ${all_setup_returns}"
-setup_ups_products dune_externals
-all_setup_returns="${setup_ups_returns} ${all_setup_returns}"
-setup_ups_products dune_daqpackages
-all_setup_returns="${setup_ups_returns} ${all_setup_returns}"
+
+for ps in ${DBT_PKG_SETS[@]}; do
+  setup_ups_products dune_$ps
+  all_setup_returns="${setup_ups_returns} ${all_setup_returns}"
+
+  if [ $ps == "$DBT_PKG_SET" ]; then
+    break
+  fi
+done
 
 if ! [[ "$all_setup_returns" =~ [1-9] ]]; then
   echo "All setup calls on the packages returned 0, indicative of success"
@@ -91,6 +128,9 @@ fi
 export DBT_INSTALL_DIR=${DBT_AREA_ROOT}/install
 
 export DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED=1
+
+unset DBT_PKG_SET DBT_PKG_SETS
+
 echo "This script has been sourced successfully"
 echo
 
