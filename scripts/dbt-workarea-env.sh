@@ -1,29 +1,57 @@
 #------------------------------------------------------------------------------
 
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
+scriptname=$(basename $(readlink -f ${BASH_SOURCE}))
 
-# Import find_work_area function
+DBT_PKG_SETS=( devtools systems externals daqpackages )
+REFRESH_UPS=false
+# We use "$@" instead of $* to preserve argument-boundary information
+options=$(getopt -o 'hs:r' -l 'help, subset:, refresh' -- "$@") || return 10
+eval "set -- $options"
+
+DBT_PKG_SET="${DBT_PKG_SETS[-1]}"
+while true; do
+    case $1 in
+        (-r|--refresh)
+            REFRESH_UPS=true
+            shift;;
+        (-s|--subset)
+            DBT_PKG_SET=$2
+            shift 2;;
+        (-h|--help)
+            cat << EOU
+Usage
+-----
+
+  ${scriptname} [-h/--help] [--refresh] [-s/--subset [devtools systems externals daqpackages]]
+
+  Sets up the environment of a dbt development area
+
+  Arguments and options:
+
+    --refresh: re-runs the build environment setup
+    -s/--subset: optional set of ups packages to load. [choices: ${DBT_PKG_SETS[@]}]
+    
+EOU
+            return 0;;           # error
+        (--)  shift; break;;
+        (*) 
+            echo "ERROR $@"  
+            return 1;;           # error
+    esac
+done
+
 source ${HERE}/dbt-setup-tools.sh
+# Import find_work_area function
 
-if [[ -n $1 ]]; then
-    if [[ "$1" =~ "--refresh" ]]; then
-        if [[ -z "${DBT_WORKAREA_ENV_SCRIPT_SOURCED}" ]]; then
-            error "This script hasn't yet been sourced (successfully) in this shell; please run it without arguments. Returning..."
-            return 30
-        fi
-    else
-        error "Unknown argument(s) passed to ${BASH_SOURCE}; returning..."
-        return 40
-    fi
+export DBT_AREA_ROOT=$(find_work_area)
+
+if [[ -z $DBT_AREA_ROOT ]]; then
+    error "Expected work area directory not found. Returning..." 
+    return 1
 else
-    if [[ -n "${DBT_WORKAREA_ENV_SCRIPT_SOURCED}" ]]; then
-        error "This script has already been sourced (successfully) in this shell; to source it again please pass it the \"--refresh\" argument. Returning..."
-        return 50
-    fi
+  echo -e "${COL_BLUE}Work area: '${DBT_AREA_ROOT}'${COL_RESET}\n"
 fi
-
-
-DBT_AREA_ROOT=$(find_work_area)
 
 SOURCE_DIR="${DBT_AREA_ROOT}/sourcecode"
 BUILD_DIR="${DBT_AREA_ROOT}/build"
@@ -40,44 +68,73 @@ EOF
 
 fi
 
-if [[ -z $DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED ]]; then
-
-    build_env_script=${DBT_ROOT}/scripts/dbt-setup-build-environment.sh
-        
-    if [[ ! -f $build_env_script ]]; then
-
-        error "$( cat<<EOF 
-
-    Error: this script is trying to source
-    $build_env_script but is unable to
-    find it. It's likely an assumption in the daq-buildtools framework is
-    being broken somewhere. Returning...
-
-EOF
-    )"
-        return 20
+if [[ ("${REFRESH_UPS}" == "false" &&  -z "${DBT_UPS_SETUP_DONE}") || "${REFRESH_UPS}" == "true" ]]; then
+    # 
+    if [[ -z "${DBT_UPS_SETUP_DONE}" ]]; then
+        echo -e "${COL_GREEN}This script hasn't yet been sourced (successfully) in this shell; setting up the build environment${COL_RESET}\n"
+    else
+        echo -e "${COL_GREEN}Refreshing UPS package setup${COL_RESET}\n"
     fi
 
-    echo "Lines between the ='s are the output of sourcing $build_env_script"
-    echo "======================================================================"
-    . $build_env_script
-    retval="$?"
-    echo "======================================================================"
-    if ! [[ $retval -eq 0 ]]; then
-        error "There was a problem sourcing $build_env_script. Exiting..." 
-        return $retval
+    # 1. Load the UPS area information from the local area file
+    source ${DBT_AREA_ROOT}/${DBT_AREA_FILE}
+    if ! [[ $? -eq 0 ]]; then
+        error "There was a problem sourcing ${DBT_AREA_ROOT}/${DBT_AREA_FILE}. Returning..." 
+        return 1
     fi
+
+    echo "Product directories ${dune_products_dirs[@]}"
+    echo "Products ${dune_products[@]}"
+
+    setup_ups_product_areas
+
+    # 2. Setup the python environment
+    setup_ups_products dune_systems
+
+    if ! [[ $? -eq 0 ]]; then
+        error "The \"setup python ${dune_python_version}\" call failed. Returning..." 
+        return 5
+    fi
+
+    source ${DBT_AREA_ROOT}/${DBT_VENV}/bin/activate
+
+    if [[ "$VIRTUAL_ENV" == "" ]]
+    then
+      error "You are already in a virtual env. Please deactivate first. Returning..." 
+      return 11
+    fi
+
+    all_setup_returns=""
+
+    for ps in ${DBT_PKG_SETS[@]}; do
+      setup_ups_products dune_$ps
+      all_setup_returns="${setup_ups_returns} ${all_setup_returns}"
+
+      if [ $ps == "$DBT_PKG_SET" ]; then
+        break
+      fi
+    done
+
+    if ! [[ "$all_setup_returns" =~ [1-9] ]]; then
+      echo "All setup calls on the packages returned 0, indicative of success"
+    else
+      error "At least one of the required packages this script attempted to set up didn't set up correctly. Returning..." 
+      return 1
+    fi
+
+    export DBT_INSTALL_DIR=${DBT_AREA_ROOT}/install
+
+    export DBT_UPS_SETUP_DONE=1
+
+    unset DBT_PKG_SET DBT_PKG_SETS
 
 else
-    cat <<EOF
-The build environment setup script already appears to have been sourced, so this script doesn't need to source it again.
-
-EOF
+    echo -e "${COL_YELLOW}The build environment has been already setup.\nUse '${scriptname} --refresh' to force a reload.${COL_RESET}\n"
 fi
-# unset DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED
 
+# Final step: update PATHs
+echo
 echo -e "${COL_GREEN}Updating paths...${COL_RESET}"
-
 
 DBT_PACKAGES=$(find -L ${SOURCE_DIR}/ -mindepth 2 -maxdepth 2 -name CMakeLists.txt | sed "s#${SOURCE_DIR}/\(.*\)/CMakeLists.txt#\1#")
 
@@ -100,5 +157,10 @@ export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH
 echo -e "${COL_GREEN}...done${COL_RESET}"
 echo
 
+
+
 echo -e "${COL_GREEN}This script has been sourced successfully${COL_RESET}"
 echo
+
+
+
