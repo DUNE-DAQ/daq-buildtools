@@ -74,6 +74,11 @@ if [[ ("${REFRESH_UPS}" == "false" &&  -z "${DBT_UPS_SETUP_DONE}") || "${REFRESH
         echo -e "${COL_GREEN}This script hasn't yet been sourced (successfully) in this shell; setting up the build environment${COL_RESET}\n"
     else
         echo -e "${COL_GREEN}Refreshing UPS package setup${COL_RESET}\n"
+        # Clean up
+        echo -e "${COL_BLUE}Deactivating python environment${COL_RESET}\n"
+        deactivate
+        echo -e "${COL_BLUE}Running ups un-setup${COL_RESET}\n"
+        unsetup_all
     fi
 
     # 1. Load the UPS area information from the local area file
@@ -146,11 +151,11 @@ for p in ${DBT_PACKAGES}; do
     pkg_share="${PNAME//-/_}_SHARE"
     declare -xg "${pkg_share}"="${BUILD_DIR}/${p}"
 
-    add_many_paths_if_exist PATH "${PKG_BLD_PATH}/apps" "${PKG_BLD_PATH}/scripts" "${PKG_BLD_PATH}/test/apps" "${PKG_BLD_PATH}/test/scripts"
-    add_many_paths_if_exist PYTHONPATH "${PKG_BLD_PATH}/python"
-    add_many_paths_if_exist LD_LIBRARY_PATH "${PKG_BLD_PATH}/src"  "${PKG_BLD_PATH}/plugins"  "${PKG_BLD_PATH}/test/plugins"
-    add_many_paths_if_exist CET_PLUGIN_PATH "${PKG_BLD_PATH}/plugins" "${PKG_BLD_PATH}/test/plugins"
-    add_many_paths_if_exist DUNEDAQ_SHARE_PATH  "${PKG_BLD_PATH}" "${PKG_BLD_PATH}/test/share"
+    add_many_paths PATH "${PKG_BLD_PATH}/apps" "${PKG_BLD_PATH}/scripts" "${PKG_BLD_PATH}/test/apps" "${PKG_BLD_PATH}/test/scripts"
+    add_many_paths PYTHONPATH "${PKG_BLD_PATH}/python"
+    add_many_paths LD_LIBRARY_PATH "${PKG_BLD_PATH}/src"  "${PKG_BLD_PATH}/plugins"  "${PKG_BLD_PATH}/test/plugins"
+    add_many_paths CET_PLUGIN_PATH "${PKG_BLD_PATH}/plugins" "${PKG_BLD_PATH}/test/plugins"
+    add_many_paths DUNEDAQ_SHARE_PATH  "${PKG_BLD_PATH}" "${PKG_BLD_PATH}/test/share"
 done
 
 export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH
