@@ -135,8 +135,7 @@ dune_systems=(
     "package_declared_by_user v1_2_3 e19:prof"
     )
 ```
-As the names suggest, `dune_products_dirs` contains the list of UPS product pools and `dune_daqpackages` contains a list of UPS products sourced when you first run `dbt-workarea-env` (described below). If you've already run `dbt-workarea-env` before editing the `dbt-settings` file, you'll need to log into a fresh shell and source `dbt-setup-env.sh` and run `dbt-workarea-env` again. 
-
+As the names suggest, `dune_products_dirs` contains the list of UPS product pools and `dune_daqpackages` contains a list of UPS products sourced when you first run `dbt-workarea-env` (described below). If you've already run `dbt-workarea-env` before editing the `dbt-settings` file, you'll need to run `dbt-workarea-env --refresh`. If you updated a version of UPS packages in your `dbt-settings`, it's likely that you will get messages about version conflicts among UPS products. In this case, do `unsetup_all` first before retrying, or simply restart from a fresh shell by logging out and back in, setup daq-buildtools and run `dbt-workarea-env` again. 
 
 ## Compiling
 We're about to build and install the `listrev` package. (&#x1F534; Note: if you are working with other packages, have a look at the [Working with more repos](#working-with-more-repos) subsection before running the following build command.) By default, the scripts will create a subdirectory of MyTopDir called `./install `and install any packages you build off your repos there. If you wish to install them in another location, you'll want to set the environment variable `DBT_INSTALL_DIR` to the desired installation path after the `dbt-workarea-env` command described below, but before the `dbt-build.sh` command. 
@@ -147,10 +146,6 @@ dbt-workarea-env  # If you haven't already run this
 dbt-build.sh --install
 ```
 ...and this will build `listrev` in the local `./build` subdirectory and then install it as a package either in the local `./install` subdirectory or in whatever you pointed `DBT_INSTALL_DIR` to. 
-
-To use the locally built packages, you will need to run `dbt-workarea-env` again. You will see a few paths under `MyTopDir/install` and `MyTopDir/build` are added to `$PATH` and a few other environment variables.
-
-&#x1F534; Hint 💡 we added a few more useful options to `dbt-build.sh`, for example `--cmake-msg-lvl`. Take a look with `dbt-build.sh -h`.
 
 &#x1F534; Hint 💡 `dbt-workare-env` now has a new option `-s/--subset <externals, daqpackages, systems, devtools>` which allows user to set up a subset of UPS products listed in `dbt-settings`.
 
@@ -184,6 +179,11 @@ If you want to see verbose output from the compiler, all you need to do is add t
 dbt-build.sh --verbose 
 ```
 
+If you want to change cmake message log level, you can use the `--cmake-msg-lvl` option:
+```
+dbt-build.sh --cmake-msg-lvl <ERROR|WARNING|NOTICE|STATUS|VERBOSE|DEBUG|TRACE>
+```
+
 You can see all the options listed if you run the script with the `--help` command, i.e.
 ```
 dbt-build.sh --help
@@ -196,10 +196,10 @@ Finally, note that both the output of your builds and your unit tests are logged
 
 In order to access the applications, libraries and plugins built in your `./build` area during the above procedure, the system needs to be instructed on where to look for them. All you need to do is the following:
 ```
-dbt-workarea-env --refresh
+dbt-workarea-env
 ```
 
-Note that if you add a new repo to your work area, after building your new code - and hence putting its output in `./build` - you'll need to rerun `dbt-workarea-env --refresh`. 
+Note that if you add a new repo to your work area, after building your new code - and hence putting its output in `./build` - you'll need to rerun `dbt-workarea-env`.
 
 Once the runtime environment is set, just run the application you need. listrev, however, has no applications; it's just a set of DAQ module plugins which get added to CET_PLUGIN_PATH.  
 
