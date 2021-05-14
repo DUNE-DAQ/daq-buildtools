@@ -130,76 +130,6 @@ if [[ ! -z "${ARGS:-}" ]]; then
     error "Unknown arguments '${ARGS[@]}' provided; run with \" --help\" to see valid options. Exiting..."  
 fi
 
-# while ((i_arg < $#)); do
-
-#   arg=${args[$i_arg]}
-#   nextarg=
-#   if ((i_arg + 1 < $#)); then
-#       nextarg=${args[$((i_arg+1))]}
-#   fi
-#   i_arg=$((i_arg + 1))
-
-#   if [[ "$arg" == "--help" ]]; then
-#     cat << EOF
-
-#       Usage: "./$( basename $0 )" --clean --debug --jobs <number parallel build jobs> --unittest <optional package name> --lint <optional package name> --install --verbose --help 
-      
-#        --clean means the contents of ./build are deleted and CMake's config+generate+build stages are run
-#        --debug means you want to build your software with optimizations off and debugging info on
-#        --jobs means you want to specify the number of jobs used by cmake to build the project
-#        --unittest means that unit test executables found in ./build/<optional package name>/unittest are run, or all unit tests in ./build/*/unittest are run if no package name is provided
-#        --lint means you check for deviations in ./sourcecode/<optional package name> from the DUNE style guide, https://github.com/DUNE-DAQ/styleguide/blob/develop/dune-daq-cppguide.md, or deviations in all local repos if no package name is provided
-#        --install means that you want the code from your package(s) installed in the directory which was pointed to by the DBT_INSTALL_DIR environment variable before the most recent clean build
-#        --verbose means that you want verbose output from the compiler
-#        --cmake-trace enable cmake tracing
-#        --cmake-graphviz geneates a target dependency graph
-
-    
-#     All arguments are optional. With no arguments, CMake will typically just run 
-#     build, unless build/CMakeCache.txt is missing    
-    
-# EOF
-
-#     exit 0    
-
-#   elif [[ "$arg" == "--clean" ]]; then
-#     clean_build=true
-#   elif [[ "$arg" == "--debug" ]]; then
-#     debug_build=true
-#   elif [[ "$arg" == "--unittest" ]]; then
-#     run_tests=true
-#     if [[ -n ${nextarg:-} && "$nextarg" =~ ^[^\-] ]]; then
-#         package_to_test=$nextarg
-#         i_arg=$((i_arg + 1))
-#     fi
-#   elif [[ "$arg" == "--lint" ]]; then
-#     lint=true
-#     if [[ -n ${nextarg:-} && "$nextarg" =~ ^[^\-] ]]; then
-#         package_to_lint=$nextarg
-#         i_arg=$((i_arg + 1))
-#     fi
-#   elif [[ "$arg" == "--verbose" ]]; then
-#     cpp_verbose=true
-#   elif [[ "$arg" == "--cmake-trace" ]]; then
-#     cmake_trace=true
-#   elif [[ "$arg" == "--cmake-graphviz" ]]; then
-#     cmake_graphviz=true
-#   elif [[ "$arg" == "--jobs" ]]; then
-#     if [[ -n ${nextarg:-} && "$nextarg" =~ ^[^\-] ]]; then
-#         n_jobs=$nextarg
-#         i_arg=$((i_arg + 1))
-#     fi
-#   elif [[ "$arg" == "--pkgname" ]]; then
-#     error "Use of --pkgname is deprecated; run with \" --help\" to see valid options. Exiting..."
-#   elif [[ "$arg" == "--install" ]]; then
-#     perform_install=true
-
-#   else
-#     error "Unknown argument provided; run with \" --help\" to see valid options. Exiting..."
-#   fi
-# 
-# done
-
 if [[ -z ${DBT_WORKAREA_ENV_SCRIPT_SOURCED:-} ]]; then
  
 error "$( cat<<EOF
@@ -435,17 +365,15 @@ if $run_tests ; then
 
   cd $BUILDDIR
 
-  source ${DBT_ROOT}/scripts/dbt-workarea-env.sh --refresh
-
   if [[ -z $package_to_test ]]; then
-    package_list=$( find . -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles )
+    package_list=$( find -L . -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles )
   else
-          package_list=$package_to_test
+    package_list=$package_to_test
   fi
 
   for pkgname in $package_list ; do
 
-    unittestdirs=$( find $BUILDDIR/$pkgname -type d -name "unittest" -not -regex ".*CMakeFiles.*" )
+    unittestdirs=$( find -L $BUILDDIR/$pkgname -type d -name "unittest" -not -regex ".*CMakeFiles.*" )
 
     if [[ -z $unittestdirs ]]; then
       echo
@@ -454,7 +382,7 @@ if $run_tests ; then
       continue
     fi
 
-    if [[ -z $BOOST_TEST_LOG_LEVEL ]]; then
+    if [[ -z ${BOOST_TEST_LOG_LEVEL:-} ]]; then
        export BOOST_TEST_LOG_LEVEL=all
     fi
 
