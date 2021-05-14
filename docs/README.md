@@ -148,7 +148,7 @@ dbt-build.sh --install
 ```
 ...and this will build `listrev` in the local `./build` subdirectory and then install it as a package either in the local `./install` subdirectory or in whatever you pointed `DBT_INSTALL_DIR` to. 
 
-To use the locally built packages, run `dbt-workarea-env --refresh`, you will see a few paths under `MyTopDir/install` and `MyTopDir/build` are added to `$PATH` and a few other environment variables.
+To use the locally built packages, you will need to run `dbt-workarea-env` again. You will see a few paths under `MyTopDir/install` and `MyTopDir/build` are added to `$PATH` and a few other environment variables.
 
 &#x1F534; Hint 💡 we added a few more useful options to `dbt-build.sh`, for example `--cmake-msg-lvl`. Take a look with `dbt-build.sh -h`.
 
