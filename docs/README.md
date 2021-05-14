@@ -7,9 +7,9 @@ The toolset to simplify the development of DUNE DAQ packages
 
 To get set up, you'll need access to the ups product area `/cvmfs/dunedaq.opensciencegrid.org/products`, as is the case, e.g., on the lxplus machines at CERN. 
 
-## Setup `daq-buildtools`
+## Setup of `daq-buildtools`
 
-`daq-buildtools` is a simple package that provides environment and building utilities for the DAQ Suite. It is available via cvmfs or cloning the repository to local disk.
+`daq-buildtools` is a package which provides environment and building utilities for the DAQ Suite. It is available via cvmfs or cloning the repository to local disk.
 
 To use `daq-buildtools` from cvmfs, simply do:
 
@@ -37,24 +37,25 @@ DBT setuptools loaded
 ```
 The commands include `dbt-create.sh`, `dbt-build.sh`, and `dbt-workarea-env`; these are all described in the following sections.
 
-Each time that you want to work with a DUNE DAQ work area in a fresh Linux shell, you'll need to set up daq-buildtools using either of the method above, or simply source the linked file named as `dbt-env.sh` in your existing working directory.
+Each time that you want to work with a DUNE DAQ work area in a fresh Linux shell, you'll need to set up daq-buildtools using either of the methods above, or you can cd into your work area and source the link file named `dbt-env.sh`. Work areas are described next. 
 
 ## Creating a work area
 
 Once you've set up `daq-buildtools` via `setup_dbt` or via sourcing `daq-buildtools/env.sh`, you're now ready to create a work area. Find a directory in which you want your work area to be a subdirectory, and cd into it. Then think of a good name for the area (give it any name, but we'll refer to it as "MyTopDir" on this wiki). Then you can run:
 ```sh
-dbt-create.sh <release> <your work area subdirectory> # dunedaq-v2.5.0 is the most recent release as of May-14-2020
+dbt-create.sh <release> <your work area subdirectory> # dunedaq-v2.5.0 is the most recent frozen release as of May-14-2020
 ```
 which will set up an area to place the repos you wish to build. Remember to cd into the subdirectory you just created after `dbt-create.sh` finishes running. 
 
-Since release `dunedaq-v2.5.0`, `dbt-create.sh` supports the use of nightly built releases. Add `-n` to the `dbt-create.sh` command above to use nightly releases. Use `-l` to list all available releases (use `-l -n` to list all nightly releases).
+Since the `dunedaq-v2.5.0` release, `dbt-create.sh` has supported not only frozen releases but the use of nightly built releases as well. Add `-n` to the `dbt-create.sh` command above to use nightly releases, e.g. ` dbt-create.sh -n N21-05-13 <your work area subdirectory>`. Pass `-l` to `dbt-create.sh` in order to list all available frozen releases, and `-l -n` to list all available nightly releases.
 
+The structure of your work area will look like the following:
 ```txt
 MyTopDir
 ├── build
 ├── dbt-pyvenv
 ├── dbt-settings
-├── dbt-env.sh -> /your/path/to/work/area/env.sh
+├── dbt-env.sh -> /path/to/daq-buildtools/env.sh
 ├── log
 └── sourcecode
     ├── CMakeLists.txt
@@ -71,8 +72,7 @@ Note the assumption above is that you aren't developing listrev; if you were, th
 
 ## Adding extra UPS products and product pools
 
-Sometimes it is necessary to tweak the baseline list of UPS products or even UPS product pools to add extra dependencies. 
-This can be easily done by editing the `dbt-settings` file copied over from daq-buildtools by `dbt-create.sh` and adding the new entries to `dune_products_dirs`  and `dune_daqpackages` as needed. See `/example/of/additional/user/declared/product/pool` and `package_declared_by_user v1_2_3 e19:prof` in the example of an edited `dbt-settings` file, below:
+Sometimes it is necessary to tweak the baseline list of UPS products or even UPS product pools to add extra dependencies; skip ahead to the next section if you don't need to worry about this. Adding extra dependencies can be easily done by editing the `dbt-settings` file copied over from daq-buildtools by `dbt-create.sh` and adding the new entries to `dune_products_dirs`  and `dune_daqpackages` as needed. See `/example/of/additional/user/declared/product/pool` and `package_declared_by_user v1_2_3 e19:prof` in the example of an edited `dbt-settings` file, below:
 
 ```bash
 dune_products_dirs=(
@@ -135,10 +135,10 @@ dune_systems=(
     "package_declared_by_user v1_2_3 e19:prof"
     )
 ```
-As the names suggest, `dune_products_dirs` contains the list of UPS product pools and `dune_daqpackages` contains a list of UPS products sourced when you first run `dbt-workarea-env` (described below). If you've already run `dbt-workarea-env` before editing the `dbt-settings` file, you'll need to run `dbt-workarea-env --refresh`. If you updated a version of UPS packages in your `dbt-settings`, it's likely that you will get messages about version conflicts among UPS products. In this case, do `unsetup_all` first before retrying, or simply restart from a fresh shell by logging out and back in, setup daq-buildtools and run `dbt-workarea-env` again. 
+As the names suggest, `dune_products_dirs` contains the list of UPS product pools and `dune_daqpackages` contains a list of UPS products sourced when you first run `dbt-workarea-env` (described below). If you've already run `dbt-workarea-env` before editing the `dbt-settings` file, you'll need to run `dbt-workarea-env --refresh` to force a reload.
 
 ## Compiling
-We're about to build and install the `listrev` package. (&#x1F534; Note: if you are working with other packages, have a look at the [Working with more repos](#working-with-more-repos) subsection before running the following build command.) By default, the scripts will create a subdirectory of MyTopDir called `./install `and install any packages you build off your repos there. If you wish to install them in another location, you'll want to set the environment variable `DBT_INSTALL_DIR` to the desired installation path after the `dbt-workarea-env` command described below, but before the `dbt-build.sh` command. 
+We're about to build and install the `listrev` package. (&#x1F534; Note: if you are working with other packages, have a look at the [Working with more repos](#working-with-more-repos) subsection before running the following build command.) By default, the scripts will create a subdirectory of MyTopDir called `./install ` and install any packages you build off your repos there. If you wish to install them in another location, you'll want to set the environment variable `DBT_INSTALL_DIR` to the desired installation path after the `dbt-workarea-env` command described below, but before the `dbt-build.sh` command. 
 
 Now, do the following:
 ```sh
@@ -147,7 +147,7 @@ dbt-build.sh --install
 ```
 ...and this will build `listrev` in the local `./build` subdirectory and then install it as a package either in the local `./install` subdirectory or in whatever you pointed `DBT_INSTALL_DIR` to. 
 
-&#x1F534; Hint 💡 `dbt-workare-env` now has a new option `-s/--subset <externals, daqpackages, systems, devtools>` which allows user to set up a subset of UPS products listed in `dbt-settings`.
+&#x1F534; Hint 💡 `dbt-workarea-env` now has a new option `-s/--subset <externals, daqpackages, systems, devtools>` which allows user to set up a subset of UPS products listed in `dbt-settings`.
 
 ### Working with more repos
 
