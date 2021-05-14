@@ -382,7 +382,7 @@ if $run_tests ; then
       continue
     fi
 
-    if [[ -z $BOOST_TEST_LOG_LEVEL ]]; then
+    if [[ -z ${BOOST_TEST_LOG_LEVEL:-} ]]; then
        export BOOST_TEST_LOG_LEVEL=all
     fi
 
