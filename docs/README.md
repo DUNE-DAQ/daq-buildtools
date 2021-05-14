@@ -3,25 +3,33 @@
 
 The toolset to simplify the development of DUNE DAQ packages
 
-# System requirements
+## System requirements
 
 To get set up, you'll need access to the ups product area `/cvmfs/dunedaq.opensciencegrid.org/products`, as is the case, e.g., on the lxplus machines at CERN. 
 
-# Setup `daq-buildtools`
-`daq-buildtools` is a simple package that provides environment and building utilities for the DAQ Suite. 
-Each cloned daq-buildtools can serve as many work areas as the developer wishes. 
+## Setup `daq-buildtools`
 
-The repository can simply be cloned via
+`daq-buildtools` is a simple package that provides environment and building utilities for the DAQ Suite. It is available via cvmfs or cloning the repository to local disk.
+
+To use `daq-buildtools` from cvmfs, simply do:
+
+```bash
+source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
+setup_dbt dunedaq-v2.5.0 # "dunedaq-v2.5.0" can be replaced with any other tags of daq-buildtools
+```
+
+To use `daq-buildtools` by cloning its repository, do:
+
 ```bash
 git clone https://github.com/DUNE-DAQ/daq-buildtools.git -b dunedaq-v2.5.0
 ```
-This step doesn't have to be run more than once per daq-buildtools version. 
-
-The daq-buildtools setup script has to be sourced to make the various daq-buildtools commands available. Run:
+Each cloned daq-buildtools can serve as many work areas as the developer wishes. This step doesn't have to be run more than once per daq-buildtools version. 
+If using daq-buildtools via cloning the repo, its setup script has to be sourced to make the various daq-buildtools commands available. Run:
 ```bash
-source daq-buildtools/dbt-setup-env.sh
+source daq-buildtools/env.sh
 ```
-..and you'll see something like:
+
+In either case of using `setup_dbt dunedaq-v2.5.0` with daq-buildtools from cvmfs or sourcing the setup script from the local clone, you'll see something like:
 ```
 Added /your/path/to/daq-buildtools/bin to PATH
 Added /your/path/to/daq-buildtools/scripts to PATH
@@ -29,22 +37,24 @@ DBT setuptools loaded
 ```
 The commands include `dbt-create.sh`, `dbt-build.sh`, and `dbt-workarea-env`; these are all described in the following sections.
 
-Each time that you want to work with a DUNE DAQ work area in a fresh Linux shell, you'll need to set up daq-buildtools using the `dbt-setup-env.sh` script, as described above.
+Each time that you want to work with a DUNE DAQ work area in a fresh Linux shell, you'll need to set up daq-buildtools using either of the method above, or simply source the linked file named as `dbt-env.sh` in your existing working directory.
 
-# Creating a work area
+## Creating a work area
 
-Once you've sourced `dbt-setup-env.sh`, you're now ready to create a work area. Find a directory in which you want your work area to be a subdirectory, and cd into it. Then think of a good name for the area (give it any name, but we'll refer to it as "MyTopDir" on this wiki). Then you can run:
+Once you've set up `daq-buildtools` via `setup_dbt` or via sourcing `daq-buildtools/env.sh`, you're now ready to create a work area. Find a directory in which you want your work area to be a subdirectory, and cd into it. Then think of a good name for the area (give it any name, but we'll refer to it as "MyTopDir" on this wiki). Then you can run:
 ```sh
-dbt-create.sh <release> <your work area subdirectory> # dunedaq-v2.5.0 is the most recent release as of [release date?]
+dbt-create.sh <release> <your work area subdirectory> # dunedaq-v2.5.0 is the most recent release as of May-14-2020
 ```
 which will set up an area to place the repos you wish to build. Remember to cd into the subdirectory you just created after `dbt-create.sh` finishes running. 
+
+Since release `dunedaq-v2.5.0`, `dbt-create.sh` supports the use of nightly built releases. Add `-n` to the `dbt-create.sh` command above to use nightly releases. Use `-l` to list all available releases (use `-l -n` to list all nightly releases).
 
 ```txt
 MyTopDir
 ├── build
 ├── dbt-pyvenv
 ├── dbt-settings
-├── dbt-setup-env.sh -> /your/path/to/work/area/dbt-setup-env.sh
+├── dbt-env.sh -> /your/path/to/work/area/env.sh
 ├── log
 └── sourcecode
     ├── CMakeLists.txt
@@ -59,15 +69,15 @@ cd ..
 ```
 Note the assumption above is that you aren't developing listrev; if you were, then you'd want to replace `-b dunedaq-v2.5.0` with `-b <branch you want to work on>`.
 
-# Adding extra UPS products and product pools
+## Adding extra UPS products and product pools
 
 Sometimes it is necessary to tweak the baseline list of UPS products or even UPS product pools to add extra dependencies. 
 This can be easily done by editing the `dbt-settings` file copied over from daq-buildtools by `dbt-create.sh` and adding the new entries to `dune_products_dirs`  and `dune_daqpackages` as needed. See `/example/of/additional/user/declared/product/pool` and `package_declared_by_user v1_2_3 e19:prof` in the example of an edited `dbt-settings` file, below:
 
 ```bash
 dune_products_dirs=(
-    "/cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.4.0/externals"
-    "/cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.4.0/packages"
+    "/cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.5.0/externals"
+    "/cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.5.0/packages"
     "/example/of/additional/user/declared/product/pool" 
     #"/cvmfs/dunedaq.opensciencegrid.org/products" 
     #"/cvmfs/dunedaq-development.opensciencegrid.org/products" 
@@ -128,7 +138,7 @@ dune_systems=(
 As the names suggest, `dune_products_dirs` contains the list of UPS product pools and `dune_daqpackages` contains a list of UPS products sourced when you first run `dbt-workarea-env` (described below). If you've already run `dbt-workarea-env` before editing the `dbt-settings` file, you'll need to log into a fresh shell and source `dbt-setup-env.sh` and run `dbt-workarea-env` again. 
 
 
-# Compiling
+## Compiling
 We're about to build and install the `listrev` package. (&#x1F534; Note: if you are working with other packages, have a look at the [Working with more repos](#working-with-more-repos) subsection before running the following build command.) By default, the scripts will create a subdirectory of MyTopDir called `./install `and install any packages you build off your repos there. If you wish to install them in another location, you'll want to set the environment variable `DBT_INSTALL_DIR` to the desired installation path after the `dbt-workarea-env` command described below, but before the `dbt-build.sh` command. 
 
 Now, do the following:
@@ -138,7 +148,13 @@ dbt-build.sh --install
 ```
 ...and this will build `listrev` in the local `./build` subdirectory and then install it as a package either in the local `./install` subdirectory or in whatever you pointed `DBT_INSTALL_DIR` to. 
 
-## Working with more repos
+To use the locally built packages, run `dbt-workarea-env --refresh`, you will see a few paths under `MyTopDir/install` and `MyTopDir/build` are added to `$PATH` and a few other environment variables.
+
+:bulb: Hint #1: we added a few more useful options to `dbt-build.sh`, for example `--cmake-msg-lvl`. Take a look with `dbt-build.sh -h`.
+:bult: Hint #2: `dbt-workare-env` now has a new option `-s/--subset <externals, daqpackages, systems, devtools>` which allows user to set up a subset of UPS products listed in `dbt-settings`.
+
+### Working with more repos
+
 To work with more repos, add them to the `./sourcecode` subdirectory as we did with listrev. Be aware, though: if you're developing a new repo which itself depends on another new repo, daq-buildtools may not already know about this dependency. "New" in this context means "not found in /cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.5.0/dbt-build-order.cmake". If this is the case, you have one of two options:
 
 * (Recommended) Add the names of your new packages to the `build_order` list found in `./sourcecode/dbt-build-order.cmake`, placing them in the list in the relative order in which you want them to be built. 
@@ -175,7 +191,7 @@ Finally, note that both the output of your builds and your unit tests are logged
 
 </details>
 
-# Running
+## Running
 
 In order to access the applications, libraries and plugins built in your `./build` area during the above procedure, the system needs to be instructed on where to look for them. All you need to do is the following:
 ```
@@ -227,6 +243,6 @@ Press enter a command to send next:
 ```
 And you can again type `init`, etc. However, unlike previously, now you'll want to look in the other terminal running daq_application to see it responding to the commands. As before, Ctrl-c will exit you out of these applications. 
 
-# Next Step
+## Next Step
 
 * You can learn how to create a new package by taking a look at the [daq-cmake documentation](https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-cmake/)
