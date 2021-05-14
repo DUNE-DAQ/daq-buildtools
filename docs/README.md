@@ -151,7 +151,7 @@ dbt-build.sh --install
 To use the locally built packages, run `dbt-workarea-env --refresh`, you will see a few paths under `MyTopDir/install` and `MyTopDir/build` are added to `$PATH` and a few other environment variables.
 
 :bulb: Hint #1: we added a few more useful options to `dbt-build.sh`, for example `--cmake-msg-lvl`. Take a look with `dbt-build.sh -h`.
-:bult: Hint #2: `dbt-workare-env` now has a new option `-s/--subset <externals, daqpackages, systems, devtools>` which allows user to set up a subset of UPS products listed in `dbt-settings`.
+:bulb: Hint #2: `dbt-workare-env` now has a new option `-s/--subset <externals, daqpackages, systems, devtools>` which allows user to set up a subset of UPS products listed in `dbt-settings`.
 
 ### Working with more repos
 
