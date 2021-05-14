@@ -178,8 +178,8 @@ cp ${RELEASE_PATH}/${UPS_PKGLIST} $TARGETDIR/${DBT_AREA_FILE}
 test $? -eq 0 || error "There was a problem copying over the daq area signature file. Exiting..." 
 
 # Create the daq area signature file
-dbt_setup_env_script=${DBT_ROOT}/dbt-setup-env.sh
-ln -s ${dbt_setup_env_script} $TARGETDIR
+dbt_setup_env_script=${DBT_ROOT}/env.sh
+ln -s ${dbt_setup_env_script} $TARGETDIR/dbt-env.sh
 test $? -eq 0 || error "There was a problem linking the daq-buildtools setup file. Exiting..."
 
 echo "Setting up the Python subsystem"

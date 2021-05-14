@@ -9,7 +9,7 @@ COL_RED="\e[31m"
 COL_GREEN="\e[32m"
 COL_YELLOW="\e[33m"
 COL_BLUE="\e[34m"
-COL_NULL="\e[0m"
+COL_RESET="\e[0m"
 
 source ${HERE}/dbt-setup-constants.sh
 
@@ -124,7 +124,7 @@ function add_path() {
     #   you can specify
     PATH_VAL="$PATH_ADD${PATH_VAL:+":$PATH_VAL"}"
 
-    echo -e "${COL_BLUE}Added ${PATH_ADD} to ${PATH_NAME}${COL_NULL}"
+    echo -e "${COL_BLUE}Added ${PATH_ADD} to ${PATH_NAME}${COL_RESET}"
 
     # use eval to reset the target
     eval "${PATH_NAME}=${PATH_VAL}"
@@ -188,7 +188,7 @@ function error_preface() {
 function error() {
 
     error_preface
-    echo -e " ${COL_RED} ${1} ${COL_NULL} " >&2
+    echo -e " ${COL_RED} ${1} ${COL_RESET} " >&2
 
     if [[ "${FUNCNAME[-1]}" == "main" ]]; then
         exit 100

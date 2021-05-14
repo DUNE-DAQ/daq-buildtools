@@ -425,7 +425,7 @@ fi
 
 if $run_tests ; then
   COL_YELLOW="\e[33m"
-  COL_NULL="\e[0m"
+  COL_RESET="\e[0m"
   COL_RED="\e[31m"
   echo 
   echo
@@ -449,7 +449,7 @@ if $run_tests ; then
 
     if [[ -z $unittestdirs ]]; then
       echo
-      echo -e "${COL_RED}No unit tests have been written for $pkgname${COL_NULL}"
+      echo -e "${COL_RED}No unit tests have been written for $pkgname${COL_RESET}"
       echo
       continue
     fi
@@ -468,9 +468,9 @@ if $run_tests ; then
       for unittest in $unittestdir/* ; do
         if [[ -x $unittest ]]; then
           echo
-          echo -e "${COL_YELLOW}Start of unit test suite \"$unittest\"${COL_NULL}" |& tee -a $test_log
+          echo -e "${COL_YELLOW}Start of unit test suite \"$unittest\"${COL_RESET}" |& tee -a $test_log
           $unittest |& tee -a $test_log
-          echo -e "${COL_YELLOW}End of unit test suite \"$unittest\"${COL_NULL}" |& tee -a $test_log
+          echo -e "${COL_YELLOW}End of unit test suite \"$unittest\"${COL_RESET}" |& tee -a $test_log
           num_unit_tests=$((num_unit_tests + 1))
         fi
       done
@@ -478,7 +478,7 @@ if $run_tests ; then
     done
 
     echo 
-    echo -e "${COL_YELLOW}Testing complete for package \"$pkgname\". Ran $num_unit_tests unit test suites.${COL_NULL}"
+    echo -e "${COL_YELLOW}Testing complete for package \"$pkgname\". Ran $num_unit_tests unit test suites.${COL_RESET}"
   done
      
      echo
