@@ -1,4 +1,13 @@
 #!/bin/sh
+
+$(return >/dev/null 2>&1)
+# What exit code did that give?
+if [ "$?" -ne "0" ]
+then
+    echo "This script is not meant to be execute it. Please execute 'source $(basename $BASH_SOURCE)' "
+    exit 1
+fi
+
 #------------------------------------------------------------------------------
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 

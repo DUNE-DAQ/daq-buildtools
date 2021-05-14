@@ -157,7 +157,7 @@ export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH
 echo -e "${COL_GREEN}...done${COL_RESET}"
 echo
 
-
+export DBT_WORKAREA_ENV_SCRIPT_SOURCED=1
 
 echo -e "${COL_GREEN}This script has been sourced successfully${COL_RESET}"
 echo
