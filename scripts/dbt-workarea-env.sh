@@ -92,7 +92,7 @@ if [[ ("${REFRESH_UPS}" == "false" &&  -z "${DBT_UPS_SETUP_DONE}") || "${REFRESH
     setup_ups_products dune_systems
 
     if ! [[ $? -eq 0 ]]; then
-        error "The \"setup python ${dune_python_version}\" call failed. Returning..." 
+        error "The \"setup_ups_products dune_systems\" (for gcc and python) call failed. Returning..." 
         return 5
     fi
 
