@@ -21,7 +21,7 @@ setup_dbt dunedaq-v2.5.0 # "dunedaq-v2.5.0" can be replaced with any other tags 
 To use `daq-buildtools` by cloning its repository, do:
 
 ```bash
-git clone https://github.com/DUNE-DAQ/daq-buildtools.git -b v3.0.0
+git clone https://github.com/DUNE-DAQ/daq-buildtools.git -b dunedaq-v2.5.0
 ```
 Each cloned daq-buildtools can serve as many work areas as the developer wishes. This step doesn't have to be run more than once per daq-buildtools version. 
 If using daq-buildtools via cloning the repo, its setup script has to be sourced to make the various daq-buildtools commands available. Run:
