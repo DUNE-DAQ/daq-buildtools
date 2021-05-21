@@ -172,7 +172,7 @@ dbt-build.sh --lint
 ```
 ...though be aware that some guideline violations (e.g., having a function which tries to do unrelated things) can't be picked up by the automated linter. 
 
-Note that unlike the other options to `dbt-build.sh`, `--lint` and `--unittest` are both capable of taking an optional argument, which is the name of a specific repo in your work area which you'd like to either lint or run unit tests for. This can be useful if you're focusing on developing one of several repos in your work area. E.g., `dbt-build.sh --lint <repo you're working on>`.
+Note that unlike the other options to `dbt-build.sh`, `--lint` and `--unittest` are both capable of taking an optional argument, which is the name of a specific repo in your work area which you'd like to either lint or run unit tests for. This can be useful if you're focusing on developing one of several repos in your work area. It should appear after an equals sign, e.g., `dbt-build.sh --lint=<repo you're working on>`.
 
 If you want to see verbose output from the compiler, all you need to do is add the `--verbose` option:
 ```
