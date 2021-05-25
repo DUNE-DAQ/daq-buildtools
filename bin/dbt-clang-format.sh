@@ -38,10 +38,10 @@ fi
 
 differences_only=false
 if [[ -n $arg2 ]]; then
-    if [[ "$arg2" == "--view-differences-only" ]]; then
+    if [[ "$arg2" == "$view_only_option" ]]; then
 	differences_only=true
     else
-	error "Only allowed second argument is \"--view-differences-only\""
+	error "Only allowed second argument is \"$view_only_option\""
     fi
 fi
 
@@ -90,18 +90,37 @@ clang_format_link="https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/dev
 
 mv -f .clang-format .clang-format.previous  2>/dev/null # In case .clang-format's been updated in daq-buildtools since this script was run
 
-curl -O $clang_format_link
+cp ${DBT_ROOT}/configs/.clang-format .
+
 if [[ "$?" != "0" ]]; then
-    error "
-There was a problem running 
-
-curl -O $clang_format_link
-
-Exiting..."
-
+    error "There was a problem copying ${DBT_ROOT}/configs/.clang-format to this directory. Exiting..."
 fi
 
-# Now with the latest .clang-format file, let's figure out what to format
+
+function format_files() {
+
+    local differences_only=$1
+    local files_to_format=$2
+
+    for orig_file in $files_to_format ; do
+
+	echo "Processing ${orig_file}..."
+	tmpfile=/tmp/$( uuidgen )
+	clang-format -style=file $orig_file > $tmpfile
+	diff $tmpfile $orig_file
+	diff_retval="$?"
+	
+	if [[ "$diff_retval" == 0 ]]; then
+	    echo
+	    echo "$orig_file already properly formatted"
+	    echo
+	elif ! $differences_only ; then
+	    echo "Updating $orig_file with new formatting"
+	    echo
+	    mv $tmpfile $orig_file
+	fi
+    done
+}
 
 files_to_format=""
 extensions="*.hpp *.cpp *.cxx *.hxx"
@@ -118,23 +137,25 @@ elif [[ -f $filename ]]; then
     fi
 fi
 
-for orig_file in $files_to_format ; do
+format_files true "$files_to_format"
 
-    echo "Processing ${orig_file}..."
-    tmpfile=/tmp/$( uuidgen )
-    clang-format -style=file $orig_file > $tmpfile
-    diff $tmpfile $orig_file
-    diff_retval="$?"
+if ! $differences_only ; then
+    
+    cat<<EOF
+You ran this script without the $view_only_option option, are you
+sure you want it to perform the edits (if any) suggested by the
+file-by-file diffs shown above? Type in yes or no.
 
-    if [[ "$diff_retval" == 0 ]]; then
-	echo
-	echo "$orig_file already properly formatted"
-	echo
-    elif ! $differences_only ; then
-	echo "Updating $orig_file with new formatting"
-	mv $tmpfile $orig_file
-    fi
+EOF
 
-done
+    while true; do
+	read -p "" yn
+	case $yn in
+            [Yy]* ) format_files false "$files_to_format"; break;;
+            [Nn]* ) exit;;
+            * ) echo "Please answer yes or no.";;
+	esac
+    done
+fi
 
 exit 0
