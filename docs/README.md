@@ -97,7 +97,7 @@ To check for deviations from the coding rules described in the [DUNE C++ Style G
 ```
 dbt-build.sh --lint
 ```
-...though be aware that some guideline violations (e.g., having a function which tries to do unrelated things) can't be picked up by the automated linter. 
+...though be aware that some guideline violations (e.g., having a function which tries to do unrelated things) can't be picked up by the automated linter. Also note that you can use `dbt-clang-format.sh` in order to automatically fix whitespace issues in your code; type it at the command line without arguments to learn how to use it. 
 
 Note that unlike the other options to `dbt-build.sh`, `--lint` and `--unittest` are both capable of taking an optional argument, which is the name of a specific repo in your work area which you'd like to either lint or run unit tests for. This can be useful if you're focusing on developing one of several repos in your work area. It should appear after an equals sign, e.g., `dbt-build.sh --lint=<repo you're working on>`.
 
