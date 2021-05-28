@@ -8,7 +8,7 @@ function print_usage() {
 Usage
 -----
 
-      "./$( basename $0 )" [-c/--clean] [-d/--debug] [-j<n>/--jobs <number parallel build jobs>] [--unittest <optional package name>] [--lint <optional package name>] [-i/--install] [-v/--cpp-verbose] [-h/--help]
+      "./$( basename $0 )" [-c/--clean] [-d/--debug] [-j<n>/--jobs <number parallel build jobs>] [--unittest(=<optional package name>)] [--lint(=<optional package name)>] [-i/--install] [-v/--cpp-verbose] [-h/--help]
       
         -c/--clean means the contents of ./build are deleted and CMake's config+generate+build stages are run
         -d/--debug means you want to build your software with optimizations off and debugging info on
