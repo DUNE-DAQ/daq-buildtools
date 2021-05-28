@@ -173,12 +173,12 @@ And you can again type `init`, etc. However, unlike previously, now you'll want 
 
 ## Adding extra UPS products and product pools
 
-Sometimes it is necessary to tweak the baseline list of UPS products or even UPS product pools to add extra dependencies; skip ahead to the next section if you don't need to worry about this. Adding extra dependencies can be easily done by editing the `dbt-settings` file copied over from daq-buildtools by `dbt-create.sh` and adding the new entries to `dune_products_dirs`  and `dune_daqpackages` as needed. See `/example/of/additional/user/declared/product/pool` and `package_declared_by_user v1_2_3 e19:prof` in the example of an edited `dbt-settings` file, below:
+Sometimes it is necessary to tweak the baseline list of UPS products or even UPS product pools to add extra dependencies; skip ahead to the next section if you don't need to worry about this. Adding extra dependencies can be easily done by editing the `dbt-settings` file copied over from daq-buildtools by `dbt-create.sh` and adding the new entries to `dune_products_dirs`  and `dune_daqpackages` as needed. See `/example/of/additional/user/declared/product/pool` and `package_declared_by_user v1_2_3 e19:prof` in the example of an edited `dbt-settings` file, below. Please note that package versions in your `dbt-settings` file may be different than those in this example since what you see below is simply a snapshot used for educational reasons:
 
 ```bash
 dune_products_dirs=(
-    "/cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.6.0/externals"
-    "/cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.6.0/packages"
+    "/cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.5.0/externals"
+    "/cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.5.0/packages"
     "/example/of/additional/user/declared/product/pool" 
     #"/cvmfs/dunedaq.opensciencegrid.org/products" 
     #"/cvmfs/dunedaq-development.opensciencegrid.org/products" 
