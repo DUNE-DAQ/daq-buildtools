@@ -22,7 +22,7 @@ Added /your/path/to/daq-buildtools/bin to PATH
 Added /your/path/to/daq-buildtools/scripts to PATH
 DBT setuptools loaded
 ```
-If you type `dbt-<tab>` you'll see a listing of available commands, which include `dbt-create.sh`, `dbt-build.sh`, and `dbt-workarea-env`. These are all described in the following sections.
+If you type `dbt-` followed by the `<tab>` key you'll see a listing of available commands, which include `dbt-create.sh`, `dbt-build.sh`, and `dbt-workarea-env`. These are all described in the following sections.
 
 Each time that you want to work with a DUNE DAQ work area in a fresh Linux shell, you'll need to set up daq-buildtools, either by repeating the method above, or by `cd`'ing into your work area and sourcing the link file named `dbt-env.sh`. Work areas are described next. 
 
@@ -50,6 +50,8 @@ MyTopDir
 
 ## Cloning and building a package repo
 
+### The basics
+
 For the purposes of instruction, let's build the `listrev` package. Downloading it is simple:
 ```
 cd sourcecode
@@ -72,10 +74,14 @@ Since the `dunedaq-v2.6.0` release, `dbt-create.sh` has supported not only froze
 
 ### Working with more repos
 
-To work with more repos, add them to the `./sourcecode` subdirectory as we did with listrev. Be aware, though: if you're developing a new repo which itself depends on another new repo, daq-buildtools may not already know about this dependency. "New" in this context means "not found in /cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.6.0/dbt-build-order.cmake". If this is the case, you have one of two options:
+To work with more repos, add them to the `./sourcecode` subdirectory as we did with listrev. Be aware, though: if you're developing a new repo which itself depends on another new repo, daq-buildtools may not already know about this dependency. "New" in this context means "not found in `/cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.6.0/dbt-build-order.cmake`". If this is the case, you have one of two options:
 
 * (Recommended) Add the names of your new packages to the `build_order` list found in `./sourcecode/dbt-build-order.cmake`, placing them in the list in the relative order in which you want them to be built. 
 * First clone, build and install your new base repo, and THEN clone, build and install your other new repo which depends on your new base repo. 
+
+Once you've added your repos and built them, you'll want to run `dbt-workarea-env --refresh` so the environment picks up their applications, libraries, etc. 
+
+### Useful build options
 
 `dbt-build.sh` will by default skip CMake's config+generate stages and go straight to the build stage _unless_ either the `CMakeCache.txt` file isn't found in `./build` or you've just added a new repo to `./sourcecode`. If you want to remove all the contents of `./build` and run config+generate+build, all you need to do is add the `--clean` option, i.e.
 ```
@@ -102,7 +108,7 @@ dbt-build.sh --cpp-verbose
 
 If you want to change cmake message log level, you can use the `--cmake-msg-lvl` option:
 ```
-dbt-build.sh --cmake-msg-lvl <ERROR|WARNING|NOTICE|STATUS|VERBOSE|DEBUG|TRACE>
+dbt-build.sh --cmake-msg-lvl=<ERROR|WARNING|NOTICE|STATUS|VERBOSE|DEBUG|TRACE>
 ```
 
 You can see all the options listed if you run the script with the `--help` command, i.e.
@@ -147,7 +153,7 @@ For a more realistic use-case where you can send commands to the application fro
 ```sh
 daq_application -n <some name for the application instance> --commandFacility rest://localhost:12345
 ```
-To control it, let's open up a second terminal, source the daq-buildtools' `env.sh` script as you did in the first terminal, and start sending daq_application commands:
+To control it, let's open up a second terminal, set up the daq-buildtools environment as described at the top of this document, and start sending daq_application commands:
 ```sh
 cd MyTopDir
 dbt-workarea-env
