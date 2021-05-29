@@ -6,7 +6,7 @@
 ## System requirements
 
 To get set up, you'll need access to the ups product area `/cvmfs/dunedaq.opensciencegrid.org/products`, as is the case, e.g., on the lxplus machines at CERN. 
-
+<a name="Setup_of_daq-buildtools"></a>
 ## Setup of `daq-buildtools`
 
 Simply do:
@@ -26,6 +26,7 @@ If you type `dbt-` followed by the `<tab>` key you'll see a listing of available
 
 Each time that you want to work with a DUNE DAQ work area in a fresh Linux shell, you'll need to set up daq-buildtools, either by repeating the method above, or by `cd`'ing into your work area and sourcing the link file named `dbt-env.sh`. Work areas are described next. 
 
+<a name="Creating_a_work_area"></a>
 ## Creating a work area
 
 Find a directory in which you want your work area to be a subdirectory (home directories are a popular choice) and `cd` into that directory. Then think of a good name for the work area (give it any name, but we'll refer to it as "MyTopDir" on this wiki). Run:
@@ -48,6 +49,7 @@ MyTopDir
     └── dbt-build-order.cmake
 ```
 
+<a name="Cloning_and_building"></a>
 ## Cloning and building a package repo
 
 ### The basics
