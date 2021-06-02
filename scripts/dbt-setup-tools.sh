@@ -9,6 +9,7 @@ COL_RED="\e[31m"
 COL_GREEN="\e[32m"
 COL_YELLOW="\e[33m"
 COL_BLUE="\e[34m"
+COL_CYAN="\e[36m"
 COL_RESET="\e[0m"
 
 source ${HERE}/dbt-setup-constants.sh
@@ -115,12 +116,12 @@ function add_path() {
   PATH_VAL=${!1}
   PATH_ADD=$2
 
-  ACTION="Added"
+  ACTION="${COL_BLUE}Added"
   
   # Add the new path only if it is not already there
   if [[ ":$PATH_VAL:" == *":$PATH_ADD:"* ]]; then
 
-    ACTION="Updated"
+    ACTION="${COL_CYAN}Updated"
 
     # Remove PATH_ADD from PATH_VAL, such that it can be added later.
     PATH_TMP=:$PATH_VAL:
@@ -136,7 +137,7 @@ function add_path() {
   #   you can specify
   PATH_VAL="$PATH_ADD${PATH_VAL:+":$PATH_VAL"}"
 
-  echo -e "${COL_BLUE}${ACTION} ${PATH_ADD} to ${PATH_NAME}${COL_RESET}"
+  echo -e "${ACTION} ${PATH_ADD} -> ${PATH_NAME}${COL_RESET}"
 
   # use eval to reset the target
   eval "${PATH_NAME}=${PATH_VAL}"
