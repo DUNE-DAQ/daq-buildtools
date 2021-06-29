@@ -147,15 +147,16 @@ DBT_PACKAGES=$(find -L ${SOURCE_DIR}/ -mindepth 2 -maxdepth 2 -name CMakeLists.t
 for p in ${DBT_PACKAGES}; do
     PNAME=${p^^}
     PKG_BLD_PATH=${BUILD_DIR}/${p}
+    PKG_INSTALL_PATH=${DBT_INSTALL_DIR}/${p}
     # Share
     pkg_share="${PNAME//-/_}_SHARE"
     declare -xg "${pkg_share}"="${BUILD_DIR}/${p}"
 
-    add_many_paths PATH "${PKG_BLD_PATH}/apps" "${PKG_BLD_PATH}/scripts" "${PKG_BLD_PATH}/test/apps" "${PKG_BLD_PATH}/test/scripts"
-    add_many_paths PYTHONPATH "${PKG_BLD_PATH}/python"
-    add_many_paths LD_LIBRARY_PATH "${PKG_BLD_PATH}/src"  "${PKG_BLD_PATH}/plugins"  "${PKG_BLD_PATH}/test/plugins"
-    add_many_paths CET_PLUGIN_PATH "${PKG_BLD_PATH}/plugins" "${PKG_BLD_PATH}/test/plugins"
-    add_many_paths DUNEDAQ_SHARE_PATH  "${PKG_BLD_PATH}" "${PKG_BLD_PATH}/test/share"
+    add_many_paths PATH "${PKG_INSTALL_PATH}/bin" "${PKG_BLD_PATH}/test/apps" "${PKG_BLD_PATH}/test/scripts"
+    add_many_paths PYTHONPATH "${PKG_INSTALL_PATH}/lib64/python/${p}"
+    add_many_paths LD_LIBRARY_PATH "${PKG_INSTALL_PATH}/src"  "${PKG_INSTALL_PATH}/lib64"  "${PKG_BLD_PATH}/test/plugins"
+    add_many_paths CET_PLUGIN_PATH "${PKG_INSTALL_PATH}/lib64" "${PKG_BLD_PATH}/test/plugins"
+    add_many_paths DUNEDAQ_SHARE_PATH  "${PKG_INSTALL_PATH}" "${PKG_BLD_PATH}/test/share"
 done
 
 export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH
