@@ -1,27 +1,35 @@
 #!/bin/bash
 
-# lcov has to be installed manually -- 
-# https://github.com/linux-test-project/lcov/releases/tag/v1.15
-# lcov-1.15-1.noarch.rpm
+function print_usage() {
+                cat << EOU
+Usage
+-----
 
-# Upon success, the output will be in the "coverage" directory
-# Load the file coverage/index.html in your browser to view the coverage report
+lcov has to be installed manually -- 
+https://github.com/linux-test-project/lcov/releases/tag/v1.15
+lcov-1.15-1.noarch.rpm
 
-# The following should be in CMakeLists.txt at or above the level of the code
-# for which coverage information should be collected 
-# (e.g. sourcecode/CMakeLists.txt):
-#
-# SET(GCC_COVERAGE_COMPILE_FLAGS "-O0 -g -fprofile-arcs -ftest-coverage -fno-inline")
-# SET(GCC_COVERAGE_LINK_FLAGS    "-lgcov")
-#
-# SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
-# SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
-#
+Upon success, the output will be in the "coverage" directory
+Load the file coverage/index.html in your browser to view the coverage report
 
-# Coverage requires at least GCC v9_3_0 to work properly
-if [[ "${GCC_VERSION}" =~ v[78]_ ]]; then
-  unsetup gcc
-  setup gcc v9_3_0
+The following should be in CMakeLists.txt at or above the level of the code
+for which coverage information should be collected 
+(e.g. sourcecode/CMakeLists.txt):
+
+SET(GCC_COVERAGE_COMPILE_FLAGS "-O0 -g -fprofile-arcs -ftest-coverage -fno-inline")
+SET(GCC_COVERAGE_LINK_FLAGS    "-lgcov")
+
+SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
+SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
+
+Coverage requires at least GCC v9_3_0 to work properly
+    
+EOU
+}
+
+if [ $# -gt 0 ]; then
+  print_usage
+  exit 0
 fi
 
 dbt-build.sh --clean
