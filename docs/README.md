@@ -95,7 +95,7 @@ And if, after the build, you want to run the unit tests, just add the `--unittes
 ```
 dbt-build.sh --clean --unittest  # Blow away the contents of ./build, run config+generate+build, and then run the unit tests
 ```
-..where in the above case, you blow away the contents of `./build`,  run config+generate+build, install the result in `./install` and then run the unit tests. Be aware that for many packages, unit tests will only (fully) work if you've also rerun `dbt-workarea-env` with the argument `--refresh` added. 
+..where in the above case, you blow away the contents of `./build`,  run config+generate+build, install the result in `$DBT_INSTALL_DIR` and then run the unit tests. Be aware that for many packages, unit tests will only (fully) work if you've also rerun `dbt-workarea-env` with the argument `--refresh` added. 
 
 To check for deviations from the coding rules described in the [DUNE C++ Style Guide](https://dune-daq-sw.readthedocs.io/en/latest/packages/styleguide/), run with the `--lint` option:
 ```
@@ -125,8 +125,9 @@ Finally, note that both the output of your builds and your unit tests are logged
 
 ## Running
 
-In order to access the applications, libraries and plugins built in your `./build` area during the above procedure, the system needs to be instructed on where to look for them. All you need to do is the following:
+In order to access the applications, libraries and plugins built and installed into the `$DBT_INSTALL_DIR` area during the above procedure, the system needs to be instructed on where to look for them. If you've logged into a new shell and set up the daq-buildtools environment, then do the following:
 ```
+export DBT_INSTALL_DIR=<your installation directory> # Only needed if you didn't use the default
 dbt-workarea-env
 ```
 
