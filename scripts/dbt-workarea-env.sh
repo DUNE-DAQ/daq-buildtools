@@ -127,14 +127,23 @@ if [[ ("${REFRESH_UPS}" == "false" &&  -z "${DBT_UPS_SETUP_DONE}") || "${REFRESH
       return 1
     fi
 
-    export DBT_INSTALL_DIR=${DBT_AREA_ROOT}/install
-
     export DBT_UPS_SETUP_DONE=1
 
     unset DBT_PKG_SET DBT_PKG_SETS
 
 else
     echo -e "${COL_YELLOW}The build environment has been already setup.\nUse '${scriptname} --refresh' to force a reload.${COL_RESET}\n"
+fi
+
+if [[ -z $DBT_INSTALL_DIR ]]; then
+    export DBT_INSTALL_DIR=${DBT_AREA_ROOT}/install
+fi
+
+mkdir -p $DBT_INSTALL_DIR
+
+if [[ ! -d $DBT_INSTALL_DIR ]]; then
+    error "Unable to locate/create desired installation directory DBT_INSTALL_DIR=${DBT_INSTALL_DIR}, returning..."
+    return 2
 fi
 
 # Final step: update PATHs

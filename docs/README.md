@@ -62,7 +62,7 @@ cd ..
 ```
 Note the assumption above is that you aren't developing listrev; if you were, then you'd want to replace `-b dunedaq-v2.6.0` with `-b <branch you want to work on>`.
 
-We're about to build and install the `listrev` package. (&#x1F534; Note: if you are working with other packages, have a look at the [Working with more repos](#working-with-more-repos) subsection before running the following build command.) By default, the scripts will create a subdirectory of MyTopDir called `./install ` and install any packages you build off your repos there. If you wish to install them in another location, you'll want to set the environment variable `DBT_INSTALL_DIR` to the desired installation path after the `dbt-workarea-env` command described below, but before the `dbt-build.sh` command. 
+We're about to build and install the `listrev` package. (&#x1F534; Note: if you are working with other packages, have a look at the [Working with more repos](#working-with-more-repos) subsection before running the following build command.) By default, the scripts will create a subdirectory of MyTopDir called `./install ` and install any packages you build off your repos there. If you wish to install them in another location, you'll want to set the environment variable `DBT_INSTALL_DIR` to the desired installation path before calling the `dbt-workarea-env` command described below. 
 
 Now, do the following:
 ```sh
