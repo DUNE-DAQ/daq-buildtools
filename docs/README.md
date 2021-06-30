@@ -62,7 +62,7 @@ cd ..
 ```
 Note the assumption above is that you aren't developing listrev; if you were, then you'd want to replace `-b dunedaq-v2.6.0` with `-b <branch you want to work on>`.
 
-We're about to build and install the `listrev` package. (&#x1F534; Note: if you are working with other packages, have a look at the [Working with more repos](#working-with-more-repos) subsection before running the following build command.) By default, the scripts will create a subdirectory of MyTopDir called `./install ` and install any packages you build off your repos there. If you wish to install them in another location, you'll want to set the environment variable `DBT_INSTALL_DIR` to the desired installation path before calling the `dbt-workarea-env` command described below. 
+We're about to build and install the `listrev` package. (&#x1F534; Note: if you are working with other packages, have a look at the [Working with more repos](#working-with-more-repos) subsection before running the following build command.) By default, the scripts will create a subdirectory of MyTopDir called `./install ` and install any packages you build off your repos there. If you wish to install them in another location, you'll want to set the environment variable `DBT_INSTALL_DIR` to the desired installation path before calling the `dbt-workarea-env` command described below. You'll also want to remember to set the variable during subsequent logins to the work area if you don't go with the default. 
 
 Now, do the following:
 ```sh
@@ -89,6 +89,8 @@ Once you've added your repos and built them, you'll want to run `dbt-workarea-en
 ```
 dbt-build.sh --clean
 ```
+One case where you'd want to do this is if you changed the installation directory variable as described above. 
+
 And if, after the build, you want to run the unit tests, just add the `--unittest` option. Note that it can be used with or without `--clean`, so, e.g.:
 ```
 dbt-build.sh --clean --unittest  # Blow away the contents of ./build, run config+generate+build, and then run the unit tests
