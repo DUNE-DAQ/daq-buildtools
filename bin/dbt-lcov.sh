@@ -32,6 +32,22 @@ if [ $# -gt 0 ]; then
   exit 0
 fi
 
+lcov_found=`type lcov >/dev/null 2>&1 && echo 0 || echo 1`
+if [ $lcov_found -ne 0 ]; then
+  echo "lcov executable not found!"
+  echo
+  print_usage
+  exit 1
+fi
+
+gccver=`gcc -v 2>&1|grep version|awk '{print $3}'|cut -d. -f1`
+if [ $gccver -lt 9 ]; then
+  echo "GCC v9 or greater required for proper stats collection! (You have `gcc -v 2>&1|grep version|awk '{print $3}'`)"
+  echo
+  print_usage
+  exit 2
+fi
+
 dbt-build.sh --clean
 
 lcov -d . --zerocounters
