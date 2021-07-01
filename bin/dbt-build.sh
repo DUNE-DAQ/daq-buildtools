@@ -160,6 +160,14 @@ EOF
 )"
    fi
 
+   package_list=$( find $SRCDIR -mindepth 1 -maxdepth 1 -type d | xargs -i basename {} )  
+
+   for pkgname in $package_list ; do
+     if [[ -d $DBT_INSTALL_DIR/$pkgname ]]; then
+       rm -rf $DBT_INSTALL_DIR/$pkgname        
+     fi
+   done
+
 fi
 
 
