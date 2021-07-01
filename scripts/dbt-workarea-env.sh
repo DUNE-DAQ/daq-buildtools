@@ -163,9 +163,9 @@ for p in ${DBT_PACKAGES}; do
 
     add_many_paths PATH "${PKG_INSTALL_PATH}/bin" "${PKG_BLD_PATH}/test/apps" "${PKG_BLD_PATH}/test/scripts"
     add_many_paths PYTHONPATH "${PKG_INSTALL_PATH}/lib64/python/${p}"
-    add_many_paths LD_LIBRARY_PATH "${PKG_BLD_PATH}/src"  "${PKG_INSTALL_PATH}/lib64"  "${PKG_BLD_PATH}/test/plugins"
+    add_many_paths LD_LIBRARY_PATH "${PKG_INSTALL_PATH}/lib64"  "${PKG_BLD_PATH}/test/plugins"
     add_many_paths CET_PLUGIN_PATH "${PKG_INSTALL_PATH}/lib64" "${PKG_BLD_PATH}/test/plugins"
-    add_many_paths DUNEDAQ_SHARE_PATH  "${PKG_INSTALL_PATH}" "${PKG_BLD_PATH}/test/share"
+    add_many_paths DUNEDAQ_SHARE_PATH  "${PKG_INSTALL_PATH}/share" "${PKG_BLD_PATH}/test/share"
 done
 
 export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH
