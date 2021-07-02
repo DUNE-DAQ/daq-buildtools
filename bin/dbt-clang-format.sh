@@ -107,8 +107,9 @@ function format_files() {
 	echo "Processing ${orig_file}..."
 	tmpfile=/tmp/$( uuidgen )
 	clang-format -style=file $orig_file > $tmpfile
-	diff $tmpfile $orig_file
+	res=$( diff $tmpfile $orig_file )
 	diff_retval="$?"
+	echo -e " ${COL_RED} ${res} ${COL_RESET} " 
 	
 	if [[ "$diff_retval" == 0 ]]; then
 	    echo

@@ -38,20 +38,21 @@ def run(cmd, args, log):
     patterns = process.compile_pattern_list([
             '\r\n',
             '\r',
+            pexpect.TIMEOUT,
             pexpect.EOF,
-            pexpect.TIMEOUT
         ])
 
     while True:
-        index = process.expect (patterns)
+        index = process.expect (patterns, timeout=60)
 
-        # print(index)
+        # Newline
         if index == 0:
             text=process.before.decode('utf-8')
             print(text,flush=True)
             if log:
                 print(text, file=logfile)
 
+        # Carriage return
         elif index == 1:
             if not process.before:
                 continue
@@ -59,6 +60,10 @@ def run(cmd, args, log):
             print(text,flush=True)
             if log:
                 print(text, file=logfile)
+        # Timeout
+        elif index == 2:
+            print('<pytee: 60 sec elapsed without new input>')
+            continue
         else:
             break
     process.close()
