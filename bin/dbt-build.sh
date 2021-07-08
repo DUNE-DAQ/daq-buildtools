@@ -8,14 +8,13 @@ function print_usage() {
 Usage
 -----
 
-      "./$( basename $0 )" [-c/--clean] [-d/--debug] [-j<n>/--jobs <number parallel build jobs>] [--unittest(=<optional package name>)] [--lint(=<optional package name)>] [-i/--install] [-v/--cpp-verbose] [-h/--help]
+      "./$( basename $0 )" [-c/--clean] [-d/--debug] [-j<n>/--jobs <number parallel build jobs>] [--unittest(=<optional package name>)] [--lint(=<optional package name)>] [-v/--cpp-verbose] [-h/--help]
       
         -c/--clean means the contents of ./build are deleted and CMake's config+generate+build stages are run
         -d/--debug means you want to build your software with optimizations off and debugging info on
         -j/--jobs means you want to specify the number of jobs used by cmake to build the project
         --unittest means that unit test executables found in ./build/<optional package name>/unittest are run, or all unit tests in ./build/*/unittest are run if no package name is provided
         --lint means you check for deviations in ./sourcecode/<optional package name> from the DUNE style guide, https://github.com/DUNE-DAQ/styleguide/blob/develop/dune-daq-cppguide.md, or deviations in all local repos if no package name is provided
-        -i/--install means that you want the code from your package(s) installed in the directory which was pointed to by the DBT_INSTALL_DIR environment variable before the most recent clean build
         -v/--cpp-verbose means that you want verbose output from the compiler
         --cmake-msg-lvl setting "CMAKE_MESSAGE_LOG_LEVEL", default is "NOTICE", choices are ERROR|WARNING|NOTICE|STATUS|VERBOSE|DEBUG|TRACE.
         --cmake-trace enable cmake tracing
@@ -50,7 +49,6 @@ cmake_msg_level="NOTICE"
 cmake_trace=false
 cmake_graphviz=false
 declare -i n_jobs=0
-perform_install=false
 lint=false
 package_to_lint=
 
@@ -89,7 +87,7 @@ while true; do
             package_to_lint=$2
             shift 2;;
         (-i|--install)
-            perform_install=true
+	    error "Use of -i/--install is deprecated as installation always occurs now; run with \" --help\" to see valid options. Exiting..."
             shift;;
         (--cmake-msg-lvl)
             cmake_msg_level=$2
@@ -119,7 +117,6 @@ if false; then
   echo "- cmake_trace '$cmake_trace'"
   echo "- cmake_graphviz '$cmake_graphviz'"
   echo "- n_jobs '$n_jobs'"
-  echo "- perform_install '$perform_install'"
   echo "- lint '$lint'"
   echo "- package_to_lint '$package_to_lint'"
 
@@ -162,6 +159,14 @@ the build directory. Please contact John Freeman at jcfree@fnal.gov and notify h
 EOF
 )"
    fi
+
+   package_list=$( find $SRCDIR -mindepth 1 -maxdepth 1 -type d | xargs -i basename {} )  
+
+   for pkgname in $package_list ; do
+     if [[ -d $DBT_INSTALL_DIR/$pkgname ]]; then
+       rm -rf $DBT_INSTALL_DIR/$pkgname        
+     fi
+   done
 
 fi
 
@@ -335,23 +340,20 @@ else
   echo "CMake's build stage completed successfully"
 fi
 
-if $perform_install ; then
-  cd $BUILDDIR
 
-  # Will use $cmd if needed for error message
-  cmd="cmake --build . --target install -- $nprocs_argument"
-  ${cmd}
+cd $BUILDDIR
+
+# Will use $cmd if needed for error message
+cmd="cmake --build . --target install -- $nprocs_argument"
+${cmd}
  
-  if [[ "$?" == "0" ]]; then
-    echo 
-    echo "Installation complete."
-    echo "This implies your code successfully compiled before installation; you can either scroll up or run \"less -R $build_log\" to see build results"
-  else
-    error "Installation failed. There was a problem running \"$cmd\". Exiting.."
-  fi
- 
+if [[ "$?" == "0" ]]; then
+  echo 
+  echo "Installation complete."
+  echo "This implies your code successfully compiled before installation; you can either scroll up or run \"less -R $build_log\" to see build results"
+else
+  error "Installation failed. There was a problem running \"$cmd\". Exiting.."
 fi
-
 
 if $run_tests ; then
   COL_YELLOW="\e[33m"
