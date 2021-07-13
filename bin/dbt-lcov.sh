@@ -50,8 +50,8 @@ fi
 
 dbt-build.sh --clean
 
-lcov -d . --zerocounters
-lcov -c -i -d . -o dunedaq.base
+lcov -d $DBT_AREA_ROOT --zerocounters
+lcov -c -i -d $DBT_AREA_ROOT -o  $DBT_AREA_ROOT/dunedaq.base
 
 # RUN THE TESTS
 dbt-build.sh --unittest
@@ -64,7 +64,7 @@ dbt-build.sh --unittest
   echo
   echo 
 
-  package_list=$( find -L build -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles )
+  package_list=$( find -L  $DBT_AREA_ROOT/build -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles )
 
   for pkgname in $package_list ; do
 
@@ -101,8 +101,8 @@ dbt-build.sh --unittest
   done
      
 
-lcov -d . --capture --output-file dunedaq.info
-lcov -a dunedaq.base -a dunedaq.info --output-file dunedaq.total
-lcov --remove dunedaq.total '*/products/*' '/usr/include/*' '/cvmfs/*' "$DBT_AREA_ROOT/build/*" --output-file dunedaq.info.cleaned
-genhtml --demangle-cpp -o coverage dunedaq.info.cleaned
+lcov -d  $DBT_AREA_ROOT --capture --output-file  $DBT_AREA_ROOT/dunedaq.info
+lcov -a dunedaq.base -a  $DBT_AREA_ROOT/dunedaq.info --output-file  $DBT_AREA_ROOT/dunedaq.total
+lcov --remove  $DBT_AREA_ROOT/dunedaq.total '*/products/*' '/usr/include/*' '/cvmfs/*' "$DBT_AREA_ROOT/build/*" --output-file  $DBT_AREA_ROOT/dunedaq.info.cleaned
+genhtml --demangle-cpp -o  $DBT_AREA_ROOT/coverage  $DBT_AREA_ROOT/dunedaq.info.cleaned
 #genhtml -o coverage dunedaq.info
