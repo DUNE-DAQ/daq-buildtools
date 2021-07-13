@@ -255,4 +255,4 @@ As the names suggest, `dune_products_dirs` contains the list of UPS product pool
 
 ## Next Step
 
-* You can learn how to create a new package by taking a look at the [daq-cmake documentation](https://github.com/DUNE-DAQ/daq-cmake/blob/9728173674/docs/README.md)
+* You can learn how to create a new package by taking a look at the [daq-cmake documentation](https://github.com/DUNE-DAQ/daq-cmake/blob/a1d8582c3cd5752b/docs/README.md)
