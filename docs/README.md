@@ -12,8 +12,12 @@ To get set up, you'll need access to the ups product area `/cvmfs/dunedaq.opensc
 Simply do:
 
 ```bash
-source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt dunedaq-v2.6.0 # "dunedaq-v2.6.0" can be replaced with any other tags of daq-buildtools
+git clone http://github.com/DUNE-DAQ/daq-buildtools -b 6fcc0fd539
+source ./daq-buildtools/env.sh
+
+# Disregard these next two lines; you're reading instructions for the develop branch of daq-buildtools and not a frozen release
+#source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
+#setup_dbt dunedaq-v2.6.0 # "dunedaq-v2.6.0" can be replaced with any other tags of daq-buildtools
 ```
 
 Then you'll see something like:
