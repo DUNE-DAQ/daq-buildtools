@@ -12,7 +12,10 @@ To get set up, you'll need access to the ups product area `/cvmfs/dunedaq.opensc
 Simply do:
 
 ```bash
-git clone http://github.com/DUNE-DAQ/daq-buildtools -b 6fcc0fd539
+git clone http://github.com/DUNE-DAQ/daq-buildtools
+cd daq-buildtools
+git checkout 6fcc0fd539   # Head of develop on July 13th
+cd ..
 source ./daq-buildtools/env.sh
 
 # Disregard these next two lines; you're reading instructions for the develop branch of daq-buildtools and not a frozen release
