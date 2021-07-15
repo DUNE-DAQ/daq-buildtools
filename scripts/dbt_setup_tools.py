@@ -7,6 +7,7 @@ import sh
 import sys
 
 DBT_AREA_FILE='dbt-settings'
+UPS_PKGLIST="{}.sh".format(DBT_AREA_FILE)
 
 def error(errmsg):
     timenow = io.StringIO()
@@ -27,4 +28,12 @@ def find_work_area():
             currdir="/".join(currdir.split("/")[:-1])
         else:
             return ""
-        
+ 
+def list_releases(release_basepath):
+    releases = io.StringIO()
+    sh.find("-L", release_basepath, "-maxdepth", "2", "-name", UPS_PKGLIST, "-printf", "'%h '", _out=releases)
+
+    for reldir in releases.getvalue().split("'"):
+        reldir=reldir.strip()
+        if reldir != "":
+            print(reldir)
