@@ -36,4 +36,4 @@ def list_releases(release_basepath):
     for reldir in releases.getvalue().split("'"):
         reldir=reldir.strip()
         if reldir != "":
-            print(reldir)
+            print(" - {}".format(os.path.basename(reldir)))

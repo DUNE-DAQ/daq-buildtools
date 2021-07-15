@@ -46,33 +46,33 @@ PY_PKGLIST="pyvenv_requirements.txt"
 DAQ_BUILDORDER_PKGLIST="dbt-build-order.cmake"
 
 parser = argparse.ArgumentParser(usage=usage_blurb)
-parser.add_argument("-n", "--nightly", nargs='?', const="no value")
-parser.add_argument("-r", "--release-path", nargs='?', const="no value", action='store', dest='release_path')
+parser.add_argument("-n", "--nightly", action="store_true")
+parser.add_argument("-r", "--release-path", action='store', dest='release_path')
 parser.add_argument("-l", "--list", action="store_true", dest='list_arg')
 parser.add_argument("release_tag_arg", nargs='?', const="no value")
-parser.add_argument("workarea_dir", nargs='?', const="no value")
+parser.add_argument("workarea_dir", nargs='?')
 
 args = parser.parse_args()
 
-RELEASE_BASEPATH=""
-if args.release_path and args.release_path != "no value":
+if args.release_path:
     RELEASE_BASEPATH=args.release_path
 elif not args.nightly:
     RELEASE_BASEPATH=PROD_BASEPATH
-elif args.nightly != "no value":
-    RELEASE_BASEPATH="{}/{}".format(NIGHTLY_BASEPATH, args.nightly)
+else:
+    RELEASE_BASEPATH=NIGHTLY_BASEPATH
 
 if args.list_arg:
     list_releases(RELEASE_BASEPATH)
     sys.exit(0)
 
-# ...Figure out how to get -l -n to work...
+if not args.release_tag_arg or not args.workarea_dir:
+    error("Wrong number of arguments. Run '{} -h' for more information.".format(os.path.basename(__file__)))
 
 RELEASE=args.release_tag_arg
 
-stringio_obj = io.StringIO()
-sh.realpath("-m", "{}/{}".format(RELEASE_BASEPATH, RELEASE), _out=stringio_obj)
-RELEASE_PATH=stringio_obj.getvalue().strip()
+stringio_obj1 = io.StringIO()
+sh.realpath("-m", "{}/{}".format(RELEASE_BASEPATH, RELEASE), _out=stringio_obj1)
+RELEASE_PATH=stringio_obj1.getvalue().strip()
 
 TARGETDIR=args.workarea_dir
 
@@ -87,22 +87,30 @@ from a clean shell. Exiting...
 """
 )
     
-sh.date(_out=stringio_obj)
-starttime_d=stringio_obj.getvalue().strip()
+stringio_obj2 = io.StringIO()
+sh.date(_out=stringio_obj2)
+starttime_d=stringio_obj2.getvalue().strip()
 
-sh.date("+%s", _out=stringio_obj)
-starttime_s=stringio_obj.getvalue().strip()
+stringio_obj3 = io.StringIO()
+sh.date("+%s", _out=stringio_obj3)
+starttime_s=stringio_obj3.getvalue().strip()
 
 if not os.path.exists(TARGETDIR):
     os.mkdir(TARGETDIR)
 
 os.chdir(TARGETDIR)
+TARGETDIR=os.getcwd() # Get full path
 
 BUILDDIR="{}/build".format(TARGETDIR)
 LOGDIR="{}/log".format(TARGETDIR)
 SRCDIR="{}/sourcecode".format(TARGETDIR)
 
-# Deal with USER and HOSTNAME here
+if "USER" not in os.environ:
+    error("Environment variable \"USER\" should be set. Try \"export USER=$(whoami)\"")
+
+if "HOSTNAME" not in os.environ:
+    error("Environment variable \"HOSTNAME\" should be set. Try \"export HOSTNAME=$(hostname)\"")
+
 
 if EMPTY_DIR_CHECK and len(os.listdir(".")) > 0:
     error("""
@@ -127,8 +135,33 @@ for dbtfile in ["{}/configs/CMakeLists.txt".format(DBT_ROOT), \
                 "{}/configs/CMakeGraphVizOptions.cmake".format(DBT_ROOT), \
                 "{}/{}".format(RELEASE_PATH, DAQ_BUILDORDER_PKGLIST)
                 ]:
-    copy(dbtfile, "/tmp")
+    copy(dbtfile, SRCDIR)
 
 copy("{}/{}".format(RELEASE_PATH, UPS_PKGLIST), "{}/{}".format(TARGETDIR, DBT_AREA_FILE))
 
 os.symlink("{}/env.sh".format(DBT_ROOT), "{}/dbt-env.sh".format(TARGETDIR))
+
+print("Setting up the Python subsystem. Please be patient, this should take O(1 minute)...")
+
+cmd=sh.Command("{}/scripts/dbt-create-pyvenv.sh".format(DBT_ROOT))
+cmd("{}/{}".format(RELEASE_PATH, PY_PKGLIST))
+
+stringio_obj4 = io.StringIO()
+sh.date(_out=stringio_obj4)
+endtime_d=stringio_obj4.getvalue().strip()
+
+stringio_obj5 = io.StringIO()
+sh.date("+%s", _out=stringio_obj5)
+endtime_s=stringio_obj5.getvalue().strip()
+
+print("""
+Total time to run {}: {} seconds
+Start time: {}
+End time:   {}
+
+See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools/index.html for build instructions
+
+Script completed successfully
+
+""".format(__file__, int(endtime_s) - int(starttime_s), starttime_d, endtime_d))
+
