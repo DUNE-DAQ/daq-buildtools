@@ -98,7 +98,7 @@ TARGETDIR=${ARGS[1]}
 
 test -d ${RELEASE_PATH} || error  "Release path '${RELEASE_PATH}' does not exist. Exiting..."
 
-if [[ -n ${DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED:-} ]]; then
+if [[ -n ${DBT_WORKAREA_ENV_SCRIPT_SOURCED:-} ]]; then
     error "$( cat<<EOF
 
 It appears you're trying to run this script from an environment
