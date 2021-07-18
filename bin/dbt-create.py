@@ -11,7 +11,7 @@ from time import sleep
 DBT_ROOT=os.environ["DBT_ROOT"]
 sys.path.append('{}/scripts'.format(DBT_ROOT))
 
-from dbt_setup_tools import DBT_AREA_FILE, error, list_releases
+from dbt_setup_tools import DBT_AREA_FILE, error, list_releases, get_time
 
 usage_blurb="""
 
@@ -87,13 +87,8 @@ from a clean shell. Exiting...
 """
 )
     
-stringio_obj2 = io.StringIO()
-sh.date(_out=stringio_obj2)
-starttime_d=stringio_obj2.getvalue().strip()
-
-stringio_obj3 = io.StringIO()
-sh.date("+%s", _out=stringio_obj3)
-starttime_s=stringio_obj3.getvalue().strip()
+starttime_d=get_time("as_date")
+starttime_s=get_time("as_seconds_since_epoch")
 
 if not os.path.exists(TARGETDIR):
     os.mkdir(TARGETDIR)
@@ -146,13 +141,8 @@ print("Setting up the Python subsystem. Please be patient, this should take O(1 
 cmd=sh.Command("{}/scripts/dbt-create-pyvenv.sh".format(DBT_ROOT))
 cmd("{}/{}".format(RELEASE_PATH, PY_PKGLIST))
 
-stringio_obj4 = io.StringIO()
-sh.date(_out=stringio_obj4)
-endtime_d=stringio_obj4.getvalue().strip()
-
-stringio_obj5 = io.StringIO()
-sh.date("+%s", _out=stringio_obj5)
-endtime_s=stringio_obj5.getvalue().strip()
+endtime_d=get_time("as_date")
+endtime_s=get_time("as_seconds_since_epoch")
 
 print("""
 Total time to run {}: {} seconds
