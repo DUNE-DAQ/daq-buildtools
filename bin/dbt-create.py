@@ -12,6 +12,7 @@ DBT_ROOT=os.environ["DBT_ROOT"]
 sys.path.append('{}/scripts'.format(DBT_ROOT))
 
 from dbt_setup_tools import DBT_AREA_FILE, error, list_releases, get_time
+import pytee
 
 usage_blurb="""
 
@@ -46,11 +47,11 @@ PY_PKGLIST="pyvenv_requirements.txt"
 DAQ_BUILDORDER_PKGLIST="dbt-build-order.cmake"
 
 parser = argparse.ArgumentParser(usage=usage_blurb)
-parser.add_argument("-n", "--nightly", action="store_true")
-parser.add_argument("-r", "--release-path", action='store', dest='release_path')
-parser.add_argument("-l", "--list", action="store_true", dest='list_arg')
-parser.add_argument("release_tag_arg", nargs='?', const="no value")
-parser.add_argument("workarea_dir", nargs='?')
+parser.add_argument("-n", "--nightly", action="store_true", help=argparse.SUPPRESS)
+parser.add_argument("-r", "--release-path", action='store', dest='release_path', help=argparse.SUPPRESS)
+parser.add_argument("-l", "--list", action="store_true", dest='list_arg', help=argparse.SUPPRESS)
+parser.add_argument("release_tag_arg", nargs='?', const="no value", help=argparse.SUPPRESS)
+parser.add_argument("workarea_dir", nargs='?', help=argparse.SUPPRESS)
 
 args = parser.parse_args()
 
@@ -138,8 +139,7 @@ os.symlink("{}/env.sh".format(DBT_ROOT), "{}/dbt-env.sh".format(TARGETDIR))
 
 print("Setting up the Python subsystem. Please be patient, this should take O(1 minute)...")
 
-cmd=sh.Command("{}/scripts/dbt-create-pyvenv.sh".format(DBT_ROOT))
-cmd("{}/{}".format(RELEASE_PATH, PY_PKGLIST))
+pytee.run("{}/scripts/dbt-create-pyvenv.sh".format(DBT_ROOT), ["{}/{}".format(RELEASE_PATH, PY_PKGLIST)], None)
 
 endtime_d=get_time("as_date")
 endtime_s=get_time("as_seconds_since_epoch")

@@ -19,7 +19,7 @@ def run(cmd, args, log):
 
     logfile = None
     if log:
-        logfile = open(log,'w')
+        logfile = open(log,'a')
 
 
     cols, rows = shutil.get_terminal_size(fallback=(400, 100))

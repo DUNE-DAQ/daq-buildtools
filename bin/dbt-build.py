@@ -50,16 +50,16 @@ SRCDIR="{}/sourcecode".format(BASEDIR)
 
 
 parser = argparse.ArgumentParser(usage=usage_blurb)
-parser.add_argument("-c", "--clean", action="store_true", dest="clean_build")
-parser.add_argument("-d", "--debug", action="store_true", dest='debug_build')
-parser.add_argument("-v", "--cpp-verbose", action="store_true", dest='cpp_verbose')
-parser.add_argument("-j", "--jobs", action='store', type=int, dest='n_jobs')
-parser.add_argument("--unittest", nargs="?", const="all")
-parser.add_argument("--lint", nargs="?", const="all")
-parser.add_argument("-i", "--install", action="store_true")
-parser.add_argument("--cmake-msg-lvl", type=int, dest="cmake_msg_lvl")
-parser.add_argument("--cmake-trace", action="store_true", dest="cmake_trace")
-parser.add_argument("--cmake-graphviz", action="store_true", dest="cmake_graphviz")
+parser.add_argument("-c", "--clean", action="store_true", dest="clean_build", help=argparse.SUPPRESS)
+parser.add_argument("-d", "--debug", action="store_true", dest='debug_build', help=argparse.SUPPRESS)
+parser.add_argument("-v", "--cpp-verbose", action="store_true", dest='cpp_verbose', help=argparse.SUPPRESS)
+parser.add_argument("-j", "--jobs", action='store', type=int, dest='n_jobs', help=argparse.SUPPRESS)
+parser.add_argument("--unittest", nargs="?", const="all", help=argparse.SUPPRESS)
+parser.add_argument("--lint", nargs="?", const="all", help=argparse.SUPPRESS)
+parser.add_argument("-i", "--install", action="store_true", help=argparse.SUPPRESS)
+parser.add_argument("--cmake-msg-lvl", type=int, dest="cmake_msg_lvl", help=argparse.SUPPRESS)
+parser.add_argument("--cmake-trace", action="store_true", dest="cmake_trace", help=argparse.SUPPRESS)
+parser.add_argument("--cmake-graphviz", action="store_true", dest="cmake_graphviz", help=argparse.SUPPRESS)
 
 args = parser.parse_args()
 
@@ -185,7 +185,7 @@ else:
     print("The config+generate stage was skipped as CMakeCache.txt was already found in {}".format(BUILDDIR))
 
 if args.cmake_graphviz:
-    output = sh.cmake("--graphviz=graphviz/targets.dot .")
+    output = sh.cmake(["--graphviz=graphviz/targets.dot", "."])
     sys.exit(output.exit_code)
 
 if args.n_jobs:
@@ -248,9 +248,9 @@ else:
 
 os.chdir(BUILDDIR)
 fullcmd="cmake --build . --target install -- {}".format(nprocs_argument)
-output = sh.cmake(fullcmd.split()[1:])
+retval = pytee.run(fullcmd.split()[0], fullcmd.split()[1:], None)
 
-if output.exit_code == 0:
+if retval == 0:
     print("""
 Installation complete.
 This implies your code successfully compiled before installation; you can
