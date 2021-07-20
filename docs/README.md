@@ -14,7 +14,7 @@ Simply do:
 ```bash
 git clone http://github.com/DUNE-DAQ/daq-buildtools
 cd daq-buildtools
-git checkout 6e0abcc84b56010 # Head of develop on July 16th, includes fix to PYTHONPATH
+git checkout b3131531a7cd94 # Includes fix to <pkg>_SHARE environment variables
 cd ..
 source ./daq-buildtools/env.sh
 
