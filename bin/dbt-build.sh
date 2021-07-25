@@ -436,6 +436,10 @@ if $lint; then
     pkgname=$( echo $pkgdir | sed -r 's!.*/(.*)!\1!' )
     ./styleguide/cpplint/dune-cpp-style-check.sh build sourcecode/$pkgname |& tee -a $lint_log
   done
+
+  echo
+  echo "For more on our coding guidelines, see https://dune-daq-sw.readthedocs.io/en/latest/packages/styleguide/"
+  echo
 fi
 
 
