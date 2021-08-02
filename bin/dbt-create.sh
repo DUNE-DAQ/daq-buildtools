@@ -96,7 +96,7 @@ RELEASE=${ARGS[0]}
 RELEASE_PATH=$(realpath -m "${RELEASE_BASEPATH}/${RELEASE}")
 TARGETDIR=${ARGS[1]}
 
-test -d ${RELEASE_PATH} || error  "Release path '${RELEASE_PATH}' does not exist. Exiting..."
+test -d ${RELEASE_PATH} || error  "Release path '${RELEASE_PATH}' does not exist. Note that you need to pass \"-n\" for a nightly build. Exiting..."
 
 if [[ -n ${DBT_SETUP_BUILD_ENVIRONMENT_SCRIPT_SOURCED:-} ]]; then
     error "$( cat<<EOF
