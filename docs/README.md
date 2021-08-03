@@ -12,8 +12,15 @@ To get set up, you'll need access to the ups product area `/cvmfs/dunedaq.opensc
 Simply do:
 
 ```bash
-source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt dunedaq-v2.8.0 # "dunedaq-v2.8.0" can be replaced with any other frozen releases of daq-buildtools
+git clone http://github.com/DUNE-DAQ/daq-buildtools
+cd daq-buildtools
+git checkout 7d619fb1c39 # Head of develop as of Aug-3-2021
+cd ..
+source ./daq-buildtools/env.sh
+
+# Disregard these next two lines; you're reading instructions for the develop branch of daq-buildtools and not a frozen release
+#source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
+#setup_dbt dunedaq-v2.6.0 # "dunedaq-v2.6.0" can be replaced with any other tags of daq-buildtools
 ```
 
 Then you'll see something like:
@@ -31,7 +38,7 @@ Each time that you want to work with a DUNE DAQ work area in a fresh Linux shell
 
 Find a directory in which you want your work area to be a subdirectory (home directories are a popular choice) and `cd` into that directory. Then think of a good name for the work area (give it any name, but we'll refer to it as "MyTopDir" on this wiki). Run:
 ```sh
-dbt-create.sh <release> <name of work area subdirectory> # dunedaq-v2.8.0 is the most recent frozen release
+dbt-create.sh <release> <name of work area subdirectory> # dunedaq-v2.6.0 is the most recent frozen release as of May-28-2020
 cd <name of work area subdirectory>
 ```
 The second step's important: remember to `cd` into the subdirectory you just created after `dbt-create.sh` finishes running. 
@@ -54,13 +61,17 @@ MyTopDir
 
 ### The basics
 
-For the purposes of instruction, let's build the `listrev` package. Downloading it is simple:
+For the purposes of instruction, let's build the `listrev` package. Since these are instructions for the develop branch of daq-buildtoools as opposed to a frozen release, we'll want the latest-greatest daq-cmake as well. Downloading them is simple:
 ```
 cd sourcecode
-git clone https://github.com/DUNE-DAQ/listrev.git -b dunedaq-v2.8.0 
+git clone https://github.com/DUNE-DAQ/listrev.git -b dunedaq-v2.6.0 
+git clone https://github.com/DUNE-DAQ/daq-cmake.git 
+cd daq-cmake
+git checkout 48ffb173d2
+cd ..
 cd ..
 ```
-Note the assumption above is that you aren't developing listrev; if you were, then you'd want to replace `-b dunedaq-v2.8.0` with `-b <branch you want to work on>`.
+Note the assumption above is that you aren't developing listrev; if you were, then you'd want to replace `-b dunedaq-v2.6.0` with `-b <branch you want to work on>`.
 
 We're about to build and install the `listrev` package. (&#x1F534; Note: if you are working with other packages, have a look at the [Working with more repos](#working-with-more-repos) subsection before running the following build command.) By default, the scripts will create a subdirectory of MyTopDir called `./install ` and install any packages you build off your repos there. If you wish to install them in another location, you'll want to set the environment variable `DBT_INSTALL_DIR` to the desired installation path before calling the `dbt-workarea-env` command described below. You'll also want to remember to set the variable during subsequent logins to the work area if you don't go with the default. 
 
@@ -71,12 +82,12 @@ dbt-build.sh
 ```
 ...and this will build `listrev` in the local `./build` subdirectory and then install it as a package either in the local `./install` subdirectory or in whatever you pointed `DBT_INSTALL_DIR` to. 
 
-Since the `dunedaq-v2.6.0` release, `dbt-create.sh` has supported not only frozen releases but the use of nightly built releases as well. Add `-n` to the `dbt-create.sh` command above to use nightly releases, e.g. ` dbt-create.sh -n N21-07-30 <your work area subdirectory>`. Pass `-l` to `dbt-create.sh` in order to list all available frozen releases, and `-l -n` to list all available nightly releases.
+Since the `dunedaq-v2.6.0` release, `dbt-create.sh` has supported not only frozen releases but the use of nightly built releases as well. Add `-n` to the `dbt-create.sh` command above to use nightly releases, e.g. ` dbt-create.sh -n N21-05-13 <your work area subdirectory>`. Pass `-l` to `dbt-create.sh` in order to list all available frozen releases, and `-l -n` to list all available nightly releases.
 
 
 ### Working with more repos
 
-To work with more repos, add them to the `./sourcecode` subdirectory as we did with listrev. Be aware, though: if you're developing a new repo which itself depends on another new repo, daq-buildtools may not already know about this dependency. "New" in this context means "not listed in `/cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.8.0/dbt-build-order.cmake`". If this is the case, you have one of two options:
+To work with more repos, add them to the `./sourcecode` subdirectory as we did with listrev. Be aware, though: if you're developing a new repo which itself depends on another new repo, daq-buildtools may not already know about this dependency. "New" in this context means "not listed in `/cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.6.0/dbt-build-order.cmake`". If this is the case, you have one of two options:
 
 * (Recommended) Add the names of your new packages to the `build_order` list found in `./sourcecode/dbt-build-order.cmake`, placing them in the list in the relative order in which you want them to be built. 
 * First clone and build your new base repo, and THEN clone and build your other new repo which depends on your new base repo. 
@@ -125,7 +136,7 @@ Finally, note that both the output of your builds and your unit tests are logged
 
 ## Running
 
-In order to access the applications, libraries and plugins built and installed into the `$DBT_INSTALL_DIR` area during the above procedure, the system needs to be instructed on where to look for them. Log into a new shell, `cd` into your work area, set up the daq-buildtools environment as described at the top of this document, then do the following:
+In order to access the applications, libraries and plugins built and installed into the `$DBT_INSTALL_DIR` area during the above procedure, the system needs to be instructed on where to look for them. Log into a new shell and set up the daq-buildtools environment as described at the top of this document, then do the following:
 ```
 export DBT_INSTALL_DIR=<your installation directory> # Only needed if you didn't use the default
 dbt-workarea-env
@@ -154,7 +165,7 @@ What you want to do first is type `init`. Next, type `conf` to execute the confi
 ```
 To stop this, type the `stop` command. Ctrl-c will exit you out. 
 
-For a more realistic use case where you can send commands to the application from other services and applications, the [restcmd](https://dune-daq-sw.readthedocs.io/en/latest/packages/restcmd/) package provides a command handling implementation through HTTP. To use this plugin, we call `daq_application` in the following manner:
+For a more realistic use-case where you can send commands to the application from other services and applications, the [restcmd](https://dune-daq-sw.readthedocs.io/en/latest/packages/restcmd/) package provides a command handling implementation through HTTP. To use this plugin, we call `daq_application` in the following manner:
 ```sh
 daq_application -n <some name for the application instance> --commandFacility rest://localhost:12345
 ```
@@ -248,4 +259,4 @@ As the names suggest, `dune_products_dirs` contains the list of UPS product pool
 
 ## Next Step
 
-* You can learn how to create a new package by taking a look at the [daq-cmake documentation](https://dune-daq-sw.readthedocs.io/en/v2.8.0/packages/daq-cmake/)
+* You can learn how to create a new package by taking a look at the [daq-cmake documentation](https://github.com/DUNE-DAQ/daq-cmake/blob/a1d8582c3cd5752b/docs/README.md)
