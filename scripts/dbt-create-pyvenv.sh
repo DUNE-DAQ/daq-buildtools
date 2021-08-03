@@ -12,7 +12,7 @@ if [[ -z ${DBT_AREA_ROOT} ]]; then
 fi
 
 if [[ $# -ne 1 ]]; then
-    error_preface "Wrong mumber of arguments"
+    error_preface "Wrong number of arguments"
     cat << EOU
 Usage: $(basename $0) <path to requirements.txt>:
 

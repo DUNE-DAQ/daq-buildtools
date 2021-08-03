@@ -9,7 +9,8 @@ COL_RED="\e[31m"
 COL_GREEN="\e[32m"
 COL_YELLOW="\e[33m"
 COL_BLUE="\e[34m"
-COL_NULL="\e[0m"
+COL_CYAN="\e[36m"
+COL_RESET="\e[0m"
 
 source ${HERE}/dbt-setup-constants.sh
 
@@ -73,7 +74,7 @@ function find_work_area() {
 
   SEARCH_PATH=${PWD}
   WA_PATH=""
-  for(( i=${#SLASHES}; i>0; i--)); do
+  for(( i=${#SLASHES}-1; i>0; i--)); do
     WA_SEARCH_PATH="${SEARCH_PATH}/${DBT_AREA_FILE}"
     # echo "Looking for $WA_SEARCH_PATH"
     if [ -f "${WA_SEARCH_PATH}" ]; then
@@ -83,6 +84,9 @@ function find_work_area() {
     SEARCH_PATH=$(dirname ${SEARCH_PATH})
   done
 
+  if [[ -z ${WA_PATH} ]]; then
+    return
+  fi
   echo $(dirname ${WA_PATH})
 }
 #------------------------------------------------------------------------------
@@ -91,8 +95,10 @@ function find_work_area() {
 #------------------------------------------------------------------------------
 function list_releases() {
     # How? RELEASE_BASEPATH subdirs matching some condition? i.e. dunedaq_area.sh file in it?
-    FOUND_RELEASES=($(find ${RELEASE_BASEPATH} -maxdepth 2 -name ${UPS_PKGLIST} -printf '%h '))
-    for rel in "${FOUND_RELEASES[@]}"; do
+    FOUND_RELEASES=($(find -L ${RELEASE_BASEPATH} -maxdepth 2 -name ${UPS_PKGLIST} -printf '%h '))
+    readarray -t SORTED_RELEASES < <(printf '%s\n' "${FOUND_RELEASES[@]}" | sort)
+
+    for rel in "${SORTED_RELEASES[@]}"; do
         echo " - $(basename ${rel})"
     done 
 }
@@ -110,20 +116,31 @@ function add_path() {
   PATH_VAL=${!1}
   PATH_ADD=$2
 
+  ACTION="${COL_BLUE}Added"
+  
   # Add the new path only if it is not already there
-  if [[ ":$PATH_VAL:" != *":$PATH_ADD:"* ]]; then
-    # Note
-    # ${PARAMETER:+WORD}
-    #   This form expands to nothing if the parameter is unset or empty. If it
-    #   is set, it does not expand to the parameter's value, but to some text
-    #   you can specify
-    PATH_VAL="$PATH_ADD${PATH_VAL:+":$PATH_VAL"}"
+  if [[ ":$PATH_VAL:" == *":$PATH_ADD:"* ]]; then
 
-    echo -e "${COL_BLUE}Added ${PATH_ADD} to ${PATH_NAME}${COL_NULL}"
+    ACTION="${COL_CYAN}Updated"
 
-    # use eval to reset the target
-    eval "${PATH_NAME}=${PATH_VAL}"
+    # Remove PATH_ADD from PATH_VAL, such that it can be added later.
+    PATH_TMP=:$PATH_VAL:
+    PATH_TMP=${PATH_TMP//:${PATH_ADD}:/:}
+    PATH_TMP=${PATH_TMP#:}; PATH_TMP=${PATH_TMP%:}
+    PATH_VAL=${PATH_TMP}
   fi
+
+  # Note
+  # ${PARAMETER:+WORD}
+  #   This form expands to nothing if the parameter is unset or empty. If it
+  #   is set, it does not expand to the parameter's value, but to some text
+  #   you can specify
+  PATH_VAL="$PATH_ADD${PATH_VAL:+":$PATH_VAL"}"
+
+  echo -e "${ACTION} ${PATH_ADD} -> ${PATH_NAME}${COL_RESET}"
+
+  # use eval to reset the target
+  eval "${PATH_NAME}=${PATH_VAL}"
 }
 #------------------------------------------------------------------------------
 
@@ -137,19 +154,45 @@ function add_many_paths() {
 }
 #------------------------------------------------------------------------------
 
+
+#------------------------------------------------------------------------------
+function add_many_paths_if_exist() {
+  for d in "${@:2}"
+  do
+    if [ -d "$d" ]; then
+      add_path $1 $d
+    fi
+  done
+}
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+function backtrace () {
+    local deptn=${#FUNCNAME[@]}
+
+    for ((i=1; i<$deptn; i++)); do
+        local func="${FUNCNAME[$i]}"
+        local line="${BASH_LINENO[$((i-1))]}"
+        local src="${BASH_SOURCE[$((i))]}"
+        printf '%*s' $i '' # indent
+        echo "at: $func(), $src, line $line"
+    done
+}
+#------------------------------------------------------------------------------
+
 #------------------------------------------------------------------------------
 function error_preface() {
 
   for dbt_file in "${BASH_SOURCE[@]}"; do
     if ! [[ "${BASH_SOURCE[0]}" =~ "$dbt_file" ]]; then
 	    break
-	   fi
+    fi
   done
 
-  dbt_file=$( basename $dbt_file )
+  dbt_file=$( basename ${BASH_SOURCE[2]} )
 
   timenow="date \"+%D %T\""
-  echo -n "ERROR: [`eval $timenow`] [${dbt_file}]:" >&2
+  echo -n "ERROR: [`eval $timenow`] [${dbt_file}:${BASH_LINENO[1]}]:" >&2
 }
 #------------------------------------------------------------------------------
 
@@ -157,9 +200,9 @@ function error_preface() {
 function error() {
 
     error_preface
-    echo -e " ${COL_RED} ${1} ${COL_NULL} " >&2
+    echo -e " ${COL_RED} ${1} ${COL_RESET} " >&2
 
-    if [[ -x ${BASH_SOURCE[-1]} ]]; then
+    if [[ "${FUNCNAME[-1]}" == "main" ]]; then
         exit 100
     fi
 }
