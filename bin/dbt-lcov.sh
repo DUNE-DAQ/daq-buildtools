@@ -66,11 +66,11 @@ dbt-build.sh --unittest || "dbt-build.sh --unittest returned nonzero; exiting...
   echo
   echo 
 
-  package_list=$( find -L  $DBT_AREA_ROOT/build -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles )
+  package_list=$( find -L  $DBT_AREA_ROOT/install -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles )
 
   for pkgname in $package_list ; do
 
-    testdirs=$( find -L $pkgname/test -type d \( -name "apps" -o -name "scripts" \) -not -regex ".*CMakeFiles.*" )
+    testdirs=$( find -L $pkgname/test -type d -name "bin" -not -regex ".*CMakeFiles.*" )
 
     if [[ -z $testdirs ]]; then
       echo
