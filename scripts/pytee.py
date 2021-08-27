@@ -66,5 +66,13 @@ def run(cmd, args, log):
     #raise SystemExit(process.exitstatus)
     return process.exitstatus
 
+
+@click.command('run')
+@click.argument('cmd')
+@click.argument('args', nargs=-1)
+@click.option('-l', '--log', type=click.Path(), help='Log file.')
+def run_cli(cmd, args, log):
+    run(cmd, args, log)
+    
 if __name__ == '__main__':
-    run()
+    run_cli()
