@@ -159,15 +159,6 @@ the build directory. Please contact John Freeman at jcfree@fnal.gov and notify h
 EOF
 )"
    fi
-
-   package_list=$( find $SRCDIR -mindepth 1 -maxdepth 1 -type d | xargs -i basename {} )  
-
-   for pkgname in $package_list ; do
-     if [[ -d $DBT_INSTALL_DIR/$pkgname ]]; then
-       rm -rf $DBT_INSTALL_DIR/$pkgname        
-     fi
-   done
-
 fi
 
 
@@ -342,6 +333,13 @@ fi
 
 
 cd $BUILDDIR
+
+if [[ -n $DBT_INSTALL_DIR && ! $DBT_INSTALL_DIR =~ ^/?$ ]]; then
+   rm -rf $DBT_INSTALL_DIR/*
+else
+   echo "JCF, Aug-27-2021: \$DBT_INSTALL_DIR is not properly defined, which would result in the deletion of the entire contents of this system if it weren't for this check!!!" >&2
+   exit 100
+fi
 
 # Will use $cmd if needed for error message
 cmd="cmake --build . --target install -- $nprocs_argument"
