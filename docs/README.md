@@ -12,8 +12,12 @@ To get set up, you'll need access to the ups product area `/cvmfs/dunedaq.opensc
 Simply do:
 
 ```bash
-source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt dunedaq-v2.6.0 # "dunedaq-v2.6.0" can be replaced with any other tags of daq-buildtools
+git clone http://github.com/DUNE-DAQ/daq-buildtools # optionally, [-b <tag or branch>], default will be develop branch
+source ./daq-buildtools/env.sh
+
+# Disregard these next two lines; you're reading instructions for the develop branch of daq-buildtools and not a frozen release
+#source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
+#setup_dbt dunedaq-v2.6.0 # "dunedaq-v2.6.0" can be replaced with any other tags of daq-buildtools
 ```
 
 Then you'll see something like:
@@ -54,10 +58,14 @@ MyTopDir
 
 ### The basics
 
-For the purposes of instruction, let's build the `listrev` package. Downloading it is simple:
+For the purposes of instruction, let's build the `listrev` package. Since these are instructions for the develop branch of daq-buildtoools as opposed to a frozen release, we'll want the latest-greatest daq-cmake as well. Downloading them is simple:
 ```
 cd sourcecode
 git clone https://github.com/DUNE-DAQ/listrev.git -b dunedaq-v2.6.0 
+git clone https://github.com/DUNE-DAQ/daq-cmake.git 
+cd daq-cmake
+git checkout 48ffb173d2
+cd ..
 cd ..
 ```
 Note the assumption above is that you aren't developing listrev; if you were, then you'd want to replace `-b dunedaq-v2.6.0` with `-b <branch you want to work on>`.
@@ -125,7 +133,7 @@ Finally, note that both the output of your builds and your unit tests are logged
 
 ## Running
 
-In order to access the applications, libraries and plugins built and installed into the `$DBT_INSTALL_DIR` area during the above procedure, the system needs to be instructed on where to look for them. If you've logged into a new shell and set up the daq-buildtools environment, then do the following:
+In order to access the applications, libraries and plugins built and installed into the `$DBT_INSTALL_DIR` area during the above procedure, the system needs to be instructed on where to look for them. Log into a new shell and set up the daq-buildtools environment as described at the top of this document, then do the following:
 ```
 export DBT_INSTALL_DIR=<your installation directory> # Only needed if you didn't use the default
 dbt-workarea-env
@@ -158,7 +166,7 @@ For a more realistic use-case where you can send commands to the application fro
 ```sh
 daq_application -n <some name for the application instance> --commandFacility rest://localhost:12345
 ```
-To control it, let's open up a second terminal, set up the daq-buildtools environment as described at the top of this document, and start sending daq_application commands:
+To control it, let's open up a second terminal, set up the daq-buildtools environment, and start sending daq_application commands:
 ```sh
 cd MyTopDir
 dbt-workarea-env
@@ -193,15 +201,15 @@ dune_products_dirs=(
 dune_systems=(
     "gcc               v8_2_0"
     "python            v3_8_3b"
-    )
+)
 
-    dune_devtools=(
+dune_devtools=(
     "cmake             v3_17_2"
     "gdb               v9_2"
     "ninja             v1_10_0"
-    )
+)
 
-    dune_externals=(
+dune_externals=(
     "cetlib            v3_11_01     e19:prof"
     "TRACE             v3_16_02"
     "folly             v2020_05_25a e19:prof"
@@ -214,9 +222,9 @@ dune_systems=(
     "felix             v1_1_1       e19:prof"
     "pybind11          v2_6_2       e19:prof"
     "uhal              v2_8_0       e19:prof"
-    )
+)
 
-    dune_daqpackages=(
+dune_daqpackages=(
     "daq_cmake         v1_3_3       e19:prof"
     "ers               v1_1_2       e19:prof"
     "logging           v1_0_1b      e19:prof"
@@ -240,7 +248,7 @@ dune_systems=(
     "influxopmon       v1_0_1       e19:prof"
     "nwqueueadapters   v1_2_0       e19:prof"
     "package_declared_by_user v1_2_3 e19:prof"
-    )
+)
 ```
 As the names suggest, `dune_products_dirs` contains the list of UPS product pools and `dune_daqpackages` contains a list of UPS products sourced when you first run `dbt-workarea-env` (described below). If you've already run `dbt-workarea-env` before editing the `dbt-settings` file, you'll need to run `dbt-workarea-env --refresh` to force a reload.
 
@@ -248,4 +256,4 @@ As the names suggest, `dune_products_dirs` contains the list of UPS product pool
 
 ## Next Step
 
-* You can learn how to create a new package by taking a look at the [daq-cmake documentation](https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-cmake/)
+* You can learn how to create a new package by taking a look at the [daq-cmake documentation](https://github.com/DUNE-DAQ/daq-cmake/blob/a1d8582c3cd5752b/docs/README.md)

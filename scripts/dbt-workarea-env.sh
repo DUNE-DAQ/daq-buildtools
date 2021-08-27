@@ -159,10 +159,10 @@ for p in ${DBT_PACKAGES}; do
     PKG_INSTALL_PATH=${DBT_INSTALL_DIR}/${p}
     # Share
     pkg_share="${PNAME//-/_}_SHARE"
-    declare -xg "${pkg_share}"="${BUILD_DIR}/${p}"
+    declare -xg "${pkg_share}"="${DBT_INSTALL_DIR}/${p}/share"
 
     add_many_paths PATH "${PKG_INSTALL_PATH}/bin" "${PKG_INSTALL_PATH}/test/bin"
-    add_many_paths PYTHONPATH "${PKG_INSTALL_PATH}/lib64/python/${p}"
+    add_many_paths PYTHONPATH "${PKG_INSTALL_PATH}/lib64/python"
     add_many_paths LD_LIBRARY_PATH "${PKG_INSTALL_PATH}/lib64"  "${PKG_INSTALL_PATH}/test/lib64"
     add_many_paths CET_PLUGIN_PATH "${PKG_INSTALL_PATH}/lib64" "${PKG_INSTALL_PATH}/test/lib64"
     add_many_paths DUNEDAQ_SHARE_PATH  "${PKG_INSTALL_PATH}/share" 
