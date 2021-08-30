@@ -16,12 +16,12 @@ sys.path.append('{}/scripts'.format(DBT_ROOT))
 from dbt_setup_tools import error, find_work_area, get_time, get_num_processors
 import pytee
 
-usage_blurb="""
+usage_blurb=f"""
 
 Usage
 -----
 
-      "{}" [-c/--clean] [-d/--debug] [-j<n>/--jobs <number parallel build jobs>] [--unittest (<optional package name>)] [--lint (<optional package name)>] [-v/--cpp-verbose] [-h/--help]
+      {os.path.basename(__file__)} [-c/--clean] [-d/--debug] [-j<n>/--jobs <number parallel build jobs>] [--unittest (<optional package name>)] [--lint (<optional package name)>] [-v/--cpp-verbose] [-h/--help]
       
         -c/--clean means the contents of ./build are deleted and CMake's config+generate+build stages are run
         -d/--debug means you want to build your software with optimizations off and debugging info on
@@ -38,15 +38,15 @@ Usage
     build, unless build/CMakeCache.txt is missing    
 
 
-""".format(os.path.basename(__file__))
+"""
 
 BASEDIR=find_work_area()
 if not os.path.exists(BASEDIR):
     error("daq-buildtools work area directory not found. Exiting...")
 
-BUILDDIR="{}/build".format(BASEDIR)
-LOGDIR="{}/log".format(BASEDIR)
-SRCDIR="{}/sourcecode".format(BASEDIR)
+BUILDDIR=f"{BASEDIR}/build"
+LOGDIR=f"{BASEDIR}/log"
+SRCDIR=f"{BASEDIR}/sourcecode"
 
 
 parser = argparse.ArgumentParser(usage=usage_blurb)
@@ -84,7 +84,7 @@ running this script. Exiting...
     """)
 
 if not os.path.exists(BUILDDIR):
-    error("Expected build directory \"{}\" not found. Exiting...".format(BUILDDIR))
+    error(f"Expected build directory \"{BUILDDIR}\" not found. Exiting...")
 os.chdir(BUILDDIR)
 
 if args.clean_build:
@@ -103,18 +103,10 @@ If you wish to abort, you have 5 seconds to hit Ctrl-c"
             elif os.path.isdir(file_path):
                 rmtree(file_path)
     else:
-        error("""
-You requested a clean build, but this script thinks that {} isn't 
+        error(f"""
+You requested a clean build, but this script thinks that {os.getcwd()} isn't 
 the build directory. Please contact John Freeman at jcfree@fnal.gov and notify him of this message.
-        """.format(os.getcwd()))
-
-    stringio_obj1 = io.StringIO()
-    sh.xargs(sh.find(SRCDIR, "-mindepth", "1", "-maxdepth", "1", "-type", "d"), "-i", "basename", "{}", _out=stringio_obj1)
-    package_list = stringio_obj1.getvalue().strip().split()
-
-    for pkgname in package_list: 
-        if os.path.isdir("{}/{}".format(os.environ["DBT_INSTALL_DIR"], pkgname)):
-            rmtree("{}/{}".format(os.environ["DBT_INSTALL_DIR"], pkgname))
+        """)
 
 stringio_obj2 = io.StringIO()
 sh.date(_out=stringio_obj2)
@@ -247,23 +239,34 @@ else:
     print("CMake's build stage completed successfully")
 
 os.chdir(BUILDDIR)
+
+if "DBT_INSTALL_DIR" in os.environ and not re.search(r"^/?$", os.environ["DBT_INSTALL_DIR"]):
+    for filename in os.listdir(os.environ["DBT_INSTALL_DIR"]):
+        file_path = os.path.join(os.getcwd(), filename)
+        if os.path.isfile(file_path) or os.path.islink(file_path):
+            os.unlink(file_path)
+        elif os.path.isdir(file_path):
+            rmtree(file_path)
+else:
+    error("$DBT_INSTALL_DIR is not properly defined, which would result in the deletion of the entire contents of this system if it weren't for this check!!!")
+
 fullcmd="cmake --build . --target install -- {}".format(nprocs_argument)
 retval = pytee.run(fullcmd.split()[0], fullcmd.split()[1:], None)
 
 if retval == 0:
-    print("""
+    print(f"""
 Installation complete.
 This implies your code successfully compiled before installation; you can
-either scroll up or run \"less -R {}\" to see build results""".format(build_log))
+either scroll up or run \"less -R {build_log}\" to see build results""")
 else:
-    error("Installation failed. There was a problem running \"{}\". Exiting...".format(fullcmd))
+    error("Installation failed. There was a problem running \"{fullcmd}\". Exiting...")
 
 if run_tests:
     stringio_obj5 = io.StringIO()
     sh.date(_out=stringio_obj5)
     datestring=re.sub("[: ]+", "_", stringio_obj5.getvalue().strip())
 
-    test_log="{}/unit_tests_{}.log".format(LOGDIR, datestring)
+    test_log=f"{LOGDIR}/unit_tests_{datestring}.log"
 
     os.chdir(BUILDDIR)
     
@@ -275,7 +278,7 @@ if run_tests:
         package_list = [ package_to_test ]
 
     for pkgname in package_list:
-        fullcmd=("find -L {}/{} -type d -name unittest -not -regex .*CMakeFiles.*".format(BUILDDIR, pkgname))
+        fullcmd=(f"find -L {BUILDDIR}/{pkgname} -type d -name unittest -not -regex .*CMakeFiles.*")
         stringio_obj7 = io.StringIO()
         sh.find(fullcmd.split()[1:], _out=stringio_obj7)
         unittestdirs = stringio_obj7.getvalue().split()
@@ -290,22 +293,21 @@ if run_tests:
         num_unit_tests = 0
 
         for unittestdir in unittestdirs:
-            print("""
+            print(f"""
 
-RUNNING UNIT TESTS IN {}
+RUNNING UNIT TESTS IN {unittestdir}
 ======================================================================
-""".format(unittestdir))
+""")
             for unittest in os.listdir(unittestdir):
-                print("unittest == {}".format(unittest))
-                if which("{}/{}".format(unittestdir, unittest), mode=os.X_OK) is not None:
+                print(f"unittest == {unittest}")
+                if which(f"{unittestdir}/{unittest}", mode=os.X_OK) is not None:
                     pytee.run("echo", "-e Start of unit test suite {}".format(unittest).split(), test_log)
-                    pytee.run("{}/{}".format(unittestdir, unittest), "", test_log)
-                    #pytee.run("echo", "-e End of unit test suite {}".format(unittest).split(), test_log)
+                    pytee.run(f"{unittestdir}/{unittest}", "", test_log)
                     num_unit_tests += 1
 
             print("{}Testing complete for package \"{}\". Ran {} unit test suites.{}".format(Fore.YELLOW, pkgname, num_unit_tests, Style.RESET_ALL))
             print("")
-            print("Test results are saved in {}".format(test_log))
+            print(f"Test results are saved in {test_log}")
 
 if args.lint:
     os.chdir(BASEDIR)
@@ -314,10 +316,10 @@ if args.lint:
     sh.date(_out=stringio_obj8)
     datestring=re.sub("[: ]+", "_", stringio_obj8.getvalue().strip())
     
-    lint_log="{}/linting_{}.log".format(BASEDIR, datestring)
+    lint_log=f"{BASEDIR}/linting_{datestring}.log"
 
     if not os.path.exists("styleguide"):
-        print("Cloning styleguide into {} so linting can be applied".format(os.getcwd()))
+        print(f"Cloning styleguide into {os.getcwd()} so linting can be applied")
         sh.git("clone", "https://github.com/DUNE-DAQ/styleguide.git")
 
         if not os.path.exists("styleguide"):
@@ -332,8 +334,8 @@ if args.lint:
 
     for pkgdir in package_list:
         pkgname=os.path.basename(pkgdir)
-        print("Package to lint is {}".format(pkgname))
-        fullcmd = "./styleguide/cpplint/dune-cpp-style-check.sh build sourcecode/{}".format(pkgname)
+        print(f"Package to lint is {pkgname}")
+        fullcmd = f"./styleguide/cpplint/dune-cpp-style-check.sh build sourcecode/{pkgname}"
         pytee.run(fullcmd.split()[0], fullcmd.split()[1:], lint_log)
 
  

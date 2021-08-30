@@ -80,7 +80,7 @@ RELEASE_PATH=stringio_obj1.getvalue().strip()
 TARGETDIR=args.workarea_dir
 
 if not os.path.exists(RELEASE_PATH):
-    error(f"Release path '{RELEASE_PATH}' does not exist. Exiting...")
+    error(f"Release path '{RELEASE_PATH}' does not exist. Note that you need to pass \"-n\" for a nightly build. Exiting...")
 
 if "DBT_WORKAREA_ENV_SCRIPT_SOURCED" in os.environ:
     error("""
