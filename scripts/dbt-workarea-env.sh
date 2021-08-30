@@ -168,6 +168,18 @@ for p in ${DBT_PACKAGES}; do
     add_many_paths DUNEDAQ_SHARE_PATH  "${PKG_INSTALL_PATH}/share" 
 done
 
+for envvar in PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH ; do
+    
+    for pkg in $( eval echo \$$envvar | tr ":" "\n" | sed -r -n 's!'$DBT_INSTALL_DIR'/?([^/]+).*!\1!p' ); do
+	if [[ ! -d $DBT_AREA_ROOT/sourcecode/$pkg ]]; then
+           export $envvar=$( eval echo \$$envvar | sed -r 's!'$DBT_INSTALL_DIR'/?'$pkg'/[^:]+!!g' )
+           echo "Removed $DBT_INSTALL_DIR/$pkg/* -> $envvar"
+           export $envvar=$( eval echo \$$envvar | sed -r 's/^://;s/:$//;s/::+/:/g' ) # Mop up any superfluous :'s
+	fi
+    done
+
+done
+
 export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH
 echo -e "${COL_GREEN}...done${COL_RESET}"
 echo
