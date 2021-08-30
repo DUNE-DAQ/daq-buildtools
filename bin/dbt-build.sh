@@ -337,8 +337,7 @@ cd $BUILDDIR
 if [[ -n $DBT_INSTALL_DIR && ! $DBT_INSTALL_DIR =~ ^/?$ ]]; then
    rm -rf $DBT_INSTALL_DIR/*
 else
-   echo "JCF, Aug-27-2021: \$DBT_INSTALL_DIR is not properly defined, which would result in the deletion of the entire contents of this system if it weren't for this check!!!" >&2
-   exit 100
+   error "\$DBT_INSTALL_DIR is not properly defined, which would result in the deletion of the entire contents of this system if it weren't for this check!!!"
 fi
 
 # Will use $cmd if needed for error message
