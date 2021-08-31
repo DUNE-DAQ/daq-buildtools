@@ -12,12 +12,12 @@ To get set up, you'll need access to the ups product area `/cvmfs/dunedaq.opensc
 Simply do:
 
 ```bash
-git clone http://github.com/DUNE-DAQ/daq-buildtools # optionally, [-b <tag or branch>], default will be develop branch
+git clone http://github.com/DUNE-DAQ/daq-buildtools -b pythonize-dbt 
 source ./daq-buildtools/env.sh
 
 # Disregard these next two lines; you're reading instructions for the develop branch of daq-buildtools and not a frozen release
 #source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-#setup_dbt dunedaq-v2.6.0 # "dunedaq-v2.6.0" can be replaced with any other tags of daq-buildtools
+#setup_dbt dunedaq-v2.8.0 # "dunedaq-v2.8.0" can be replaced with any other tags of daq-buildtools
 ```
 
 Then you'll see something like:
@@ -35,7 +35,7 @@ Each time that you want to work with a DUNE DAQ work area in a fresh Linux shell
 
 Find a directory in which you want your work area to be a subdirectory (home directories are a popular choice) and `cd` into that directory. Then think of a good name for the work area (give it any name, but we'll refer to it as "MyTopDir" on this wiki). Run:
 ```sh
-dbt-create.py <release> <name of work area subdirectory> # dunedaq-v2.6.0 is the most recent frozen release as of May-28-2020
+dbt-create.py <release> <name of work area subdirectory> # dunedaq-v2.8.0 is the most recent frozen release as of Aug-31-2021
 cd <name of work area subdirectory>
 ```
 The second step's important: remember to `cd` into the subdirectory you just created after `dbt-create.py` finishes running. 
@@ -61,14 +61,14 @@ MyTopDir
 For the purposes of instruction, let's build the `listrev` package. Since these are instructions for the develop branch of daq-buildtoools as opposed to a frozen release, we'll want the latest-greatest daq-cmake as well. Downloading them is simple:
 ```
 cd sourcecode
-git clone https://github.com/DUNE-DAQ/listrev.git -b dunedaq-v2.6.0 
+git clone https://github.com/DUNE-DAQ/listrev.git -b dunedaq-v2.8.0 
 git clone https://github.com/DUNE-DAQ/daq-cmake.git 
 cd daq-cmake
 git checkout 48ffb173d2
 cd ..
 cd ..
 ```
-Note the assumption above is that you aren't developing listrev; if you were, then you'd want to replace `-b dunedaq-v2.6.0` with `-b <branch you want to work on>`.
+Note the assumption above is that you aren't developing listrev; if you were, then you'd want to replace `-b dunedaq-v2.8.0` with `-b <branch you want to work on>`.
 
 We're about to build and install the `listrev` package. (&#x1F534; Note: if you are working with other packages, have a look at the [Working with more repos](#working-with-more-repos) subsection before running the following build command.) By default, the scripts will create a subdirectory of MyTopDir called `./install ` and install any packages you build off your repos there. If you wish to install them in another location, you'll want to set the environment variable `DBT_INSTALL_DIR` to the desired installation path before calling the `dbt-workarea-env` command described below. You'll also want to remember to set the variable during subsequent logins to the work area if you don't go with the default. 
 
