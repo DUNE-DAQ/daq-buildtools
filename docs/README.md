@@ -62,11 +62,7 @@ For the purposes of instruction, let's build the `listrev` package. Since these 
 ```
 cd sourcecode
 git clone https://github.com/DUNE-DAQ/listrev.git -b dunedaq-v2.8.0 
-git clone https://github.com/DUNE-DAQ/daq-cmake.git 
-cd daq-cmake
-git checkout 48ffb173d2
-cd ..
-cd ..
+cd ../..
 ```
 Note the assumption above is that you aren't developing listrev; if you were, then you'd want to replace `-b dunedaq-v2.8.0` with `-b <branch you want to work on>`.
 
