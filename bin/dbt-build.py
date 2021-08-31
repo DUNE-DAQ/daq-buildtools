@@ -6,12 +6,13 @@ import io
 import os
 import re
 import sh
+import shutil
 from shutil import rmtree, which
 import sys
 from time import sleep
 
 DBT_ROOT=os.environ["DBT_ROOT"]
-sys.path.append('{}/scripts'.format(DBT_ROOT))
+sys.path.append(f'{DBT_ROOT}/scripts')
 
 from dbt_setup_tools import error, find_work_area, get_time, get_num_processors
 import pytee
@@ -57,7 +58,7 @@ parser.add_argument("-j", "--jobs", action='store', type=int, dest='n_jobs', hel
 parser.add_argument("--unittest", nargs="?", const="all", help=argparse.SUPPRESS)
 parser.add_argument("--lint", nargs="?", const="all", help=argparse.SUPPRESS)
 parser.add_argument("-i", "--install", action="store_true", help=argparse.SUPPRESS)
-parser.add_argument("--cmake-msg-lvl", type=int, dest="cmake_msg_lvl", help=argparse.SUPPRESS)
+parser.add_argument("--cmake-msg-lvl", dest="cmake_msg_lvl", help=argparse.SUPPRESS)
 parser.add_argument("--cmake-trace", action="store_true", dest="cmake_trace", help=argparse.SUPPRESS)
 parser.add_argument("--cmake-graphviz", action="store_true", dest="cmake_graphviz", help=argparse.SUPPRESS)
 
@@ -90,10 +91,10 @@ os.chdir(BUILDDIR)
 if args.clean_build:
     # Want to be damn sure we're in the right directory, recursive directory removal is no joke...
     if os.path.basename(os.getcwd()) == "build":
-        print("""
-Clean build requested, will delete all the contents of build directory \"{}\".
+        print(f"""
+Clean build requested, will delete all the contents of build directory \"{os.getcwd()}\".
 If you wish to abort, you have 5 seconds to hit Ctrl-c"
-        """.format(os.getcwd()))
+        """)
         sleep(5)
         
         for filename in os.listdir(os.getcwd()):
@@ -108,15 +109,16 @@ You requested a clean build, but this script thinks that {os.getcwd()} isn't
 the build directory. Please contact John Freeman at jcfree@fnal.gov and notify him of this message.
         """)
 
+
 stringio_obj2 = io.StringIO()
 sh.date(_out=stringio_obj2)
 datestring=re.sub("[: ]+", "_", stringio_obj2.getvalue().strip())
 
-build_log="{}/build_attempt_{}.log".format(LOGDIR, datestring)
+build_log=f"{LOGDIR}/build_attempt_{datestring}.log"
 
 cmake="cmake"
 if args.cmake_trace:
-    cmake = "{} --trace"
+    cmake = f"{cmake} --trace"
 
 # We usually only need to explicitly run the CMake configure+generate
 # makefiles stages when it hasn't already been successfully run;
@@ -125,6 +127,7 @@ if args.cmake_trace:
 # gets renamed if it's produced but there's a failure.
 
 running_config_and_generate=False
+
 if not os.path.exists("CMakeCache.txt"):
     running_config_and_generate = True
 
@@ -140,11 +143,17 @@ if not os.path.exists("CMakeCache.txt"):
     starttime_cfggen_d=get_time("as_date")
     starttime_cfggen_s=get_time("as_seconds_since_epoch")
 
-    fullcmd="{} -DCMAKE_MESSAGE_LOG_LEVEL={} -DMOO_CMD={} -DDBT_ROOT={} -DDBT_DEBUG={} -DCMAKE_INSTALL_PREFIX={} {} {}".format(cmake, args.cmake_msg_lvl, moo_path, os.environ["DBT_ROOT"], args.debug_build, os.environ["DBT_INSTALL_DIR"], generator_arg, SRCDIR)
+    debug_build="false"
+    if args.debug_build:
+        debug_build="true"
 
-    fullcmd.split(" ")[1:]
-    
-    print("Executing '{}'".format(fullcmd))
+    cmake_msg_lvl="NOTICE"
+    if args.cmake_msg_lvl:
+        cmake_msg_lvl = args.cmake_msg_lvl
+
+    fullcmd="{} -DCMAKE_MESSAGE_LOG_LEVEL={} -DMOO_CMD={} -DDBT_ROOT={} -DDBT_DEBUG={} -DCMAKE_INSTALL_PREFIX={} {} {}".format(cmake, cmake_msg_lvl, moo_path, os.environ["DBT_ROOT"], debug_build, os.environ["DBT_INSTALL_DIR"], generator_arg, SRCDIR)
+
+    print(f"Executing '{fullcmd}'")
     retval=pytee.run(fullcmd.split(" ")[0], fullcmd.split(" ")[1:], build_log)
 
     endtime_cfggen_d=get_time("as_date")
@@ -158,35 +167,35 @@ if not os.path.exists("CMakeCache.txt"):
     else:
         shutil.move("CMakeCache.txt", "CMakeCache.txt.most_recent_failure")
 
-        error("""
+        error(f"""
 
 This script ran into a problem running 
 
-{} 
+{fullcmd} 
 
-from {} (i.e., CMake's config+generate stages). 
+from {BUILDDIR} (i.e., CMake's config+generate stages). 
 Scroll up for details or look at the build log via 
 
-less -R {}
+less -R {BUILDDIR}
 
 Exiting...
 
-""".format(fullcmd, BUILDDIR, BUILDDIR))
+""")
 
 else: 
-    print("The config+generate stage was skipped as CMakeCache.txt was already found in {}".format(BUILDDIR))
+    print(f"The config+generate stage was skipped as CMakeCache.txt was already found in {BUILDDIR}")
 
 if args.cmake_graphviz:
     output = sh.cmake(["--graphviz=graphviz/targets.dot", "."])
     sys.exit(output.exit_code)
 
 if args.n_jobs:
-    nprocs_argument = "-j {}".format(args.n_jobs)
+    nprocs_argument = f"-j {args.n_jobs}"
 else:
     nprocs = get_num_processors()
-    nprocs_argument = "-j {}".format(nprocs)
+    nprocs_argument = f"-j {nprocs}"
     
-    print("This script believes you have {} processors available on this system, and will use as many of them as it can".format(nprocs))
+    print(f"This script believes you have {nprocs} processors available on this system, and will use as many of them as it can")
 
 starttime_build_d=get_time("as_date")    
 starttime_build_s=get_time("as_seconds_since_epoch")
@@ -196,10 +205,11 @@ if args.cpp_verbose:
     build_options=" --verbose"
 
 if not args.cmake_trace:
-    build_options="{} {}".format(build_options, nprocs_argument)
+    build_options=f"{build_options} {nprocs_argument}"
 
-fullcmd="{} --build . {}".format(cmake, build_options)
-print("Executing '{}'".format(fullcmd))
+fullcmd=f"{cmake} --build . {build_options}"
+
+print(f"Executing '{fullcmd}'")
 retval=pytee.run(fullcmd.split(" ")[0], fullcmd.split(" ")[1:], build_log)
 
 endtime_build_d=get_time("as_date")
@@ -208,18 +218,18 @@ endtime_build_s=get_time("as_seconds_since_epoch")
 if retval == 0:
     buildtime=int(endtime_build_s) - int(starttime_build_s)
 else:
-    error("""
+    error(f"""
 This script ran into a problem running 
 
-{} 
+{fullcmd} 
 
-from {} (i.e.,
+from {BUILDDIR} (i.e.,
 CMake's build stage). Scroll up for details or look at the build log via 
 
-less -R {}
+less -R {build_log}
 
 Exiting...
-""".format(fullcmd, BUILDDIR, build_log))
+""")
 
 stringio_obj4 = io.StringIO()
 
@@ -238,11 +248,9 @@ if running_config_and_generate:
 else:
     print("CMake's build stage completed successfully")
 
-os.chdir(BUILDDIR)
-
 if "DBT_INSTALL_DIR" in os.environ and not re.search(r"^/?$", os.environ["DBT_INSTALL_DIR"]):
     for filename in os.listdir(os.environ["DBT_INSTALL_DIR"]):
-        file_path = os.path.join(os.getcwd(), filename)
+        file_path = os.path.join(os.environ["DBT_INSTALL_DIR"], filename)
         if os.path.isfile(file_path) or os.path.islink(file_path):
             os.unlink(file_path)
         elif os.path.isdir(file_path):
@@ -250,16 +258,18 @@ if "DBT_INSTALL_DIR" in os.environ and not re.search(r"^/?$", os.environ["DBT_IN
 else:
     error("$DBT_INSTALL_DIR is not properly defined, which would result in the deletion of the entire contents of this system if it weren't for this check!!!")
 
-fullcmd="cmake --build . --target install -- {}".format(nprocs_argument)
-retval = pytee.run(fullcmd.split()[0], fullcmd.split()[1:], None)
 
+os.chdir(BUILDDIR)
+
+fullcmd=f"cmake --build . --target install -- {nprocs_argument}"
+retval = pytee.run(fullcmd.split()[0], fullcmd.split()[1:], None)
 if retval == 0:
     print(f"""
 Installation complete.
 This implies your code successfully compiled before installation; you can
 either scroll up or run \"less -R {build_log}\" to see build results""")
 else:
-    error("Installation failed. There was a problem running \"{fullcmd}\". Exiting...")
+    error(f"Installation failed. There was a problem running \"{fullcmd}\". Exiting...")
 
 if run_tests:
     stringio_obj5 = io.StringIO()
