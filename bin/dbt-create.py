@@ -6,6 +6,7 @@ import os
 import pathlib
 import sh
 from shutil import copy
+import subprocess
 import sys
 from time import sleep
 
@@ -13,7 +14,6 @@ DBT_ROOT=os.environ["DBT_ROOT"]
 sys.path.append(f'{DBT_ROOT}/scripts')
 
 from dbt_setup_tools import DBT_AREA_FILE, error, get_time, list_releases
-import pytee
 
 EMPTY_DIR_CHECK=True
 
@@ -140,7 +140,10 @@ os.symlink(f"{DBT_ROOT}/env.sh", f"{TARGETDIR}/dbt-env.sh")
 
 print("Setting up the Python subsystem. Please be patient, this should take O(1 minute)...")
 
-pytee.run(f"{DBT_ROOT}/scripts/dbt-create-pyvenv.sh", [f"{RELEASE_PATH}/{PY_PKGLIST}"], None)
+cmd = f"{DBT_ROOT}/scripts/dbt-create-pyvenv.sh {RELEASE_PATH}/{PY_PKGLIST}"
+res = subprocess.run( cmd.split() )
+if res.returncode != 0:
+    error(f"There was a problem running \"{cmd}\" (return value {res.returncode}); exiting...")
 
 endtime_d=get_time("as_date")
 endtime_s=get_time("as_seconds_since_epoch")
