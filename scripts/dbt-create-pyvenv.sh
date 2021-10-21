@@ -41,11 +41,6 @@ source ${DBT_AREA_ROOT}/${DBT_AREA_FILE}
 
 test $? -eq 0 || error "There was a problem sourcing ${DBT_AREA_ROOT}/${DBT_AREA_FILE}. Exiting..."
 
-setup_ups_product_areas
-
-setup_ups_products dune_systems
-test $? -eq 0 || error "Failed to setup 'dune_system' products, required to build the python venv. Exiting..." 
-
 
 ###
 # Check existance/create the default virtual_env

@@ -20,6 +20,6 @@ add_many_paths PATH ${DBT_ROOT}/bin ${DBT_ROOT}/scripts
 export PATH
 
 dbt-setup-build-environment() { error "This command is deprecated; please run \"dbt-workarea-env\" instead" ; }
-dbt-workarea-env() { source ${DBT_ROOT}/scripts/dbt-workarea-env.sh $@; }
+dbt-workarea-env() { source ${DBT_ROOT}/scripts/dbt-workarea-env-spack.sh $@; }
 
 echo -e "${COL_GREEN}DBT setuptools loaded${COL_RESET}"

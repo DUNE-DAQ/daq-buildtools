@@ -189,9 +189,10 @@ fi
 if ! [ -e CMakeCache.txt ]; then
 
   generator_arg=
-  if [ "x${SETUP_NINJA}" != "x" ]; then
-    generator_arg="-G Ninja"
-  fi
+# See daq-buildtools Issue #162 for why this is commented out
+#  if [ "x${SETUP_NINJA}" != "x" ]; then
+#    generator_arg="-G Ninja"
+#  fi
 
 
   starttime_cfggen_d=$( date )
