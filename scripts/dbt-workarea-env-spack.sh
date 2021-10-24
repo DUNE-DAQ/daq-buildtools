@@ -88,6 +88,14 @@ EOF
 fi
 
 if [[ ("${REFRESH_UPS}" == "false" &&  -z "${DBT_UPS_SETUP_DONE}") || "${REFRESH_UPS}" == "true" ]]; then
+
+    spack load "dune-daqpackages@dunedaq-v2.8.0"
+
+    if [[ "$?" != "0" ]]; then
+	echo "There was a problem loading dune-daqpackages; exiting..." >&2
+	return 2
+    fi
+    
      # 
      if [[ -z "${DBT_UPS_SETUP_DONE}" ]]; then
          echo -e "${COL_GREEN}This script hasn't yet been sourced (successfully) in this shell; setting up the build environment${COL_RESET}\n"
@@ -162,13 +170,6 @@ done
 export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH
 echo -e "${COL_GREEN}...done${COL_RESET}"
 echo
-
-spack load "dune-daqpackages@dunedaq-v2.8.0"
-
-if [[ "$?" != "0" ]]; then
-echo "There was a problem loading dune-daqpackages; exiting..." >&2
-return 2
-fi
 
 export DBT_WORKAREA_ENV_SCRIPT_SOURCED=1
 
