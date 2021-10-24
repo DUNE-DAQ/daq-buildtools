@@ -41,6 +41,20 @@ source ${DBT_AREA_ROOT}/${DBT_AREA_FILE}
 
 test $? -eq 0 || error "There was a problem sourcing ${DBT_AREA_ROOT}/${DBT_AREA_FILE}. Exiting..."
 
+source ~/spack/share/spack/setup-env.sh
+
+cd ~/proto-spack
+echo "JCF, Oct-4-2021: don't worry if you see \"Repository is already registered \" error message(s) below"
+spack repo add dune-build 
+spack repo add dune_daqpackages 
+cd -
+
+echo "JCF, Oct-21-2021: don't worry if you see a complaint about new compilers not being found; we just want gcc 8.2.0"
+spack compiler find
+spack load gcc@8.2.0
+source ~/proto-spack/compiler-setup.sh
+
+spack load python@3.8.11
 
 ###
 # Check existance/create the default virtual_env
