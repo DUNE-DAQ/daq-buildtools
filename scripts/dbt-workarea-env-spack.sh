@@ -89,6 +89,13 @@ fi
 
 if [[ ("${REFRESH_UPS}" == "false" &&  -z "${DBT_UPS_SETUP_DONE}") || "${REFRESH_UPS}" == "true" ]]; then
 
+    spack load "gcc@8.2.0 +binutils"
+
+    if [[ "$?" != "0" ]]; then
+        echo "There was a problem loading gcc; exiting..." >&2
+        return 2
+    fi
+
     spack load "dune-daqpackages@dunedaq-v2.8.0"
 
     if [[ "$?" != "0" ]]; then
