@@ -3,8 +3,6 @@
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 scriptname=$(basename $(readlink -f ${BASH_SOURCE}))
 
-PROD_BASEPATH="/cvmfs/dunedaq.opensciencegrid.org/releases"
-NIGHTLY_BASEPATH="/cvmfs/dunedaq-development.opensciencegrid.org/nightly"
 CUSTOM_BASEPATH=""
 SHOW_RELEASE_LIST=false
 NIGHTLY=false
@@ -58,7 +56,8 @@ EOU
 done
 
 ARGS=("$@")
-echo "$ARGS"
+
+source ${HERE}/dbt-setup-tools.sh
 
 if [[ ! -z "${CUSTOM_BASEPATH}" ]]; then
     RELEASE_BASEPATH="${CUSTOM_BASEPATH}"
@@ -68,19 +67,18 @@ else
     RELEASE_BASEPATH="${NIGHTLY_BASEPATH}"
 fi
 
-source ${HERE}/dbt-setup-tools.sh
 if [[ "${SHOW_RELEASE_LIST}" == true ]]; then
     list_releases
     return 0;
 fi
 
-test ${#ARGS[@]} -eq 1 || error "Wrong number of arguments. Run '${scriptname} -h' for more information." 
+test ${#ARGS[@]} -eq 1 || (error "Wrong number of arguments. Run '${scriptname} -h' for more information." && return 11 )
 
 
 RELEASE=${ARGS[0]}
 RELEASE_PATH=$(realpath -m "${RELEASE_BASEPATH}/${RELEASE}")
 
-test -d ${RELEASE_PATH} || error  "Release path '${RELEASE_PATH}' does not exist. Note that you need to pass \"-n\" for a nightly build. Exiting..." 
+test -d ${RELEASE_PATH} || (error  "Release path '${RELEASE_PATH}' does not exist. Note that you need to pass \"-n\" for a nightly build. Exiting..." && return 11)
 
 if [[ -n ${DBT_WORKAREA_ENV_SCRIPT_SOURCED:-} ]]; then
     error "$( cat<<EOF
@@ -91,17 +89,19 @@ from a clean shell. Exiting...
 
 EOF
 )"
+    return 12
 fi
 
 if [[ -n ${DBT_SETUP_RELEASE_SCRIPT_SOURCED:-} ]]; then
     error "$( cat<<EOF
 
 It appears you're trying to run this script from an environment
-where another running evelopment been set up.  You'll want to run this
+where another running environment been set up.  You'll want to run this
 from a clean shell. Exiting...     
 
 EOF
 )"
+    return 12
 fi
 
 
@@ -133,7 +133,7 @@ source ${RELEASE_PATH}/${DBT_VENV}/bin/activate
 if [[ "$VIRTUAL_ENV" == "" ]]
 then
   error "You are already in a virtual env. Please deactivate first. Returning..." 
-  return 11
+  return 13
 fi
 
 all_setup_returns=""

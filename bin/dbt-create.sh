@@ -30,8 +30,6 @@ EOU
 
 
 EMPTY_DIR_CHECK=true
-PROD_BASEPATH="/cvmfs/dunedaq.opensciencegrid.org/releases"
-NIGHTLY_BASEPATH="/cvmfs/dunedaq-development.opensciencegrid.org/nightly"
 CUSTOM_BASEPATH=""
 # TARGETDIR=""
 SHOW_RELEASE_LIST=false
