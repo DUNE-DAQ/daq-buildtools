@@ -11,17 +11,18 @@ Usage
 
 To create a new DUNE DAQ development area:
       
-    $( basename $0 ) [-r/--release-path <path to release area>] <dunedaq-release> <target directory>
+    $( basename $0 ) [-n/--nightly] [-c/--clone-pyvenv] [-r/--release-path <path to release area>] <dunedaq-release> <target directory>
 
 To list the available DUNE DAQ releases:
 
-    $( basename $0 ) -l/--list [-r/--release-path <path to release area>]
+    $( basename $0 ) -l/--list [-n/--nightly] [-r/--release-path <path to release area>]
 
 Arguments and options:
 
     dunedaq-release: is the name of the release the new work area will be based on (e.g. dunedaq-v2.0.0)
     -n/--nightly: switch to nightly releases
     -l/--list: show the list of available releases
+    -c/--clone-pyvenv: cloning the dbt-pyvenv from cvmfs instead of installing from scratch
     -r/--release-path: is the path to the release archive (RELEASE_BASEPATH var; default: /cvmfs/dunedaq.opensciencegrid.org/releases)
 
 EOU
@@ -34,6 +35,7 @@ NIGHTLY_BASEPATH="/cvmfs/dunedaq-development.opensciencegrid.org/nightly"
 CUSTOM_BASEPATH=""
 # TARGETDIR=""
 SHOW_RELEASE_LIST=false
+CLONE_VENV=false
 NIGHTLY=false
 
 # Define usage function here
@@ -49,7 +51,7 @@ PY_PKGLIST="pyvenv_requirements.txt"
 DAQ_BUILDORDER_PKGLIST="dbt-build-order.cmake"
 
 # We use "$@" instead of $* to preserve argument-boundary information
-options=$(getopt -o 'hnlr:' -l ',help,nightly,list,release-base-path:' -- "$@") || exit
+options=$(getopt -o 'hnlcr:' -l ',help,nightly,list,clone-pyvenv,release-base-path:' -- "$@") || exit
 eval "set -- $options"
 
 while true; do
@@ -60,6 +62,10 @@ while true; do
         (-l|--list)
             # List available releases
             SHOW_RELEASE_LIST=true
+            shift;;
+        (-c|--clone-pyvenv)
+            # clone pyvenv
+            CLONE_VENV=true
             shift;;
         (-r|--release-path)
             CUSTOM_BASEPATH=$2
@@ -183,7 +189,11 @@ ln -s ${dbt_setup_env_script} $TARGETDIR/dbt-env.sh
 test $? -eq 0 || error "There was a problem linking the daq-buildtools setup file. Exiting..."
 
 echo "Setting up the Python subsystem"
-${DBT_ROOT}/scripts/dbt-create-pyvenv.sh ${RELEASE_PATH}/${PY_PKGLIST}
+if [[ "${CLONE_VENV}" == true ]]; then
+    ${DBT_ROOT}/scripts/dbt-clone-pyvenv.sh ${RELEASE_PATH}/${DBT_VENV}
+else
+    ${DBT_ROOT}/scripts/dbt-create-pyvenv.sh ${RELEASE_PATH}/${PY_PKGLIST}
+fi
 
 test $? -eq 0 || error "Call to create_pyvenv.sh returned nonzero. Exiting..."
 

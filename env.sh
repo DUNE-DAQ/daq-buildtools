@@ -21,5 +21,6 @@ export PATH
 
 dbt-setup-build-environment() { error "This command is deprecated; please run \"dbt-workarea-env\" instead" ; }
 dbt-workarea-env() { source ${DBT_ROOT}/scripts/dbt-workarea-env.sh $@; }
+dbt-setup-release() { source ${DBT_ROOT}/scripts/dbt-setup-release.sh $@; }
 
 echo -e "${COL_GREEN}DBT setuptools loaded${COL_RESET}"
