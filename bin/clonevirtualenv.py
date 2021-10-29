@@ -10,6 +10,9 @@ import shutil
 import subprocess
 import sys
 import itertools
+import distutils.dir_util
+import fnmatch
+
 
 __version__ = '0.5.7'
 
@@ -72,8 +75,13 @@ def clone_virtualenv(src_dir, dst_dir):
     #sys_path = _virtualenv_syspath(src_dir)
     logger.info('cloning virtualenv \'%s\' => \'%s\'...' %
             (src_dir, dst_dir))
-    shutil.copytree(src_dir, dst_dir, symlinks=True,
-            ignore=shutil.ignore_patterns('*.pyc'))
+    distutils.dir_util.copy_tree(src_dir, dst_dir, preserve_symlinks=1)
+    for rootDir, subdirs, filenames in os.walk(dst_dir):
+        for filename in fnmatch.filter(filenames, '*.pyc'):
+            try:
+                os.remove(os.path.join(rootDir, filename))
+            except OSError:
+                print("Error while deleting file")
     version, sys_path = _virtualenv_sys(dst_dir)
     logger.info('fixing scripts in bin...')
     fixup_scripts(src_dir, dst_dir, version)
