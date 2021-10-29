@@ -12,12 +12,8 @@ To get set up, you'll need access to the ups product area `/cvmfs/dunedaq.opensc
 Simply do:
 
 ```bash
-git clone http://github.com/DUNE-DAQ/daq-buildtools # optionally, [-b <tag or branch>], default will be develop branch
-source ./daq-buildtools/env.sh
-
-# Disregard these next two lines; you're reading instructions for the develop branch of daq-buildtools and not a frozen release
-#source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-#setup_dbt dunedaq-v2.6.0 # "dunedaq-v2.6.0" can be replaced with any other tags of daq-buildtools
+source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
+setup_dbt dunedaq-v2.8.1 # "dunedaq-v2.8.1" can be replaced with any other tags of daq-buildtools
 ```
 
 Then you'll see something like:
@@ -26,18 +22,33 @@ Added /your/path/to/daq-buildtools/bin to PATH
 Added /your/path/to/daq-buildtools/scripts to PATH
 DBT setuptools loaded
 ```
-If you type `dbt-` followed by the `<tab>` key you'll see a listing of available commands, which include `dbt-create.sh`, `dbt-build.sh`, and `dbt-workarea-env`. These are all described in the following sections.
+If you type `dbt-` followed by the `<tab>` key you'll see a listing of available commands, which include `dbt-create.sh`, `dbt-build.sh`, `dbt-setup-release` and `dbt-workarea-env`. These are all described in the following sections.
 
 Each time that you want to work with a DUNE DAQ work area in a fresh Linux shell, you'll need to set up daq-buildtools, either by repeating the method above, or by `cd`'ing into your work area and sourcing the link file named `dbt-env.sh`. Work areas are described next. 
+
+<a name="Running_a_release_from_cvmfs"></a>
+## Running a release from cvmfs
+
+Running a release from cvmfs without creating a work area is supported since the `dunedaq-v2.8.1` release. To do that, simply run the following:
+
+```sh
+dbt-setup-release <release> # note that only dunedaq-v2.8.1 or newer releases are supported.
+```
+
+It will set up both the external packages and DAQ packages, as well as activate the python virtual environment. Note that the python virtual environment activated here is read-only. If you want to install newer versions or new packages to the environment, please follow the steps of "creating a work area" below.
+
 
 <a name="Creating_a_work_area"></a>
 ## Creating a work area
 
 Find a directory in which you want your work area to be a subdirectory (home directories are a popular choice) and `cd` into that directory. Then think of a good name for the work area (give it any name, but we'll refer to it as "MyTopDir" on this wiki). Run:
 ```sh
-dbt-create.sh <release> <name of work area subdirectory> # dunedaq-v2.6.0 is the most recent frozen release as of May-28-2020
+dbt-create.sh [-c/--clone-pyvenv] <release> <name of work area subdirectory> # dunedaq-v2.8.1 is the most recent frozen release as of OCt-29-2021
 cd <name of work area subdirectory>
 ```
+
+The option `-c/--clone-pyvenv` for `dbt-create.sh` is optional. If used, the python virtual environment created in the work area will be a clone of an existing one from the release directory. This avoids the compilation/installation of python modules using the `pyvenv_requirements.txt` in the release directory, and speeds up the work-area creation significantly. The first time running `dbt-create.sh` with this option on a node may take longer timer since cvmfs needs to fetch these files into local cache first.
+
 The second step's important: remember to `cd` into the subdirectory you just created after `dbt-create.sh` finishes running. 
 
 The structure of your work area will look like the following:
