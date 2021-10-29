@@ -69,17 +69,13 @@ MyTopDir
 
 ### The basics
 
-For the purposes of instruction, let's build the `listrev` package. Since these are instructions for the develop branch of daq-buildtools as opposed to a frozen release, we'll want the latest-greatest daq-cmake as well. Downloading them is simple:
+For the purposes of instruction, let's build the `listrev` package. Downloading it is simple:
 ```
 cd sourcecode
-git clone https://github.com/DUNE-DAQ/listrev.git -b dunedaq-v2.8.0 
-git clone https://github.com/DUNE-DAQ/daq-cmake.git 
-cd daq-cmake
-git checkout 00bc5ed5b36450c
-cd ..
+git clone https://github.com/DUNE-DAQ/listrev.git -b dunedaq-v2.8.1 
 cd ..
 ```
-Note the assumption above is that you aren't developing listrev; if you were, then you'd want to replace `-b dunedaq-v2.8.0` with `-b <branch you want to work on>`.
+Note the assumption above is that you aren't developing listrev; if you were, then you'd want to replace `-b dunedaq-v2.8.1` with `-b <branch you want to work on>`.
 
 We're about to build and install the `listrev` package. (&#x1F534; Note: if you are working with other packages, have a look at the [Working with more repos](#working-with-more-repos) subsection before running the following build command.) By default, the scripts will create a subdirectory of MyTopDir called `./install ` and install any packages you build off your repos there. If you wish to install them in another location, you'll want to set the environment variable `DBT_INSTALL_DIR` to the desired installation path before calling the `dbt-workarea-env` command described below. You'll also want to remember to set the variable during subsequent logins to the work area if you don't go with the default. 
 
@@ -268,4 +264,4 @@ As the names suggest, `dune_products_dirs` contains the list of UPS product pool
 
 ## Next Step
 
-* You can learn how to create a new package by taking a look at the [daq-cmake documentation](https://github.com/DUNE-DAQ/daq-cmake/blob/101a4c94f9353aba/docs/README.md)
+* You can learn how to create a new package by taking a look at the [daq-cmake documentation](https://dune-daq-sw.readthedocs.io/en/v2.8.1/packages/daq-cmake/)
