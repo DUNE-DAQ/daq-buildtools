@@ -24,7 +24,7 @@ DBT setuptools loaded
 ```
 If you type `dbt-` followed by the `<tab>` key you'll see a listing of available commands, which include `dbt-create.sh`, `dbt-build.sh`, `dbt-setup-release` and `dbt-workarea-env`. These are all described in the following sections.
 
-Each time that you want to work with a DUNE DAQ work area in a fresh Linux shell, you'll need to set up daq-buildtools, either by repeating the method above, or by `cd`'ing into your work area and sourcing the link file named `dbt-env.sh`. Work areas are described monetarily. 
+Each time that you want to work with a DUNE DAQ work area in a fresh Linux shell, you'll need to set up daq-buildtools, either by repeating the method above, or by `cd`'ing into your work area and sourcing the link file named `dbt-env.sh`. Work areas are described momentarily. 
 
 <a name="Running_a_release_from_cvmfs"></a>
 ## Running a release from cvmfs
@@ -35,7 +35,7 @@ Running a release from cvmfs without creating a work area is supported since the
 dbt-setup-release <release> # note that only dunedaq-v2.8.1 or newer releases are supported.
 ```
 
-It will set up both the external packages and DAQ packages, as well as activate the python virtual environment. Note that the python virtual environment activated here is read-only. You'd want to run `dbt-setup-release` only if you weren't developing DUNE DAQ software, the topic covered for the remainder of this document. However, if you want to install newer versions or new packages to the environment, please follow the steps of "Creating a work area" below.
+It will set up both the external packages and DAQ packages, as well as activate the python virtual environment. Note that the python virtual environment activated here is read-only. You'd want to run `dbt-setup-release` only if you weren't developing DUNE DAQ software, the topic covered for the remainder of this document. However, if you don't want a frozen set of versioned packages - which you wouldn't, if you were developing code - please continue reading.
 
 
 <a name="Creating_a_work_area"></a>
