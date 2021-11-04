@@ -14,7 +14,7 @@ Usage
         -d/--debug means you want to build your software with optimizations off and debugging info on
         -j/--jobs means you want to specify the number of jobs used by cmake to build the project
         --unittest means that unit test executables found in ./build/<optional package name>/unittest are run, or all unit tests in ./build/*/unittest are run if no package name is provided
-        --lint means you check for deviations in ./sourcecode/<optional package name> from the DUNE style guide, https://github.com/DUNE-DAQ/styleguide/blob/develop/dune-daq-cppguide.md, or deviations in all local repos if no package name is provided
+        --lint means you check for deviations in ./sourcecode/<optional package name> from the DUNE style guide, https://dune-daq-sw.readthedocs.io/en/latest/packages/styleguide/, or deviations in all local repos if no package name is provided
         -v/--cpp-verbose means that you want verbose output from the compiler
         --cmake-msg-lvl setting "CMAKE_MESSAGE_LOG_LEVEL", default is "NOTICE", choices are ERROR|WARNING|NOTICE|STATUS|VERBOSE|DEBUG|TRACE.
         --cmake-trace enable cmake tracing
@@ -159,15 +159,6 @@ the build directory. Please contact John Freeman at jcfree@fnal.gov and notify h
 EOF
 )"
    fi
-
-   package_list=$( find $SRCDIR -mindepth 1 -maxdepth 1 -type d | xargs -i basename {} )  
-
-   for pkgname in $package_list ; do
-     if [[ -d $DBT_INSTALL_DIR/$pkgname ]]; then
-       rm -rf $DBT_INSTALL_DIR/$pkgname        
-     fi
-   done
-
 fi
 
 
@@ -342,6 +333,12 @@ fi
 
 
 cd $BUILDDIR
+
+if [[ -n $DBT_INSTALL_DIR && ! $DBT_INSTALL_DIR =~ ^/?$ ]]; then
+   rm -rf $DBT_INSTALL_DIR/*
+else
+   error "\$DBT_INSTALL_DIR is not properly defined, which would result in the deletion of the entire contents of this system if it weren't for this check!!!"
+fi
 
 # Will use $cmd if needed for error message
 cmd="cmake --build . --target install -- $nprocs_argument"
