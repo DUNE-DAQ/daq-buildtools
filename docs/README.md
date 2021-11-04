@@ -13,7 +13,7 @@ Simply do:
 
 ```bash
 source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt dunedaq-v2.8.2 # "dunedaq-v2.8.1" can be replaced with any other tags of daq-buildtools
+setup_dbt dunedaq-v2.8.2 # "dunedaq-v2.8.2" can be replaced with any other tags of daq-buildtools
 ```
 
 Then you'll see something like:
