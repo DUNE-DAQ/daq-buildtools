@@ -1,14 +1,6 @@
 #------------------------------------------------------------------------------
 
 
-required_host="epdtdi-spack-build03.cern.ch"
-if [[ $(hostname) != $required_host ]]; then
-    echo "Only run this on ${required_host}. Returning..." >&2
-    return 1
-fi
-
-export HOME=/home/spacknp/jcfree
-
 spack_script=$HOME/spack/share/spack/setup-env.sh
 
 if [[ ! -e $spack_script ]]; then
@@ -22,34 +14,31 @@ source $spack_script
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 scriptname=$(basename $(readlink -f ${BASH_SOURCE}))
 
-DBT_PKG_SETS=( devtools systems externals daqpackages )
-REFRESH_UPS=false
+DBT_GCC_PKG="gcc@8.2.0 +binutils"
+DBT_PKG_SET="dune-daqpackages@dunedaq-v2.8.0 build_type=RelWithDebInfo"
+
+REFRESH_PACKAGES=false
 # We use "$@" instead of $* to preserve argument-boundary information
-options=$(getopt -o 'hs:r' -l 'help, subset:, refresh' -- "$@") || return 10
+options=$(getopt -o 'h:r' -l 'help:, refresh' -- "$@") || return 10
 eval "set -- $options"
 
-DBT_PKG_SET="${DBT_PKG_SETS[-1]}"
 while true; do
     case $1 in
         (-r|--refresh)
-            REFRESH_UPS=true
+            REFRESH_PACKAGES=true
             shift;;
-        (-s|--subset)
-            DBT_PKG_SET=$2
-            shift 2;;
         (-h|--help)
             cat << EOU
 Usage
 -----
 
-  ${scriptname} [-h/--help] [--refresh] [-s/--subset [devtools systems externals daqpackages]]
+  ${scriptname} [-h/--help] [--refresh]
 
   Sets up the environment of a dbt development area
 
   Arguments and options:
 
     --refresh: re-runs the build environment setup
-    -s/--subset: optional set of ups packages to load. [choices: ${DBT_PKG_SETS[@]}]
     
 EOU
             return 0;;           # error
@@ -87,40 +76,35 @@ EOF
 
 fi
 
-if [[ ("${REFRESH_UPS}" == "false" &&  -z "${DBT_UPS_SETUP_DONE}") || "${REFRESH_UPS}" == "true" ]]; then
 
-    spack load "gcc@8.2.0 +binutils"
-
-    if [[ "$?" != "0" ]]; then
-        echo "There was a problem loading gcc; exiting..." >&2
-        return 2
-    fi
-
-    spack load "dune-daqpackages@dunedaq-v2.8.0"
-
-    if [[ "$?" != "0" ]]; then
-	echo "There was a problem loading dune-daqpackages; exiting..." >&2
-	return 2
-    fi
+if [[ ("${REFRESH_PACKAGES}" == "false" &&  -z "${DBT_PACKAGE_SETUP_DONE}") || "${REFRESH_PACKAGES}" == "true" ]]; then
     
-     # 
-     if [[ -z "${DBT_UPS_SETUP_DONE}" ]]; then
+     if [[ -z "${DBT_PACKAGE_SETUP_DONE}" ]]; then
          echo -e "${COL_GREEN}This script hasn't yet been sourced (successfully) in this shell; setting up the build environment${COL_RESET}\n"
      else
-         echo -e "${COL_GREEN}Refreshing UPS package setup${COL_RESET}\n"
+         echo -e "${COL_GREEN}Refreshing package setup${COL_RESET}\n"
          # Clean up
          echo -e "${COL_BLUE}Deactivating python environment${COL_RESET}\n"
          deactivate
-         echo -e "${COL_BLUE}Running ups un-setup${COL_RESET}\n"
-         unsetup_all
+         echo -e "${COL_BLUE}Unloading packages${COL_RESET}\n"
+         spack unload $DBT_GCC_PKG
+	 spack unload $DBT_PKG_SET
      fi
 
-     # 1. Load the UPS area information from the local area file
-     source ${DBT_AREA_ROOT}/${DBT_AREA_FILE}
-     if ! [[ $? -eq 0 ]]; then
-         error "There was a problem sourcing ${DBT_AREA_ROOT}/${DBT_AREA_FILE}. Returning..." 
-         return 1
-     fi
+          
+    spack load $DBT_GCC_PKG
+
+    if [[ "$?" != "0" ]]; then
+	error "There was a problem running spack load $DBT_GCC_PKG; returning..."
+        return 2
+    fi
+
+    spack load $DBT_PKG_SET
+
+    if [[ "$?" != "0" ]]; then
+	error "There was a problem running spack load $DBT_PKG_SET; returning..." 
+	return 3
+    fi
 
      # Assumption is you've already spack loaded python, etc...
 
@@ -132,13 +116,11 @@ if [[ ("${REFRESH_UPS}" == "false" &&  -z "${DBT_UPS_SETUP_DONE}") || "${REFRESH
        return 11
      fi
 
-     export DBT_UPS_SETUP_DONE=1
+     export DBT_PACKAGE_SETUP_DONE=1
 
-     unset DBT_PKG_SET DBT_PKG_SETS
-
- else
+else
      echo -e "${COL_YELLOW}The build environment has been already setup.\nUse '${scriptname} --refresh' to force a reload.${COL_RESET}\n"
- fi
+fi
 
 if [[ -z $DBT_INSTALL_DIR ]]; then
     export DBT_INSTALL_DIR=${DBT_AREA_ROOT}/install
@@ -169,10 +151,9 @@ for p in ${DBT_PACKAGES}; do
     add_many_paths PATH "${PKG_INSTALL_PATH}/bin" "${PKG_INSTALL_PATH}/test/bin"
     add_many_paths PYTHONPATH "${PKG_INSTALL_PATH}/lib64/python"
     add_many_paths LD_LIBRARY_PATH "${PKG_INSTALL_PATH}/lib64"  "${PKG_INSTALL_PATH}/test/lib64"
+    add_many_paths CET_PLUGIN_PATH "${PKG_INSTALL_PATH}/lib64" "${PKG_INSTALL_PATH}/test/lib64"
     add_many_paths DUNEDAQ_SHARE_PATH  "${PKG_INSTALL_PATH}/share" 
 done
-
-#CET_PLUGIN_PATH=$LD_LIBRARY_PATH
 
 export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH
 echo -e "${COL_GREEN}...done${COL_RESET}"
