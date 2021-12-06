@@ -15,7 +15,7 @@ HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 scriptname=$(basename $(readlink -f ${BASH_SOURCE}))
 
 DBT_GCC_PKG="gcc@8.2.0 +binutils"
-DBT_PKG_SET="dune-daqpackages@dunedaq-v2.8.0 build_type=RelWithDebInfo"
+DBT_PKG_SET="dune-daqpackages@dunedaq-v2.8.2 build_type=RelWithDebInfo"
 
 REFRESH_PACKAGES=false
 # We use "$@" instead of $* to preserve argument-boundary information
