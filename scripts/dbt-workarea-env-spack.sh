@@ -15,18 +15,27 @@ HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 scriptname=$(basename $(readlink -f ${BASH_SOURCE}))
 
 DBT_GCC_PKG="gcc@8.2.0 +binutils"
-DBT_PKG_SET="dune-daqpackages@dunedaq-v2.8.2 build_type=RelWithDebInfo"
-
+DBT_PKG_SETS=( "systems@dunedaq-v2.8.2" \
+               "devtools@dunedaq-v2.8.2" \
+               "externals@dunedaq-v2.8.2" \
+               "dune-daqpackages@dunedaq-v2.8.2" \
+               )
+    
+DEFAULT_BUILD_TYPE=RelWithDebInfo
 REFRESH_PACKAGES=false
 # We use "$@" instead of $* to preserve argument-boundary information
-options=$(getopt -o 'h:r' -l 'help:, refresh' -- "$@") || return 10
+options=$(getopt -o 'hs:r' -l 'help, subset:, refresh' -- "$@") || return 10
 eval "set -- $options"
 
+DBT_PKG_SET="${DBT_PKG_SETS[-1]}"
 while true; do
     case $1 in
         (-r|--refresh)
             REFRESH_PACKAGES=true
             shift;;
+	(-s|--subset)
+            DBT_PKG_SET=$2
+            shift 2;;
         (-h|--help)
             cat << EOU
 Usage
@@ -39,6 +48,8 @@ Usage
   Arguments and options:
 
     --refresh: re-runs the build environment setup
+    -s/--subset: optional set of ups packages to load. [choices: ${DBT_PKG_SETS[@]}] 
+
     
 EOU
             return 0;;           # error
@@ -99,10 +110,16 @@ if [[ ("${REFRESH_PACKAGES}" == "false" &&  -z "${DBT_PACKAGE_SETUP_DONE}") || "
         return 2
     fi
 
-    spack load $DBT_PKG_SET
+    if [[ "$DBT_PKG_SET" =~ "dune-daqpackages" ]]; then
+	cmd="spack load $DBT_PKG_SET build_type=$DEFAULT_BUILD_TYPE"
+    else
+	cmd="spack load $DBT_PKG_SET"
+    fi
+
+    $cmd
 
     if [[ "$?" != "0" ]]; then
-	error "There was a problem running spack load $DBT_PKG_SET; returning..." 
+	error "There was a problem running $cmd; returning..." 
 	return 3
     fi
 
@@ -115,7 +132,7 @@ if [[ ("${REFRESH_PACKAGES}" == "false" &&  -z "${DBT_PACKAGE_SETUP_DONE}") || "
        error "You are already in a virtual env. Please deactivate first. Returning..." 
        return 11
      fi
-
+     
      export DBT_PACKAGE_SETUP_DONE=1
 
 else
