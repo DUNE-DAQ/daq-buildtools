@@ -1,23 +1,21 @@
 #!/usr/bin/env python3
 
-PROD_BASEPATH="/cvmfs/dunedaq.opensciencegrid.org/releases"
-NIGHTLY_BASEPATH="/cvmfs/dunedaq-development.opensciencegrid.org/nightly"
+import os
+DBT_ROOT=os.environ["DBT_ROOT"]
+exec(open(f'{DBT_ROOT}/scripts/dbt_setup_constants.py').read())
 
 import sys
 sys.path.append(f'{PROD_BASEPATH}/dunedaq-v2.8.2/dbt-pyvenv/lib/python3.8/site-packages')
 
-
 import argparse
 from colorama import Fore, Style
 import io
-import os
 import re
 import sh
 import shutil
 from shutil import rmtree, which
 from time import sleep
 
-DBT_ROOT=os.environ["DBT_ROOT"]
 sys.path.append(f'{DBT_ROOT}/scripts')
 
 from dbt_setup_tools import error, find_work_area, get_time, get_num_processors
@@ -34,7 +32,7 @@ Usage
         -d/--debug means you want to build your software with optimizations off and debugging info on
         -j/--jobs means you want to specify the number of jobs used by cmake to build the project
         --unittest means that unit test executables found in ./build/<optional package name>/unittest are run, or all unit tests in ./build/*/unittest are run if no package name is provided
-        --lint means you check for deviations in ./sourcecode/<optional package name> from the DUNE style guide, https://dune-daq-sw.readthedocs.io/en/latest/packages/styleguide/index.html, or deviations in all local repos if no package name is provided
+        --lint means you check for deviations in ./sourcecode/<optional package name> from the DUNE style guide, https://dune-daq-sw.readthedocs.io/en/latest/packages/styleguide/, or deviations in all local repos if no package name is provided
         -v/--cpp-verbose means that you want verbose output from the compiler
         --cmake-msg-lvl setting "CMAKE_MESSAGE_LOG_LEVEL", default is "NOTICE", choices are ERROR|WARNING|NOTICE|STATUS|VERBOSE|DEBUG|TRACE.
         --cmake-trace enable cmake tracing

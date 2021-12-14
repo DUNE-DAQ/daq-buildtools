@@ -6,7 +6,7 @@ import os
 import sh
 import sys
 
-DBT_AREA_FILE='dbt-settings'
+exec(open(f'{os.environ["DBT_ROOT"]}/scripts/dbt_setup_constants.py').read())
 UPS_PKGLIST="{}.sh".format(DBT_AREA_FILE)
 
 def error(errmsg):
@@ -52,7 +52,7 @@ def get_time(kind):
     elif kind == "as_seconds_since_epoch":
         sh.date("+%s", _out=stringio_obj)
     else:
-        assert(False, "Unknown argument passed to get_time")
+        assert False, "Unknown argument passed to get_time"
 
     return stringio_obj.getvalue().strip()
 

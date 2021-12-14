@@ -1,28 +1,27 @@
 #!/usr/bin/env python3
 
-PROD_BASEPATH="/cvmfs/dunedaq.opensciencegrid.org/releases"
-NIGHTLY_BASEPATH="/cvmfs/dunedaq-development.opensciencegrid.org/nightly"
+import os
+DBT_ROOT=os.environ["DBT_ROOT"]
+exec(open(f'{DBT_ROOT}/scripts/dbt_setup_constants.py').read())
 
 import sys
 sys.path.append(f'{PROD_BASEPATH}/dunedaq-v2.8.2/dbt-pyvenv/lib/python3.8/site-packages')
 
 import argparse
 import io
-import os
 import pathlib
 import sh
 from shutil import copy
 import subprocess
 from time import sleep
 
-DBT_ROOT=os.environ["DBT_ROOT"]
+
 sys.path.append(f'{DBT_ROOT}/scripts')
 
-from dbt_setup_tools import DBT_AREA_FILE, error, get_time, list_releases
+from dbt_setup_tools import error, get_time, list_releases
 
 EMPTY_DIR_CHECK=True
 
-UPS_PKGLIST=f"{DBT_AREA_FILE}.sh"
 PY_PKGLIST="pyvenv_requirements.txt"
 DAQ_BUILDORDER_PKGLIST="dbt-build-order.cmake"
 
@@ -33,7 +32,7 @@ Usage
 
 To create a new DUNE DAQ development area:
       
-    {os.path.basename(__file__)} [-n/--nightly] [-r/--release-path <path to release area>] <dunedaq-release> <target directory>
+    {os.path.basename(__file__)} [-n/--nightly] [-c/--clone-pyvenv] [-r/--release-path <path to release area>] <dunedaq-release> <target directory>
 
 To list the available DUNE DAQ releases:
 
@@ -44,6 +43,7 @@ Arguments and options:
     dunedaq-release: is the name of the release the new work area will be based on (e.g. dunedaq-v2.8.0)
     -n/--nightly: switch from frozen to nightly releases
     -l/--list: show the list of available releases
+    -c/--clone-pyvenv: cloning the dbt-pyvenv from cvmfs instead of installing from scratch    
     -r/--release-path: is the path to the release archive (defaults to either {PROD_BASEPATH} (frozen) or {NIGHTLY_BASEPATH} (nightly))
 
 See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools for more
@@ -53,6 +53,7 @@ See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools for mor
 
 parser = argparse.ArgumentParser(usage=usage_blurb)
 parser.add_argument("-n", "--nightly", action="store_true", help=argparse.SUPPRESS)
+parser.add_argument("-c", "--clone", action="store_true", help=argparse.SUPPRESS)
 parser.add_argument("-r", "--release-path", action='store', dest='release_path', help=argparse.SUPPRESS)
 parser.add_argument("-l", "--list", action="store_true", dest='_list', help=argparse.SUPPRESS)
 parser.add_argument("release_tag", nargs='?', help=argparse.SUPPRESS)
@@ -140,9 +141,14 @@ copy(f"{RELEASE_PATH}/{UPS_PKGLIST}", f"{TARGETDIR}/{DBT_AREA_FILE}")
 
 os.symlink(f"{DBT_ROOT}/env.sh", f"{TARGETDIR}/dbt-env.sh")
 
-print("Setting up the Python subsystem. Please be patient, this should take O(1 minute)...")
+print("Setting up the Python subsystem.") 
 
-cmd = f"{DBT_ROOT}/scripts/dbt-create-pyvenv.sh {RELEASE_PATH}/{PY_PKGLIST}"
+if args.clone:
+    cmd = f"{DBT_ROOT}/scripts/dbt-clone-pyvenv.sh {RELEASE_PATH}/{DBT_VENV}"
+else:
+    print("Please be patient, this should take O(1 minute)...")
+    cmd = f"{DBT_ROOT}/scripts/dbt-create-pyvenv.sh {RELEASE_PATH}/{PY_PKGLIST}"
+
 res = subprocess.run( cmd.split() )
 if res.returncode != 0:
     error(f"There was a problem running \"{cmd}\" (return value {res.returncode}); exiting...")
