@@ -167,6 +167,29 @@ function add_many_paths_if_exist() {
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
+function remove_path() {
+  # Assert that we got enough arguments
+  if [[ $# -ne 2 ]]; then
+    echo "path remove: needs 2 arguments"
+    return 1
+  fi
+  PATH_NAME=$1
+  PATH_REMOVE=$2
+
+  ACTION="${COL_BLUE}Removed"
+
+  cmd="$PATH_NAME=$( eval echo \$$PATH_NAME | sed -r 's!'$PATH_REMOVE':!!g' )"
+  eval $cmd
+  
+  cmd="$PATH_NAME=$( eval echo \$$PATH_NAME | sed -r 's!:'$PATH_REMOVE'$!!g' )"
+  eval $cmd
+
+  echo -e "${ACTION} ${PATH_REMOVE} -> ${PATH_NAME}${COL_RESET}"
+}
+#------------------------------------------------------------------------------
+
+
+#------------------------------------------------------------------------------
 function backtrace () {
     local deptn=${#FUNCNAME[@]}
 
