@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
 
+PROD_BASEPATH="/cvmfs/dunedaq.opensciencegrid.org/releases"
+NIGHTLY_BASEPATH="/cvmfs/dunedaq-development.opensciencegrid.org/nightly"
+
+import sys
+sys.path.append(f'{PROD_BASEPATH}/dunedaq-v2.8.2/dbt-pyvenv/lib/python3.8/site-packages')
+
+
 import argparse
 from colorama import Fore, Style
 import io
@@ -8,7 +15,6 @@ import re
 import sh
 import shutil
 from shutil import rmtree, which
-import sys
 from time import sleep
 
 DBT_ROOT=os.environ["DBT_ROOT"]

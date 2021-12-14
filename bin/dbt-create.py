@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+PROD_BASEPATH="/cvmfs/dunedaq.opensciencegrid.org/releases"
+NIGHTLY_BASEPATH="/cvmfs/dunedaq-development.opensciencegrid.org/nightly"
+
+import sys
+sys.path.append(f'{PROD_BASEPATH}/dunedaq-v2.8.2/dbt-pyvenv/lib/python3.8/site-packages')
+
 import argparse
 import io
 import os
@@ -7,7 +13,6 @@ import pathlib
 import sh
 from shutil import copy
 import subprocess
-import sys
 from time import sleep
 
 DBT_ROOT=os.environ["DBT_ROOT"]
@@ -16,9 +21,6 @@ sys.path.append(f'{DBT_ROOT}/scripts')
 from dbt_setup_tools import DBT_AREA_FILE, error, get_time, list_releases
 
 EMPTY_DIR_CHECK=True
-
-PROD_BASEPATH="/cvmfs/dunedaq.opensciencegrid.org/releases"
-NIGHTLY_BASEPATH="/cvmfs/dunedaq-development.opensciencegrid.org/nightly"
 
 UPS_PKGLIST=f"{DBT_AREA_FILE}.sh"
 PY_PKGLIST="pyvenv_requirements.txt"
