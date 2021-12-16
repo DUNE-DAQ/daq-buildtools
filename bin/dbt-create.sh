@@ -186,10 +186,11 @@ dbt_setup_env_script=${DBT_ROOT}/env.sh
 ln -s ${dbt_setup_env_script} $TARGETDIR/dbt-env.sh
 test $? -eq 0 || error "There was a problem linking the daq-buildtools setup file. Exiting..."
 
-echo "Setting up the Python subsystem"
+echo "Setting up the Python subsystem." 
 if [[ "${CLONE_VENV}" == true ]]; then
     ${DBT_ROOT}/scripts/dbt-clone-pyvenv.sh ${RELEASE_PATH}/${DBT_VENV}
 else
+    echo "Please be patient, this should take O(1 minute)..."
     ${DBT_ROOT}/scripts/dbt-create-pyvenv.sh ${RELEASE_PATH}/${PY_PKGLIST}
 fi
 
