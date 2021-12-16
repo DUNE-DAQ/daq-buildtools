@@ -5,7 +5,10 @@ DBT_ROOT=os.environ["DBT_ROOT"]
 exec(open(f'{DBT_ROOT}/scripts/dbt_setup_constants.py').read())
 
 import sys
-sys.path.append(f'{PROD_BASEPATH}/dunedaq-v2.8.2/dbt-pyvenv/lib/python3.8/site-packages')
+if sys.prefix == sys.base_prefix:
+    print("You need your Python virtualenv to be set up for this script to work; have you run dbt-workarea-env yet?", file=sys.stderr)
+    print("See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools/ for details", file=sys.stderr)
+    sys.exit(1)
 
 import argparse
 from colorama import Fore, Style
