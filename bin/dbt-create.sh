@@ -42,6 +42,8 @@ NIGHTLY=false
 # Load DBT common constants
 source ${DBT_ROOT}/scripts/dbt-setup-tools.sh
 
+# deprecation_warning
+
 # This is a horrible lash-up and should be replaced with a proper manifest file or equivalent.
 # UPS_PKGLIST="${DBT_AREA_FILE:1}.sh"
 UPS_PKGLIST="${DBT_AREA_FILE}.sh"

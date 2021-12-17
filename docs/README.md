@@ -1,6 +1,6 @@
 _n.b. These instructions assume you're using daq-buildtools from the dunedaq-v2.9.0 frozen release or later_
 
-# DUNE DAQ Buildtools 
+# DUNE DAQ Buildtools
 
 `daq-buildtools` is the toolset to simplify the development of DUNE DAQ packages. It provides environment and building utilities for the DAQ Suite.
 
@@ -97,7 +97,7 @@ To work with more repos, add them to the `./sourcecode` subdirectory as we did w
 * (Recommended) Add the names of your new packages to the `build_order` list found in `./sourcecode/dbt-build-order.cmake`, placing them in the list in the relative order in which you want them to be built. 
 * First clone and build your new base repo, and THEN clone and build your other new repo which depends on your new base repo. 
 
-Once you've added your repos and built them, you'll want to run `dbt-workarea-env --refresh` so the environment picks up their applications, libraries, etc. 
+Once you've added your repos and built them, you'll want to run `dbt-workarea-env --force-ups-reload` so the environment picks up their applications, libraries, etc. 
 
 ### Useful build options
 
@@ -111,7 +111,7 @@ And if, after the build, you want to run the unit tests, just add the `--unittes
 ```
 dbt-build.sh --clean --unittest  # Blow away the contents of ./build, run config+generate+build, and then run the unit tests
 ```
-..where in the above case, you blow away the contents of `./build`,  run config+generate+build, install the result in `$DBT_INSTALL_DIR` and then run the unit tests. Be aware that for many packages, unit tests will only (fully) work if you've also rerun `dbt-workarea-env` with the argument `--refresh` added. 
+..where in the above case, you blow away the contents of `./build`,  run config+generate+build, install the result in `$DBT_INSTALL_DIR` and then run the unit tests. Be aware that for many packages, unit tests will only (fully) work if you've also rerun `dbt-workarea-env` with the argument `--force-ups-reload` added. 
 
 To check for deviations from the coding rules described in the [DUNE C++ Style Guide](https://dune-daq-sw.readthedocs.io/en/latest/packages/styleguide/), run with the `--lint` option:
 ```
@@ -147,7 +147,7 @@ export DBT_INSTALL_DIR=<your installation directory> # Only needed if you didn't
 dbt-workarea-env
 ```
 
-Note that if you add a new repo to your work area, after building your new code - and hence putting its output in `./build` - you'll need to run `dbt-workarea-env --refresh`.
+Note that if you add a new repo to your work area, after building your new code - and hence putting its output in `./build` - you'll need to run `dbt-workarea-env --force-ups-reload`.
 
 Once the runtime environment is set, just run the application you need. listrev, however, has no applications; it's just a set of DAQ module plugins which get added to CET_PLUGIN_PATH.  
 
@@ -258,7 +258,7 @@ dune_daqpackages=(
     "package_declared_by_user v1_2_3 e19:prof"
 )
 ```
-As the names suggest, `dune_products_dirs` contains the list of UPS product pools and `dune_daqpackages` contains a list of UPS products sourced when you first run `dbt-workarea-env` (described below). If you've already run `dbt-workarea-env` before editing the `dbt-settings` file, you'll need to run `dbt-workarea-env --refresh` to force a reload.
+As the names suggest, `dune_products_dirs` contains the list of UPS product pools and `dune_daqpackages` contains a list of UPS products sourced when you first run `dbt-workarea-env` (described below). If you've already run `dbt-workarea-env` before editing the `dbt-settings` file, you'll need to run `dbt-workarea-env --force-ups-reload` to force a reload.
 
 &#x1F534; Hint 💡 `dbt-workarea-env` now has a new option `-s/--subset <externals, daqpackages, systems, devtools>` which allows user to set up a subset of UPS products listed in `dbt-settings`.
 
