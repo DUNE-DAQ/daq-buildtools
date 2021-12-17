@@ -287,8 +287,11 @@ else:
 
 summary_build_info = {}
 for pkg in get_package_list(BUILDDIR):
-    with open(f"{INSTALLDIR}/{pkg}/{pkg}_build_info.json") as f:
-        summary_build_info[pkg] = json.load(f)
+    try:
+        with open(f"{INSTALLDIR}/{pkg}/{pkg}_build_info.json") as f:
+            summary_build_info[pkg] = json.load(f)
+    except FileNotFoundError:
+        summary_build_info[pkg] = "Build info not available"
 
 with open(f"{INSTALLDIR}/build_summary_info.json", 'w') as sbi_f:
     json.dump( summary_build_info, sbi_f, sort_keys=True, indent=4 )
