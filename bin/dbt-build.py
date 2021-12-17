@@ -6,8 +6,8 @@ exec(open(f'{DBT_ROOT}/scripts/dbt_setup_constants.py').read())
 
 import sys
 if sys.prefix == sys.base_prefix:
-    print("You need your Python virtualenv to be set up for this script to work; have you run dbt-workarea-env yet?", file=sys.stderr)
-    print("See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools/ for details", file=sys.stderr)
+    rich.print("You need your Python virtualenv to be set up for this script to work; have you run dbt-workarea-env yet?", file=sys.stderr)
+    rich.print("See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools/ for details", file=sys.stderr)
     sys.exit(1)
 
 import argparse
@@ -18,11 +18,18 @@ import sh
 import shutil
 from shutil import rmtree, which
 from time import sleep
+import rich
+import json
 
 sys.path.append(f'{DBT_ROOT}/scripts')
 
 from dbt_setup_tools import error, find_work_area, get_time, get_num_processors
 import pytee
+
+
+def get_package_list( build_dir ) :
+    return sh.find(r"-L . -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles  -printf %f\n".split()).split()
+
 
 usage_blurb=f"""
 
@@ -55,7 +62,7 @@ if not os.path.exists(BASEDIR):
 BUILDDIR=f"{BASEDIR}/build"
 LOGDIR=f"{BASEDIR}/log"
 SRCDIR=f"{BASEDIR}/sourcecode"
-
+INSTALLDIR=os.environ['DBT_INSTALL_DIR']
 
 parser = argparse.ArgumentParser(usage=usage_blurb)
 parser.add_argument("-c", "--clean", action="store_true", dest="clean_build", help=argparse.SUPPRESS)
@@ -98,7 +105,7 @@ os.chdir(BUILDDIR)
 if args.clean_build:
     # Want to be damn sure we're in the right directory, recursive directory removal is no joke...
     if os.path.basename(os.getcwd()) == "build":
-        print(f"""
+        rich.print(f"""
 Clean build requested, will delete all the contents of build directory \"{os.getcwd()}\".
 If you wish to abort, you have 5 seconds to hit Ctrl-c"
         """)
@@ -160,7 +167,7 @@ if not os.path.exists("CMakeCache.txt"):
 
     fullcmd="{} -DCMAKE_MESSAGE_LOG_LEVEL={} -DMOO_CMD={} -DDBT_ROOT={} -DDBT_DEBUG={} -DCMAKE_INSTALL_PREFIX={} {} {}".format(cmake, cmake_msg_lvl, moo_path, os.environ["DBT_ROOT"], debug_build, os.environ["DBT_INSTALL_DIR"], generator_arg, SRCDIR)
 
-    print(f"Executing '{fullcmd}'")
+    rich.print(f"Executing '{fullcmd}'")
     retval=pytee.run(fullcmd.split(" ")[0], fullcmd.split(" ")[1:], build_log)
 
     endtime_cfggen_d=get_time("as_date")
@@ -168,9 +175,9 @@ if not os.path.exists("CMakeCache.txt"):
     
     if retval == 0:
         cfggentime=int(endtime_cfggen_s) - int(starttime_cfggen_s)
-        print("CMake's config+generate stages took {} seconds".format(cfggentime))
-        print("Start time: {}".format(starttime_cfggen_d))
-        print("End time:   {}".format(endtime_cfggen_d))
+        rich.print("CMake's config+generate stages took {} seconds".format(cfggentime))
+        rich.print("Start time: {}".format(starttime_cfggen_d))
+        rich.print("End time:   {}".format(endtime_cfggen_d))
     else:
         shutil.move("CMakeCache.txt", "CMakeCache.txt.most_recent_failure")
 
@@ -190,7 +197,7 @@ Exiting...
 """)
 
 else: 
-    print(f"The config+generate stage was skipped as CMakeCache.txt was already found in {BUILDDIR}")
+    rich.print(f"The config+generate stage was skipped as CMakeCache.txt was already found in {BUILDDIR}")
 
 if args.cmake_graphviz:
     output = sh.cmake(["--graphviz=graphviz/targets.dot", "."])
@@ -202,7 +209,7 @@ else:
     nprocs = get_num_processors()
     nprocs_argument = f"-j {nprocs}"
     
-    print(f"This script believes you have {nprocs} processors available on this system, and will use as many of them as it can")
+    rich.print(f"This script believes you have {nprocs} processors available on this system, and will use as many of them as it can")
 
 starttime_build_d=get_time("as_date")    
 starttime_build_s=get_time("as_seconds_since_epoch")
@@ -216,7 +223,7 @@ if not args.cmake_trace:
 
 fullcmd=f"{cmake} --build . {build_options}"
 
-print(f"Executing '{fullcmd}'")
+rich.print(f"Executing '{fullcmd}'")
 retval=pytee.run(fullcmd.split(" ")[0], fullcmd.split(" ")[1:], build_log)
 
 endtime_build_d=get_time("as_date")
@@ -247,13 +254,13 @@ try:
 except sh.ErrorReturnCode_1:
     pass
 
-print("")
+rich.print("")
 
 if running_config_and_generate:
-    print("CMake's config+generate+build stages all completed successfully")
-    print("")
+    rich.print("CMake's config+generate+build stages all completed successfully")
+    rich.print("")
 else:
-    print("CMake's build stage completed successfully")
+    rich.print("CMake's build stage completed successfully")
 
 if "DBT_INSTALL_DIR" in os.environ and not re.search(r"^/?$", os.environ["DBT_INSTALL_DIR"]):
     for filename in os.listdir(os.environ["DBT_INSTALL_DIR"]):
@@ -271,12 +278,20 @@ os.chdir(BUILDDIR)
 fullcmd=f"cmake --build . --target install -- {nprocs_argument}"
 retval = pytee.run(fullcmd.split()[0], fullcmd.split()[1:], None)
 if retval == 0:
-    print(f"""
+    rich.print(f"""
 Installation complete.
 This implies your code successfully compiled before installation; you can
 either scroll up or run \"less -R {build_log}\" to see build results""")
 else:
     error(f"Installation failed. There was a problem running \"{fullcmd}\". Exiting...")
+
+summary_build_info = {}
+for pkg in get_package_list(BUILDDIR):
+    with open(f"{INSTALLDIR}/{pkg}/{pkg}_build_info.json") as f:
+        summary_build_info[pkg] = json.load(f)
+
+with open(f"{INSTALLDIR}/build_summary_info.json", 'w') as sbi_f:
+    json.dump( summary_build_info, sbi_f, sort_keys=True, indent=4 )
 
 if run_tests:
     stringio_obj5 = io.StringIO()
@@ -301,7 +316,7 @@ if run_tests:
         unittestdirs = stringio_obj7.getvalue().split()
 
         if len(unittestdirs) == 0:
-            print("{}No unit tests have been written for {}{}".format(Fore.RED, pkgname, Style.RESET_ALL), file = sys.stderr)            
+            rich.print("{}No unit tests have been written for {}{}".format(Fore.RED, pkgname, Style.RESET_ALL), file = sys.stderr)            
             continue
 
         if not "BOOST_TEST_LOG_LEVEL" in os.environ:
@@ -310,21 +325,21 @@ if run_tests:
         num_unit_tests = 0
 
         for unittestdir in unittestdirs:
-            print(f"""
+            rich.print(f"""
 
 RUNNING UNIT TESTS IN {unittestdir}
 ======================================================================
 """)
             for unittest in os.listdir(unittestdir):
-                print(f"unittest == {unittest}")
+                rich.print(f"unittest == {unittest}")
                 if which(f"{unittestdir}/{unittest}", mode=os.X_OK) is not None:
                     pytee.run("echo", "-e Start of unit test suite {}".format(unittest).split(), test_log)
                     pytee.run(f"{unittestdir}/{unittest}", "", test_log)
                     num_unit_tests += 1
 
-            print("{}Testing complete for package \"{}\". Ran {} unit test suites.{}".format(Fore.YELLOW, pkgname, num_unit_tests, Style.RESET_ALL))
-            print("")
-            print(f"Test results are saved in {test_log}")
+            rich.print("{}Testing complete for package \"{}\". Ran {} unit test suites.{}".format(Fore.YELLOW, pkgname, num_unit_tests, Style.RESET_ALL))
+            rich.print("")
+            rich.print(f"Test results are saved in {test_log}")
 
 if args.lint:
     os.chdir(BASEDIR)
@@ -336,7 +351,7 @@ if args.lint:
     lint_log=f"{BASEDIR}/linting_{datestring}.log"
 
     if not os.path.exists("styleguide"):
-        print(f"Cloning styleguide into {os.getcwd()} so linting can be applied")
+        rich.print(f"Cloning styleguide into {os.getcwd()} so linting can be applied")
         sh.git("clone", "https://github.com/DUNE-DAQ/styleguide.git")
 
         if not os.path.exists("styleguide"):
@@ -351,7 +366,7 @@ if args.lint:
 
     for pkgdir in package_list:
         pkgname=os.path.basename(pkgdir)
-        print(f"Package to lint is {pkgname}")
+        rich.print(f"Package to lint is {pkgname}")
         fullcmd = f"./styleguide/cpplint/dune-cpp-style-check.sh build sourcecode/{pkgname}"
         pytee.run(fullcmd.split()[0], fullcmd.split()[1:], lint_log)
 
