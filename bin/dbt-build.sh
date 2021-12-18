@@ -8,7 +8,7 @@ function print_usage() {
 Usage
 -----
 
-      "./$( basename $0 )" [-c/--clean] [-d/--debug] [-j<n>/--jobs <number parallel build jobs>] [--unittest(=<optional package name>)] [--lint(=<optional package name)>] [-v/--cpp-verbose] [-h/--help]
+      "$( basename -- $0 )" [-c/--clean] [-d/--debug] [-j<n>/--jobs <number parallel build jobs>] [--unittest(=<optional package name>)] [--lint(=<optional package name)>] [-v/--cpp-verbose] [-h/--help]
       
         -c/--clean means the contents of ./build are deleted and CMake's config+generate+build stages are run
         -d/--debug means you want to build your software with optimizations off and debugging info on
@@ -27,10 +27,13 @@ Usage
 EOU
 }
 
+
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
 # Import find_work_area function
 source ${DBT_ROOT}/scripts/dbt-setup-tools.sh
+
+deprecation_warning
 
 BASEDIR=$(find_work_area)
 test -n ${BASEDIR:-} || error "DBT Work area directory not found. Exiting..." 
