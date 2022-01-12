@@ -4,7 +4,7 @@ HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 scriptname=$(basename $(readlink -f ${BASH_SOURCE}))
 
 DBT_PKG_SETS=( devtools systems externals daqpackages )
-REFRESH_UPS=false
+FORCE_UPS_RELOAD=false
 # We use "$@" instead of $* to preserve argument-boundary information
 options=$(getopt -o 'hs:r' -l 'help, subset:, refresh' -- "$@") || return 10
 eval "set -- $options"
@@ -12,8 +12,8 @@ eval "set -- $options"
 DBT_PKG_SET="${DBT_PKG_SETS[-1]}"
 while true; do
     case $1 in
-        (-r|--refresh)
-            REFRESH_UPS=true
+        (-r|--force-ups-reload)
+            FORCE_UPS_RELOAD=true
             shift;;
         (-s|--subset)
             DBT_PKG_SET=$2
@@ -23,13 +23,13 @@ while true; do
 Usage
 -----
 
-  ${scriptname} [-h/--help] [--refresh] [-s/--subset [devtools systems externals daqpackages]]
+  ${scriptname} [-h/--help] [--force-ups-reload] [-s/--subset [devtools systems externals daqpackages]]
 
   Sets up the environment of a dbt development area
 
   Arguments and options:
 
-    --refresh: re-runs the build environment setup
+    --force-ups-reload: re-runs the build environment setup
     -s/--subset: optional set of ups packages to load. [choices: ${DBT_PKG_SETS[@]}]
     
 EOU
@@ -68,7 +68,7 @@ EOF
 
 fi
 
-if [[ ("${REFRESH_UPS}" == "false" &&  -z "${DBT_UPS_SETUP_DONE}") || "${REFRESH_UPS}" == "true" ]]; then
+if [[ ("${FORCE_UPS_RELOAD}" == "false" &&  -z "${DBT_UPS_SETUP_DONE}") || "${FORCE_UPS_RELOAD}" == "true" ]]; then
     # 
     if [[ -z "${DBT_UPS_SETUP_DONE}" ]]; then
         echo -e "${COL_GREEN}This script hasn't yet been sourced (successfully) in this shell; setting up the build environment${COL_RESET}\n"
@@ -132,7 +132,7 @@ if [[ ("${REFRESH_UPS}" == "false" &&  -z "${DBT_UPS_SETUP_DONE}") || "${REFRESH
     unset DBT_PKG_SET DBT_PKG_SETS
 
 else
-    echo -e "${COL_YELLOW}The build environment has been already setup.\nUse '${scriptname} --refresh' to force a reload.${COL_RESET}\n"
+    echo -e "${COL_YELLOW}The build environment has been already setup.\nUse '${scriptname} --force-ups-reload' to force a reload.${COL_RESET}\n"
 fi
 
 if [[ -z $DBT_INSTALL_DIR ]]; then
@@ -166,6 +166,16 @@ for p in ${DBT_PACKAGES}; do
     add_many_paths LD_LIBRARY_PATH "${PKG_INSTALL_PATH}/lib64"  "${PKG_INSTALL_PATH}/test/lib64"
     add_many_paths CET_PLUGIN_PATH "${PKG_INSTALL_PATH}/lib64" "${PKG_INSTALL_PATH}/test/lib64"
     add_many_paths DUNEDAQ_SHARE_PATH  "${PKG_INSTALL_PATH}/share" 
+done
+
+for envvar in PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH ; do
+    
+    for pkg in $( eval echo \$$envvar | tr ":" "\n" | sed -r -n 's!'$DBT_INSTALL_DIR'/?([^/]+).*!\1!p' ); do
+	if [[ ! -d $DBT_AREA_ROOT/sourcecode/$pkg ]]; then
+           remove_path $envvar ${DBT_INSTALL_DIR}/?${pkg}/[^:]+
+	fi
+    done
+
 done
 
 export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH

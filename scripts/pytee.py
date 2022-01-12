@@ -4,12 +4,6 @@ import pexpect
 import click
 import shutil
 
-
-
-@click.command()
-@click.argument('cmd')
-@click.argument('args', nargs=-1)
-@click.option('-l', '--log', type=click.Path(), help='Log file.')
 def run(cmd, args, log):
     """
     Execute CMD with argument ARGS in a subshell with pty.
@@ -25,7 +19,7 @@ def run(cmd, args, log):
 
     logfile = None
     if log:
-        logfile = open(log,'w')
+        logfile = open(log,'a')
 
 
     cols, rows = shutil.get_terminal_size(fallback=(400, 100))
@@ -69,7 +63,16 @@ def run(cmd, args, log):
     process.close()
     
     # print(process.exitstatus, process.signalstatus)
-    raise SystemExit(process.exitstatus)
+    #raise SystemExit(process.exitstatus)
+    return process.exitstatus
 
+
+@click.command('run')
+@click.argument('cmd')
+@click.argument('args', nargs=-1)
+@click.option('-l', '--log', type=click.Path(), help='Log file.')
+def run_cli(cmd, args, log):
+    run(cmd, args, log)
+    
 if __name__ == '__main__':
-    run()
+    run_cli()

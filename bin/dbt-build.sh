@@ -8,7 +8,7 @@ function print_usage() {
 Usage
 -----
 
-      "./$( basename $0 )" [-c/--clean] [-d/--debug] [-j<n>/--jobs <number parallel build jobs>] [--unittest(=<optional package name>)] [--lint(=<optional package name)>] [-v/--cpp-verbose] [-h/--help]
+      "$( basename -- $0 )" [-c/--clean] [-d/--debug] [-j<n>/--jobs <number parallel build jobs>] [--unittest(=<optional package name>)] [--lint(=<optional package name)>] [-v/--cpp-verbose] [-h/--help]
       
         -c/--clean means the contents of ./build are deleted and CMake's config+generate+build stages are run
         -d/--debug means you want to build your software with optimizations off and debugging info on
@@ -27,10 +27,13 @@ Usage
 EOU
 }
 
+
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
 # Import find_work_area function
 source ${DBT_ROOT}/scripts/dbt-setup-tools.sh
+
+deprecation_warning
 
 BASEDIR=$(find_work_area)
 test -n ${BASEDIR:-} || error "DBT Work area directory not found. Exiting..." 
@@ -159,15 +162,6 @@ the build directory. Please contact John Freeman at jcfree@fnal.gov and notify h
 EOF
 )"
    fi
-
-   package_list=$( find $SRCDIR -mindepth 1 -maxdepth 1 -type d | xargs -i basename {} )  
-
-   for pkgname in $package_list ; do
-     if [[ -d $DBT_INSTALL_DIR/$pkgname ]]; then
-       rm -rf $DBT_INSTALL_DIR/$pkgname        
-     fi
-   done
-
 fi
 
 
@@ -343,6 +337,12 @@ fi
 
 
 cd $BUILDDIR
+
+if [[ -n $DBT_INSTALL_DIR && ! $DBT_INSTALL_DIR =~ ^/?$ ]]; then
+   rm -rf $DBT_INSTALL_DIR/*
+else
+   error "\$DBT_INSTALL_DIR is not properly defined, which would result in the deletion of the entire contents of this system if it weren't for this check!!!"
+fi
 
 # Will use $cmd if needed for error message
 cmd="cmake --build . --target install -- $nprocs_argument"

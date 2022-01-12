@@ -15,6 +15,14 @@ COL_RESET="\e[0m"
 source ${HERE}/dbt-setup-constants.sh
 
 #------------------------------------------------------------------------------
+function deprecation_warning() {
+  SCRIPT_NAME=$( basename -- $0 )
+  echo 
+  echo -e "${COL_YELLOW}DEPRECATION WARNING: ${SCRIPT_NAME} has been replaced by ${SCRIPT_NAME%.*}.py. ${SCRIPT_NAME} is deprecated and will be removed in future releases.${COL_RESET}"
+  echo 
+}
+
+#------------------------------------------------------------------------------
 function setup_ups_product_areas() {
   
   if [ -z "${dune_products_dirs}" ]; then
@@ -165,6 +173,29 @@ function add_many_paths_if_exist() {
   done
 }
 #------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+function remove_path() {
+  # Assert that we got enough arguments
+  if [[ $# -ne 2 ]]; then
+    echo "path remove: needs 2 arguments"
+    return 1
+  fi
+  PATH_NAME=$1
+  PATH_REMOVE=$2
+
+  ACTION="${COL_BLUE}Removed"
+
+  cmd="$PATH_NAME=$( eval echo \$$PATH_NAME | sed -r 's!'$PATH_REMOVE':!!g' )"
+  eval $cmd
+  
+  cmd="$PATH_NAME=$( eval echo \$$PATH_NAME | sed -r 's!:'$PATH_REMOVE'$!!g' )"
+  eval $cmd
+
+  echo -e "${ACTION} ${PATH_REMOVE} -> ${PATH_NAME}${COL_RESET}"
+}
+#------------------------------------------------------------------------------
+
 
 #------------------------------------------------------------------------------
 function backtrace () {
