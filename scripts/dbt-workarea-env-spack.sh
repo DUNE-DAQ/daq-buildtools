@@ -15,10 +15,10 @@ HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 scriptname=$(basename $(readlink -f ${BASH_SOURCE}))
 
 DBT_GCC_PKG="gcc@8.2.0 +binutils"
-DBT_PKG_SETS=( "systems@dunedaq-v2.8.2" \
-               "devtools@dunedaq-v2.8.2" \
-               "externals@dunedaq-v2.8.2" \
-               "dune-daqpackages@dunedaq-v2.8.2" \
+DBT_PKG_SETS=( "systems" \
+               "devtools" \
+               "externals" \
+               "dune-daqpackages" \
                )
     
 DEFAULT_BUILD_TYPE=RelWithDebInfo
@@ -102,7 +102,8 @@ if [[ ("${REFRESH_PACKAGES}" == "false" &&  -z "${DBT_PACKAGE_SETUP_DONE}") || "
 	 spack unload $DBT_PKG_SET
      fi
 
-          
+    source ${DBT_AREA_ROOT}/${DBT_AREA_FILE}  
+
     spack load $DBT_GCC_PKG
 
     if [[ "$?" != "0" ]]; then
@@ -111,9 +112,9 @@ if [[ ("${REFRESH_PACKAGES}" == "false" &&  -z "${DBT_PACKAGE_SETUP_DONE}") || "
     fi
 
     if [[ "$DBT_PKG_SET" =~ "dune-daqpackages" ]]; then
-	cmd="spack load $DBT_PKG_SET build_type=$DEFAULT_BUILD_TYPE"
+	cmd="spack load ${DBT_PKG_SET}@${DUNE_DAQ_BASE_RELEASE} build_type=$DEFAULT_BUILD_TYPE"
     else
-	cmd="spack load $DBT_PKG_SET"
+	cmd="spack load ${DBT_PKG_SET}@${DUNE_DAQ_BASE_RELEASE}"
     fi
 
     $cmd
