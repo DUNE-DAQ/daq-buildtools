@@ -6,8 +6,8 @@ exec(open(f'{DBT_ROOT}/scripts/dbt_setup_constants.py').read())
 
 import sys
 if sys.prefix == sys.base_prefix:
-    rich.print("You need your Python virtualenv to be set up for this script to work; have you run dbt-workarea-env yet?", file=sys.stderr)
-    rich.print("See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools/ for details", file=sys.stderr)
+    sys.stderr.write("\nYou need your Python virtualenv to be set up for this script to work; have you run dbt-workarea-env yet?")
+    sys.stderr.write("\nSee https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools/ for details. Exiting...\n\n")
     sys.exit(1)
 
 import argparse
