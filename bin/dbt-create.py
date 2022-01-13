@@ -50,10 +50,6 @@ See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools for mor
 
 """ 
 
-print(f"""
-EXPERIMENTAL WARNING: {os.path.basename(__file__)} is still experimental and may not behave as expected. Please use {os.path.splitext(os.path.basename(__file__))[0]}.sh instead.
-""")
-
 
 parser = argparse.ArgumentParser(usage=usage_blurb)
 parser.add_argument("-n", "--nightly", action="store_true", help=argparse.SUPPRESS)
