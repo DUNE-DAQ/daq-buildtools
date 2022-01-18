@@ -351,7 +351,7 @@ if args.lint:
     sh.date(_out=stringio_obj8)
     datestring=re.sub("[: ]+", "_", stringio_obj8.getvalue().strip())
     
-    lint_log=f"{BASEDIR}/linting_{datestring}.log"
+    lint_log=f"{LOGDIR}/linting_{datestring}.log"
 
     if not os.path.exists("styleguide"):
         rich.print(f"Cloning styleguide into {os.getcwd()} so linting can be applied")
