@@ -15,11 +15,7 @@ HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 scriptname=$(basename $(readlink -f ${BASH_SOURCE}))
 
 DBT_GCC_PKG="gcc@8.2.0 +binutils"
-DBT_PKG_SETS=( "systems" \
-               "devtools" \
-               "externals" \
-               "dune-daqpackages" \
-               )
+DBT_PKG_SETS=( devtools systems externals daqpackages )
     
 DEFAULT_BUILD_TYPE=RelWithDebInfo
 REFRESH_PACKAGES=false
