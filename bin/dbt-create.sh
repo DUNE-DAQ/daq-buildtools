@@ -130,12 +130,6 @@ BUILDDIR=${TARGETDIR}/build
 LOGDIR=${TARGETDIR}/log
 SRCDIR=${TARGETDIR}/sourcecode
 
-export USER=${USER:-$(whoami)}
-export HOSTNAME=${HOSTNAME:-$(hostname)}
-
-if [[ -z $USER || -z $HOSTNAME ]]; then
-    error "Problem getting one or both of the environment variables \$USER and \$HOSTNAME. Exiting..." 
-fi
 
 if $EMPTY_DIR_CHECK && [[ -n $( ls -a1 $TARGETDIR | grep -E -v "^\.\.?$" ) ]]; then
 

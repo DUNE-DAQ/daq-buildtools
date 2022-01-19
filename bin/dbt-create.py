@@ -106,13 +106,6 @@ BUILDDIR=f"{TARGETDIR}/build"
 LOGDIR=f"{TARGETDIR}/log"
 SRCDIR=f"{TARGETDIR}/sourcecode"
 
-if "USER" not in os.environ:
-    error("Environment variable \"USER\" should be set. Try \"export USER=$(whoami)\"")
-
-if "HOSTNAME" not in os.environ:
-    error("Environment variable \"HOSTNAME\" should be set. Try \"export HOSTNAME=$(hostname)\"")
-
-
 if EMPTY_DIR_CHECK and os.listdir("."):
     error(f"""
 There appear to be files in {TARGETDIR} besides this script                                                  
