@@ -11,7 +11,7 @@ Usage
 
 To create a new DUNE DAQ development area:
       
-    $( basename $0 ) [-n/--nightly] [-c/--clone-pyvenv] [-r/--release-path <path to release area>] <dunedaq-release> <target directory>
+    $( basename $0 ) [-n/--nightly] [-c/--clone-pyvenv] [-s/--spack] [-r/--release-path <path to release area>] <dunedaq-release> <target directory>
 
 To list the available DUNE DAQ releases:
 
@@ -23,6 +23,7 @@ Arguments and options:
     -n/--nightly: switch to nightly releases
     -l/--list: show the list of available releases
     -c/--clone-pyvenv: cloning the dbt-pyvenv from cvmfs instead of installing from scratch
+    -s/--spack: create the the work area using Spack packages rather than UPS packages
     -r/--release-path: is the path to the release archive (RELEASE_BASEPATH var; default: /cvmfs/dunedaq.opensciencegrid.org/releases)
 
 EOU
@@ -35,6 +36,7 @@ CUSTOM_BASEPATH=""
 SHOW_RELEASE_LIST=false
 CLONE_VENV=false
 NIGHTLY=false
+SPACK=false
 
 # Define usage function here
 
@@ -51,7 +53,7 @@ PY_PKGLIST="pyvenv_requirements.txt"
 DAQ_BUILDORDER_PKGLIST="dbt-build-order.cmake"
 
 # We use "$@" instead of $* to preserve argument-boundary information
-options=$(getopt -o 'hnlcr:' -l ',help,nightly,list,clone-pyvenv,release-base-path:' -- "$@") || exit
+options=$(getopt -o 'hnlcsr:' -l ',help,nightly,list,clone-pyvenv,spack,release-base-path:' -- "$@") || exit
 eval "set -- $options"
 
 while true; do
@@ -67,6 +69,9 @@ while true; do
             # clone pyvenv
             CLONE_VENV=true
             shift;;
+	(-s|--spack)
+	    SPACK=true
+	    shift;;
         (-r|--release-path)
             CUSTOM_BASEPATH=$2
             shift 2;;
@@ -189,14 +194,19 @@ ln -s ${dbt_setup_env_script} $TARGETDIR/dbt-env.sh
 test $? -eq 0 || error "There was a problem linking the daq-buildtools setup file. Exiting..."
 
 echo "Setting up the Python subsystem." 
-if [[ "${CLONE_VENV}" == true ]]; then
-    ${DBT_ROOT}/scripts/dbt-clone-pyvenv.sh ${RELEASE_PATH}/${DBT_VENV}
-else
-    echo "Please be patient, this should take O(1 minute)..."
-    ${DBT_ROOT}/scripts/dbt-create-pyvenv.sh ${RELEASE_PATH}/${PY_PKGLIST}
+spack_arg=""
+if $SPACK ; then
+    spack_arg="--spack"
 fi
 
-test $? -eq 0 || error "Call to create_pyvenv.sh returned nonzero. Exiting..."
+if $CLONE_VENV ; then
+    cmd="${DBT_ROOT}/scripts/dbt-clone-pyvenv.sh ${spack_arg} ${RELEASE_PATH}/${DBT_VENV}"
+else
+    cmd="${DBT_ROOT}/scripts/dbt-create-pyvenv.sh ${spack_arg} ${RELEASE_PATH}/${PY_PKGLIST}"
+    echo "Please be patient, this should take O(1 minute)..."
+fi
+$cmd    
+test $? -eq 0 || error "Call to \"$cmd\" returned nonzero. Exiting..."
 
 endtime_d=$( date )
 endtime_s=$( date +%s )

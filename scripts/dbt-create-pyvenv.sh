@@ -11,16 +11,21 @@ if [[ -z ${DBT_AREA_ROOT} ]]; then
     error "Expected work area directory ${DBT_AREA_ROOT} not found. Exiting..." 
 fi
 
-if [[ $# -ne 1 ]]; then
-    error_preface "Wrong number of arguments"
-    cat << EOU
-Usage: $(basename $0) <path to requirements.txt>:
-
-EOU
+if (( $# < 1 || $# > 2)); then
+    error "Usage: $( basename $0 ) (--spack) <path to requirements.txt>"
     exit 1
 fi
 
-PYENV_REQS=$1
+SPACK=false
+PYENV_REQS=""
+
+if (( $# == 1 )); then
+    PYENV_REQS=$1
+else
+    SPACK=true
+    PYENV_REQS=$2
+fi
+
 #------------------------------------------------------------------------------
 timenow="date \"+%D %T\""
 
@@ -41,20 +46,18 @@ source ${DBT_AREA_ROOT}/${DBT_AREA_FILE}
 
 test $? -eq 0 || error "There was a problem sourcing ${DBT_AREA_ROOT}/${DBT_AREA_FILE}. Exiting..."
 
-source ~/spack/share/spack/setup-env.sh
-
-cd ~/proto-spack
-echo "JCF, Oct-4-2021: don't worry if you see \"Repository is already registered \" error message(s) below"
-spack repo add dune-build 
-spack repo add dune_daqpackages 
-cd -
-
-echo "JCF, Oct-21-2021: don't worry if you see a complaint about new compilers not being found; we just want gcc 8.2.0"
-spack compiler find
-spack load gcc@8.2.0
-source ~/proto-spack/compiler-setup.sh
-
-spack load python@3.8.11
+if ! $SPACK ; then
+    echo "USING UPS"
+    setup_ups_product_areas
+    setup_ups_products dune_systems
+    test $? -eq 0 || error "Failed to setup 'dune_system' products, required to build the python venv. Exiting..." 
+else
+    echo "USING SPACK"
+    source ~/spack/share/spack/setup-env.sh
+    cmd="spack load systems@${DUNE_DAQ_BASE_RELEASE}~debug"
+    $cmd
+    test $? -eq 0 || error "There was a problem calling ${cmd}, required to build the python venv. Exiting..."
+fi
 
 ###
 # Check existance/create the default virtual_env
@@ -77,9 +80,10 @@ then
 fi
 
 python -m pip install -r ${PYENV_REQS}
-test $? -eq 0 || error "Installing required modules failed. Exiting..." 
+test $? -eq 0 || error "Installing required modules from ${PYENV_REQS} failed. Exiting..." 
 
 deactivate
 test $? -eq 0 || error "Call to \"deactivate\" returned nonzero. Exiting..." 
+
 
 

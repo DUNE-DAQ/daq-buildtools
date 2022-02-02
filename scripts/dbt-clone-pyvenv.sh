@@ -11,16 +11,20 @@ if [[ -z ${DBT_AREA_ROOT} ]]; then
     error "Expected work area directory ${DBT_AREA_ROOT} not found. Exiting..." 
 fi
 
-if [[ $# -ne 1 ]]; then
-    error_preface "Wrong number of arguments"
-    cat << EOU
-Usage: $(basename $0) <path to existing python venv>:
-
-EOU
+if (( $# < 1 || $# > 2)); then
+    error "Usage: $( basename $0 ) (--spack) <path to existing python venv>"
     exit 1
 fi
 
-PARENT_VENV=$1
+SPACK=false
+
+if (( $# == 1 )); then
+    PARENT_VENV=$1
+else
+    SPACK=true
+    PARENT_VENV=$2
+fi
+
 #------------------------------------------------------------------------------
 timenow="date \"+%D %T\""
 
@@ -34,14 +38,18 @@ fi
 
 # Source the area settings to determine the origin and version of system packages
 source ${DBT_AREA_ROOT}/${DBT_AREA_FILE}
-
 test $? -eq 0 || error "There was a problem sourcing ${DBT_AREA_ROOT}/${DBT_AREA_FILE}. Exiting..."
 
-setup_ups_product_areas
-
-setup_ups_products dune_systems
-test $? -eq 0 || error "Failed to setup 'dune_system' products, required to build the python venv. Exiting..." 
-
+if ! $SPACK ; then
+    setup_ups_product_areas
+    setup_ups_products dune_systems
+    test $? -eq 0 || error "Failed to setup 'dune_system' products, required to build the python venv. Exiting..." 
+else
+    source ~/spack/share/spack/setup-env.sh
+    cmd="spack load systems@${DUNE_DAQ_BASE_RELEASE}~debug"
+    $cmd
+    test $? -eq 0 || error "There was a problem calling ${cmd}, required to build the python venv. Exiting..."
+fi
 
 ###
 # Check existance/create the default virtual_env
