@@ -46,9 +46,16 @@ if ! $SPACK ; then
     test $? -eq 0 || error "Failed to setup 'dune_system' products, required to build the python venv. Exiting..." 
 else
     source ~/spack/share/spack/setup-env.sh
-    cmd="spack load systems@${DUNE_DAQ_BASE_RELEASE}"
-    $cmd
-    test $? -eq 0 || error "There was a problem calling ${cmd}, required to build the python venv. Exiting..."
+    
+    systems_loaded_status=$(spack find --loaded systems)
+
+    if [[ -z $systems_loaded_status || $systems_loaded_status =~ "0 loaded packages" ]]; then
+	cmd="spack load systems@${DUNE_DAQ_BASE_RELEASE}"
+	$cmd
+	test $? -eq 0 || error "There was a problem calling ${cmd}, required to build the python venv. Exiting..."	
+    else
+	error "There already appear to be \"systems\" packages loaded in; this is disallowed. Exiting..."
+    fi
 fi
 
 ###
@@ -62,6 +69,34 @@ else
     ${HERE}/../bin/clonevirtualenv.py ${PARENT_VENV} ${DBT_AREA_ROOT}/${DBT_VENV}
 
     test $? -eq 0 || error "Problem creating virtual_env ${DBT_VENV}. Exiting..." 
+
+    if $SPACK ; then
+    	# Recall earlier we ensured one, and only one, systems package loaded in
+    	python_basedir=$( spack find -d -p --loaded systems | sed -r -n "s/^\s*python.*\s+(\S+)$/\1/p" )
+    	if [[ -z $python_basedir || "$python_basedir" == "" ]]; then
+    	    error "Somehow unable to determine the location of Spack-installed python. Exiting..."
+    	fi
+	
+    	if [[ ! -e ${DBT_AREA_ROOT}/${DBT_VENV}/pyvenv.cfg ]]; then
+    	    error "${DBT_AREA_ROOT}/${DBT_VENV}/pyvenv.cfg expected to exist but doesn't. Exiting..."
+    	fi
+
+    	sed -i -r 's!^\s*home\s*=.*!home = '${python_basedir}'/bin!' ${DBT_AREA_ROOT}/${DBT_VENV}/pyvenv.cfg
+
+	if [[ ! -L ${DBT_AREA_ROOT}/${DBT_VENV}/bin/python ]]; then
+	    error "Expected ${DBT_AREA_ROOT}/${DBT_VENV}/bin/python linkfile to exist but it doesn't. Exiting..."
+	fi
+
+	if [[ ! -e $python_basedir/bin/python ]]; then
+	    error "Expected $python_basedir/bin/python to exist but it doesn't. Exiting..."
+	fi
+
+	rm ${DBT_AREA_ROOT}/${DBT_VENV}/bin/python
+	pushd ${DBT_AREA_ROOT}/${DBT_VENV}/bin
+	ln -s $python_basedir/bin/python
+	popd
+    fi
+
 fi
 
 source ${DBT_AREA_ROOT}/${DBT_VENV}/bin/activate
