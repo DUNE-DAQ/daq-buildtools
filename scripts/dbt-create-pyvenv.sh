@@ -54,7 +54,7 @@ if ! $SPACK ; then
 else
     echo "USING SPACK"
     source ~/spack/share/spack/setup-env.sh
-    cmd="spack load systems@${DUNE_DAQ_BASE_RELEASE}~debug"
+    cmd="spack load systems@${DUNE_DAQ_BASE_RELEASE}"
     $cmd
     test $? -eq 0 || error "There was a problem calling ${cmd}, required to build the python venv. Exiting..."
 fi
