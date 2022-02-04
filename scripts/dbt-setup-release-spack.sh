@@ -131,7 +131,8 @@ if ! [[ $? -eq 0 ]]; then
     return 1
 fi
 
-spack load ${DBT_PKG_SET}@${DUNE_DAQ_BASE_RELEASE} build_type=$DEFAULT_BUILD_TYPE
+cmd="spack load ${DBT_PKG_SET}@${DUNE_DAQ_BASE_RELEASE} build_type=$DEFAULT_BUILD_TYPE"
+$cmd
 
 if [[ "$?" != "0" ]]; then
     error "There was a problem running $cmd; returning..." 

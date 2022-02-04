@@ -14,7 +14,6 @@ source $spack_script
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 scriptname=$(basename $(readlink -f ${BASH_SOURCE}))
 
-DBT_GCC_PKG="gcc@8.2.0 +binutils"
 DBT_PKG_SETS=( devtools systems externals daqpackages )
     
 DEFAULT_BUILD_TYPE=RelWithDebInfo
@@ -37,7 +36,7 @@ while true; do
 Usage
 -----
 
-  ${scriptname} [-h/--help] [--refresh]
+  ${scriptname} [-h/--help] [--refresh] [-s/--subset [devtools systems externals daqpackages]]
 
   Sets up the environment of a dbt development area
 
@@ -94,21 +93,19 @@ if [[ ("${REFRESH_PACKAGES}" == "false" &&  -z "${DBT_PACKAGE_SETUP_DONE}") || "
          echo -e "${COL_BLUE}Deactivating python environment${COL_RESET}\n"
          deactivate
          echo -e "${COL_BLUE}Unloading packages${COL_RESET}\n"
-         spack unload $DBT_GCC_PKG
-	 spack unload $DBT_PKG_SET
+
+         if [[ "$DBT_PKG_SET" == "daqpackages" ]]; then
+           spack unload dune-daqpackages@${DUNE_DAQ_BASE_RELEASE}
+         else
+	   spack unload $DBT_PKG_SET@${DUNE_DAQ_BASE_RELEASE}
+         fi
+
      fi
 
     source ${DBT_AREA_ROOT}/${DBT_AREA_FILE}  
 
-    spack load $DBT_GCC_PKG
-
-    if [[ "$?" != "0" ]]; then
-	error "There was a problem running spack load $DBT_GCC_PKG; returning..."
-        return 2
-    fi
-
-    if [[ "$DBT_PKG_SET" =~ "dune-daqpackages" ]]; then
-	cmd="spack load ${DBT_PKG_SET}@${DUNE_DAQ_BASE_RELEASE} build_type=$DEFAULT_BUILD_TYPE"
+    if [[ "$DBT_PKG_SET" =~ "daqpackages" ]]; then
+	cmd="spack load dune-daqpackages@${DUNE_DAQ_BASE_RELEASE} build_type=$DEFAULT_BUILD_TYPE"
     else
 	cmd="spack load ${DBT_PKG_SET}@${DUNE_DAQ_BASE_RELEASE}"
     fi

@@ -11,7 +11,7 @@ Usage
 
 To create a new DUNE DAQ development area:
       
-    $( basename $0 ) [-n/--nightly] [-c/--clone-pyvenv] [-s/--spack] [-r/--release-path <path to release area>] <dunedaq-release> <target directory>
+    $( basename $0 ) [-n/--nightly] [-c/--clone-pyvenv] [--spack] [-r/--release-path <path to release area>] <dunedaq-release> <target directory>
 
 To list the available DUNE DAQ releases:
 
@@ -23,7 +23,7 @@ Arguments and options:
     -n/--nightly: switch to nightly releases
     -l/--list: show the list of available releases
     -c/--clone-pyvenv: cloning the dbt-pyvenv from cvmfs instead of installing from scratch
-    -s/--spack: create the the work area using Spack packages rather than UPS packages
+    --spack: create the the work area using Spack packages rather than UPS packages
     -r/--release-path: is the path to the release archive (RELEASE_BASEPATH var; default: /cvmfs/dunedaq.opensciencegrid.org/releases)
 
 EOU
@@ -53,7 +53,7 @@ PY_PKGLIST="pyvenv_requirements.txt"
 DAQ_BUILDORDER_PKGLIST="dbt-build-order.cmake"
 
 # We use "$@" instead of $* to preserve argument-boundary information
-options=$(getopt -o 'hnlcsr:' -l ',help,nightly,list,clone-pyvenv,spack,release-base-path:' -- "$@") || exit
+options=$(getopt -o 'hnlcr:' -l ',help,nightly,list,clone-pyvenv,spack,release-base-path:' -- "$@") || exit
 eval "set -- $options"
 
 while true; do
@@ -69,7 +69,7 @@ while true; do
             # clone pyvenv
             CLONE_VENV=true
             shift;;
-	(-s|--spack)
+	(--spack)
 	    SPACK=true
 	    shift;;
         (-r|--release-path)
