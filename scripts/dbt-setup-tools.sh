@@ -102,13 +102,21 @@ function find_work_area() {
 
 #------------------------------------------------------------------------------
 function list_releases() {
-    # How? RELEASE_BASEPATH subdirs matching some condition? i.e. dunedaq_area.sh file in it?
-    FOUND_RELEASES=($(find -L ${RELEASE_BASEPATH} -maxdepth 2 -name ${UPS_PKGLIST} -printf '%h '))
-    readarray -t SORTED_RELEASES < <(printf '%s\n' "${FOUND_RELEASES[@]}" | sort)
+    if [[ -z $1 ]]; then
+	# How? RELEASE_BASEPATH subdirs matching some condition? i.e. dunedaq_area.sh file in it?
+	FOUND_RELEASES=($(find -L ${RELEASE_BASEPATH} -maxdepth 2 -name ${UPS_PKGLIST} -printf '%h '))
+	readarray -t SORTED_RELEASES < <(printf '%s\n' "${FOUND_RELEASES[@]}" | sort)
 
-    for rel in "${SORTED_RELEASES[@]}"; do
-        echo " - $(basename ${rel})"
-    done 
+	for rel in "${SORTED_RELEASES[@]}"; do
+            echo " - $(basename ${rel})"
+	done 
+    elif [[ -n $1 && "$1" =~ "--spack" ]]; then
+	source ~/spack/share/spack/setup-env.sh
+	spack find -l dune-daqpackages
+    else
+	echo "Developer error. Please contact John Freeman at jcfree@fnal.gov" >&2
+    fi
+
 }
 #------------------------------------------------------------------------------
 

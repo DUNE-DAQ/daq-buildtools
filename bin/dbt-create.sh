@@ -85,6 +85,11 @@ while true; do
     esac
 done
 
+spack_arg=""
+if $SPACK ; then
+    spack_arg="--spack"
+fi
+
 ARGS=("$@")
 
 if [[ ! -z "${CUSTOM_BASEPATH}" ]]; then
@@ -96,7 +101,7 @@ else
 fi
 
 if [[ "${SHOW_RELEASE_LIST}" == true ]]; then
-    list_releases
+    list_releases $spack_arg
     exit 0;
 fi
 
@@ -194,10 +199,6 @@ ln -s ${dbt_setup_env_script} $TARGETDIR/dbt-env.sh
 test $? -eq 0 || error "There was a problem linking the daq-buildtools setup file. Exiting..."
 
 echo "Setting up the Python subsystem." 
-spack_arg=""
-if $SPACK ; then
-    spack_arg="--spack"
-fi
 
 if $CLONE_VENV ; then
     cmd="${DBT_ROOT}/scripts/dbt-clone-pyvenv.sh ${spack_arg} ${RELEASE_PATH}/${DBT_VENV}"
