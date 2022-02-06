@@ -6,7 +6,7 @@ scriptname=$(basename $(readlink -f ${BASH_SOURCE}))
 DBT_PKG_SETS=( devtools systems externals daqpackages )
 FORCE_UPS_RELOAD=false
 # We use "$@" instead of $* to preserve argument-boundary information
-options=$(getopt -o 'hs:r' -l 'help, subset:, refresh' -- "$@") || return 10
+options=$(getopt -o 'hs:r' -l 'help, subset:, force-ups-reload' -- "$@") || return 10
 eval "set -- $options"
 
 DBT_PKG_SET="${DBT_PKG_SETS[-1]}"

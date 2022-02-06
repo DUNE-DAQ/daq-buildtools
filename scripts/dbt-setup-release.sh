@@ -72,13 +72,19 @@ if [[ "${SHOW_RELEASE_LIST}" == true ]]; then
     return 0;
 fi
 
-test ${#ARGS[@]} -eq 1 || (error "Wrong number of arguments. Run '${scriptname} -h' for more information." && return 11 )
+if [[ ${#ARGS[@]} != 1 ]]; then
+    error "Wrong number of arguments. Run '${scriptname} -h' for more information."
+    return 11
+fi
 
 
 RELEASE=${ARGS[0]}
 RELEASE_PATH=$(realpath -m "${RELEASE_BASEPATH}/${RELEASE}")
 
-test -d ${RELEASE_PATH} || (error  "Release path '${RELEASE_PATH}' does not exist. Note that you need to pass \"-n\" for a nightly build. Exiting..." && return 11)
+if [ ! -d ${RELEASE_PATH} ]; then
+    error  "Release path '${RELEASE_PATH}' does not exist. Note that you need to pass \"-n\" for a nightly build. Exiting..."
+    return 11
+fi
 
 if [[ -n ${DBT_WORKAREA_ENV_SCRIPT_SOURCED:-} ]]; then
     error "$( cat<<EOF
