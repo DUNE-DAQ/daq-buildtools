@@ -32,7 +32,7 @@ Usage
 
 To create a new DUNE DAQ development area:
       
-    {os.path.basename(__file__)} [-n/--nightly] [-c/--clone-pyvenv] [-r/--release-path <path to release area>] <dunedaq-release> <target directory>
+    {os.path.basename(__file__)} [-n/--nightly] [-c/--clone-pyvenv] [--spack] [-r/--release-path <path to release area>] <dunedaq-release> <target directory>
 
 To list the available DUNE DAQ releases:
 
@@ -44,6 +44,7 @@ Arguments and options:
     -n/--nightly: switch from frozen to nightly releases
     -l/--list: show the list of available releases
     -c/--clone-pyvenv: cloning the dbt-pyvenv from cvmfs instead of installing from scratch    
+    --spack: create the the work area using Spack packages rather than UPS packages
     -r/--release-path: is the path to the release archive (defaults to either {PROD_BASEPATH} (frozen) or {NIGHTLY_BASEPATH} (nightly))
 
 See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools for more
@@ -58,6 +59,7 @@ EXPERIMENTAL WARNING: {os.path.basename(__file__)} is still experimental and may
 parser = argparse.ArgumentParser(usage=usage_blurb)
 parser.add_argument("-n", "--nightly", action="store_true", help=argparse.SUPPRESS)
 parser.add_argument("-c", "--clone", action="store_true", help=argparse.SUPPRESS)
+parser.add_argument("-s", "--spack", action="store_true", help=argparse.SUPPRESS)
 parser.add_argument("-r", "--release-path", action='store', dest='release_path', help=argparse.SUPPRESS)
 parser.add_argument("-l", "--list", action="store_true", dest='_list', help=argparse.SUPPRESS)
 parser.add_argument("release_tag", nargs='?', help=argparse.SUPPRESS)
@@ -147,11 +149,15 @@ os.symlink(f"{DBT_ROOT}/env.sh", f"{TARGETDIR}/dbt-env.sh")
 
 print("Setting up the Python subsystem.") 
 
+spack_arg=""
+if args.spack:
+    spack_arg="--spack"
+
 if args.clone:
-    cmd = f"{DBT_ROOT}/scripts/dbt-clone-pyvenv.sh {RELEASE_PATH}/{DBT_VENV}"
+    cmd = f"{DBT_ROOT}/scripts/dbt-clone-pyvenv.sh {spack_arg} {RELEASE_PATH}/{DBT_VENV}"
 else:
     print("Please be patient, this should take O(1 minute)...")
-    cmd = f"{DBT_ROOT}/scripts/dbt-create-pyvenv.sh {RELEASE_PATH}/{PY_PKGLIST}"
+    cmd = f"{DBT_ROOT}/scripts/dbt-create-pyvenv.sh {spack_arg} {RELEASE_PATH}/{PY_PKGLIST}"
 
 res = subprocess.run( cmd.split() )
 if res.returncode != 0:
