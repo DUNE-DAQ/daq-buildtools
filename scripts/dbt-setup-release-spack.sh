@@ -1,14 +1,5 @@
 #------------------------------------------------------------------------------
 
-spack_script=$HOME/spack/share/spack/setup-env.sh
-
-if [[ ! -e $spack_script ]]; then
-    echo "Unable to find spack setup script ("$spack_script"); exiting..." >&2
-    return 1
-fi
-
-source $spack_script
-
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 scriptname=$(basename $(readlink -f ${BASH_SOURCE}))
 
@@ -130,23 +121,18 @@ if ! [[ $? -eq 0 ]]; then
     return 1
 fi
 
-cmd="spack load dune-daqpackages@${DUNE_DAQ_BASE_RELEASE} build_type=$DEFAULT_BUILD_TYPE"
-$cmd
-
-if [[ "$?" != "0" ]]; then
-    error "There was a problem running $cmd; returning..." 
-    return 3
-fi
+spack_setup_env
+spack_load_target_package dune-daqpackages
 
 # Let's use Spack python instead of the python installed in ups
 
 export PYTHON_SPACK_VIRTUALENV=`mktemp -d -t ${RELEASE}-XXXX`
-pushd $PYTHON_SPACK_VIRTUALENV
+pushd $PYTHON_SPACK_VIRTUALENV >/dev/null
 
 ${HERE}/../bin/clonevirtualenv.py ${RELEASE_PATH}/${DBT_VENV} ${DBT_VENV}
 test $? -eq 0 || error "Problem creating virtual_env ${RELEASE_PATH}/${DBT_VENV}. Exiting..." 
 
-python_basedir=$( spack find -d -p --loaded systems | sed -r -n "s/^\s*python.*\s+(\S+)$/\1/p" )
+python_basedir=$( spack find -d -p --loaded dune-daqpackages | sed -r -n "s/^\s*python.*\s+(\S+)$/\1/p" )
 if [[ -z $python_basedir || "$python_basedir" == "" ]]; then
     error "Somehow unable to determine the location of Spack-installed python. Exiting..."
 fi
@@ -165,11 +151,11 @@ if [[ ! -e $python_basedir/bin/python ]]; then
     error "Expected $python_basedir/bin/python to exist but it doesn't. Exiting..."
 fi
 
-rm ${PYTHON_SPACK_VIRTUALENV}/${DBT_VENV}/bin/python
-pushd ${PYTHON_SPACK_VIRTUALENV}/${DBT_VENV}/bin
+rm -f ${PYTHON_SPACK_VIRTUALENV}/${DBT_VENV}/bin/python
+pushd ${PYTHON_SPACK_VIRTUALENV}/${DBT_VENV}/bin > /dev/null
 ln -s $python_basedir/bin/python
-popd
-popd
+popd > /dev/null
+popd > /dev/null
 
 source ${PYTHON_SPACK_VIRTUALENV}/${DBT_VENV}/bin/activate
 

@@ -100,25 +100,6 @@ function find_work_area() {
 #------------------------------------------------------------------------------
 
 
-#------------------------------------------------------------------------------
-function list_releases() {
-    if [[ -z $1 ]]; then
-	# How? RELEASE_BASEPATH subdirs matching some condition? i.e. dunedaq_area.sh file in it?
-	FOUND_RELEASES=($(find -L ${RELEASE_BASEPATH} -maxdepth 2 -name ${UPS_PKGLIST} -printf '%h '))
-	readarray -t SORTED_RELEASES < <(printf '%s\n' "${FOUND_RELEASES[@]}" | sort)
-
-	for rel in "${SORTED_RELEASES[@]}"; do
-            echo " - $(basename ${rel})"
-	done 
-    elif [[ -n $1 && "$1" =~ "--spack" ]]; then
-	source ~/spack/share/spack/setup-env.sh
-	spack find -l dune-daqpackages
-    else
-	echo "Developer error. Please contact John Freeman at jcfree@fnal.gov" >&2
-    fi
-
-}
-#------------------------------------------------------------------------------
 
 
 #------------------------------------------------------------------------------
@@ -251,12 +232,12 @@ function error() {
 function spack_setup_env() {
 
     if [[ ! -e $SPACK_BASEPATH/setup-env.sh ]]; then
-	error "Unable to find Spack setup script \"$spack_script\"; exiting..."
+	error "Unable to find Spack setup script \"$SPACK_BASEPATH/setup-env.sh\""
     fi
 
     source $SPACK_BASEPATH/setup-env.sh
     if [[ "$?" != "0" ]]; then
-	error "There was a problem source-ing Spack setup script \"$spack_script\"; exiting..."
+	error "There was a problem source-ing Spack setup script \"$SPACK_BASEPATH/setup-env.sh\""
     fi
 }  
 #------------------------------------------------------------------------------
@@ -268,12 +249,32 @@ function spack_load_target_package() {
     pkg_loaded_status=$(spack find --loaded $spack_pkgname)
 
     if [[ -z $pkg_loaded_status || $pkg_loaded_status =~ "0 loaded packages" || $pkg_loaded_status =~ "No package matches the query: $spack_pkgname" ]]; then
-	cmd="spack load spack_pkgname@${DUNE_DAQ_BASE_RELEASE}"
+	cmd="spack load $spack_pkgname@${DUNE_DAQ_BASE_RELEASE}"
 	$cmd
-	test $? -eq 0 || error "There was a problem calling ${cmd}; exiting..."
+	test $? -eq 0 || error "There was a problem calling ${cmd}"
     else
 	spack find -p -l --loaded $spack_pkgname
-	error "There already appear to be \"$spack_pkgname\" packages loaded in; this is disallowed. Exiting..."
+	error "There already appear to be \"$spack_pkgname\" packages loaded in; this is disallowed."
+    fi
+
+}
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+function list_releases() {
+    if [[ -z $1 ]]; then
+	# How? RELEASE_BASEPATH subdirs matching some condition? i.e. dunedaq_area.sh file in it?
+	FOUND_RELEASES=($(find -L ${RELEASE_BASEPATH} -maxdepth 2 -name ${UPS_PKGLIST} -printf '%h '))
+	readarray -t SORTED_RELEASES < <(printf '%s\n' "${FOUND_RELEASES[@]}" | sort)
+
+	for rel in "${SORTED_RELEASES[@]}"; do
+            echo " - $(basename ${rel})"
+	done 
+    elif [[ -n $1 && "$1" =~ "--spack" ]]; then
+	spack_setup_env
+	spack find -l dune-daqpackages
+    else
+	echo "Developer error. Please contact John Freeman at jcfree@fnal.gov" >&2
     fi
 
 }

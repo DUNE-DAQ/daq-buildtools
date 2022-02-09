@@ -1,15 +1,6 @@
 #------------------------------------------------------------------------------
 
 
-spack_script=$HOME/spack/share/spack/setup-env.sh
-
-if [[ ! -e $spack_script ]]; then
-    echo "Unable to find spack setup script ("$spack_script"); exiting..." >&2
-    return 1
-fi
-
-source $spack_script
-
 
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 scriptname=$(basename $(readlink -f ${BASH_SOURCE}))
@@ -56,12 +47,11 @@ EOU
 done
 
 source ${HERE}/dbt-setup-tools.sh
-# Import find_work_area function
 
 export DBT_AREA_ROOT=$(find_work_area)
 
 if [[ -z $DBT_AREA_ROOT ]]; then
-    error "Expected work area directory not found. Returning..." 
+    error "Expected work area directory \"$DBT_AREA_ROOT\" not found. Returning..." 
     return 1
 else
   echo -e "${COL_BLUE}Work area: '${DBT_AREA_ROOT}'${COL_RESET}\n"
@@ -82,6 +72,7 @@ EOF
 
 fi
 
+spack_setup_env
 
 if [[ ("${REFRESH_PACKAGES}" == "false" &&  -z "${DBT_PACKAGE_SETUP_DONE}") || "${REFRESH_PACKAGES}" == "true" ]]; then
     
@@ -105,29 +96,22 @@ if [[ ("${REFRESH_PACKAGES}" == "false" &&  -z "${DBT_PACKAGE_SETUP_DONE}") || "
     source ${DBT_AREA_ROOT}/${DBT_AREA_FILE}  
 
     if [[ "$DBT_PKG_SET" =~ "daqpackages" ]]; then
-	cmd="spack load dune-daqpackages@${DUNE_DAQ_BASE_RELEASE} build_type=$DEFAULT_BUILD_TYPE"
+	spack_load_target_package dune-daqpackages
     else
-	cmd="spack load ${DBT_PKG_SET}@${DUNE_DAQ_BASE_RELEASE}"
+	spack_load_target_package $DBT_PKG_SET
     fi
 
-    $cmd
+    # Assumption is you've already spack loaded python, etc...
 
-    if [[ "$?" != "0" ]]; then
-	error "There was a problem running $cmd; returning..." 
-	return 3
+    source ${DBT_AREA_ROOT}/${DBT_VENV}/bin/activate
+
+    if [[ "$VIRTUAL_ENV" == "" ]]
+    then
+	error "You are already in a virtual env. Please deactivate first. Returning..." 
+	return 11
     fi
-
-     # Assumption is you've already spack loaded python, etc...
-
-     source ${DBT_AREA_ROOT}/${DBT_VENV}/bin/activate
-
-     if [[ "$VIRTUAL_ENV" == "" ]]
-     then
-       error "You are already in a virtual env. Please deactivate first. Returning..." 
-       return 11
-     fi
      
-     export DBT_PACKAGE_SETUP_DONE=1
+    export DBT_PACKAGE_SETUP_DONE=1
 
 else
      echo -e "${COL_YELLOW}The build environment has been already setup.\nUse '${scriptname} --refresh' to force a reload.${COL_RESET}\n"
