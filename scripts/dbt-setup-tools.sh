@@ -247,4 +247,34 @@ function error() {
 }
 #------------------------------------------------------------------------------
 
-  
+#------------------------------------------------------------------------------
+function spack_setup_env() {
+
+    if [[ ! -e $SPACK_BASEPATH/setup-env.sh ]]; then
+	error "Unable to find Spack setup script \"$spack_script\"; exiting..."
+    fi
+
+    source $SPACK_BASEPATH/setup-env.sh
+    if [[ "$?" != "0" ]]; then
+	error "There was a problem source-ing Spack setup script \"$spack_script\"; exiting..."
+    fi
+}  
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+function spack_load_target_package() {
+
+    local spack_pkgname=$1
+    pkg_loaded_status=$(spack find --loaded $spack_pkgname)
+
+    if [[ -z $pkg_loaded_status || $pkg_loaded_status =~ "0 loaded packages" || $pkg_loaded_status =~ "No package matches the query: $spack_pkgname" ]]; then
+	cmd="spack load spack_pkgname@${DUNE_DAQ_BASE_RELEASE}"
+	$cmd
+	test $? -eq 0 || error "There was a problem calling ${cmd}; exiting..."
+    else
+	spack find -p -l --loaded $spack_pkgname
+	error "There already appear to be \"$spack_pkgname\" packages loaded in; this is disallowed. Exiting..."
+    fi
+
+}
+#------------------------------------------------------------------------------

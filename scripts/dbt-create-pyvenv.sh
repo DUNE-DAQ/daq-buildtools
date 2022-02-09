@@ -41,22 +41,21 @@ fi
 # Source dune system packages
 ###
 
-# Source the area settings to determine the origin and version of system packages
+# Source the area settings to determine the origin and version of
+# system packages, as well as to get the environment variable storing
+# the release in use
+
 source ${DBT_AREA_ROOT}/${DBT_AREA_FILE}
 
 test $? -eq 0 || error "There was a problem sourcing ${DBT_AREA_ROOT}/${DBT_AREA_FILE}. Exiting..."
 
 if ! $SPACK ; then
-    echo "USING UPS"
     setup_ups_product_areas
     setup_ups_products dune_systems
     test $? -eq 0 || error "Failed to setup 'dune_system' products, required to build the python venv. Exiting..." 
 else
-    echo "USING SPACK"
-    source ~/spack/share/spack/setup-env.sh
-    cmd="spack load systems@${DUNE_DAQ_BASE_RELEASE}"
-    $cmd
-    test $? -eq 0 || error "There was a problem calling ${cmd}, required to build the python venv. Exiting..."
+    spack_setup_env
+    spack_load_target_package systems  # Error checking occurs inside function
 fi
 
 ###

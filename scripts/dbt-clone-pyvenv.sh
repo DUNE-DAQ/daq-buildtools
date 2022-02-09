@@ -45,17 +45,8 @@ if ! $SPACK ; then
     setup_ups_products dune_systems
     test $? -eq 0 || error "Failed to setup 'dune_system' products, required to build the python venv. Exiting..." 
 else
-    source ~/spack/share/spack/setup-env.sh
-    
-    systems_loaded_status=$(spack find --loaded systems)
-
-    if [[ -z $systems_loaded_status || $systems_loaded_status =~ "0 loaded packages" ]]; then
-	cmd="spack load systems@${DUNE_DAQ_BASE_RELEASE}"
-	$cmd
-	test $? -eq 0 || error "There was a problem calling ${cmd}, required to build the python venv. Exiting..."	
-    else
-	error "There already appear to be \"systems\" packages loaded in; this is disallowed. Exiting..."
-    fi
+    spack_setup_env
+    spack_load_target_package systems  # Error checking occurs inside function
 fi
 
 ###
