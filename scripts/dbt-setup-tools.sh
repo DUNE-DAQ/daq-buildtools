@@ -254,12 +254,16 @@ function spack_load_target_package() {
 
     if [[ -z $pkg_loaded_status || $pkg_loaded_status =~ "0 loaded packages" || $pkg_loaded_status =~ "No package matches the query: $spack_pkgname" ]]; then
 	cmd="spack load $spack_pkgname@${DUNE_DAQ_BASE_RELEASE}%gcc@8.2.0"
+	echo "Calling \"$cmd\"; will print \"Finished\" when successfully done"
 	$cmd
 	retval=$?
-	if [[ "$retval" != "0" ]]; then
+	if [[ "$retval" == "0" ]]; then
+	    echo "Finished"
+	else
 	    error "There was a problem calling ${cmd}"
 	    return $retval
 	fi
+	
     else
 	spack find -p -l --loaded $spack_pkgname
 	error "There already appear to be \"$spack_pkgname\" packages loaded in; this is disallowed."
