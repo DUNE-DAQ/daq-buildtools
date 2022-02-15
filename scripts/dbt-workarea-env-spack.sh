@@ -73,6 +73,11 @@ EOF
 fi
 
 spack_setup_env
+retval=$?
+if [[ "$retval" != "0" ]]; then
+    error "Problem setting up the spack environment"
+    return $retval
+fi
 
 if [[ ("${REFRESH_PACKAGES}" == "false" &&  -z "${DBT_PACKAGE_SETUP_DONE}") || "${REFRESH_PACKAGES}" == "true" ]]; then
     
@@ -85,11 +90,19 @@ if [[ ("${REFRESH_PACKAGES}" == "false" &&  -z "${DBT_PACKAGE_SETUP_DONE}") || "
          deactivate
          echo -e "${COL_BLUE}Unloading packages${COL_RESET}\n"
 
+	 cmd=""
          if [[ "$DBT_PKG_SET" == "daqpackages" ]]; then
-           spack unload dune-daqpackages@${DUNE_DAQ_BASE_RELEASE}
+             cmd="spack unload dune-daqpackages@${DUNE_DAQ_BASE_RELEASE}"
          else
-	   spack unload $DBT_PKG_SET@${DUNE_DAQ_BASE_RELEASE}
+	     cmd="spack unload $DBT_PKG_SET@${DUNE_DAQ_BASE_RELEASE}"
          fi
+	 $cmd
+	 retval="$?"
+
+	 if [[ "$retval" != "0" ]]; then
+	     error "There was a problem calling \"$cmd\"; returning..."
+	     return $retval
+	 fi
 
      fi
 
@@ -99,6 +112,12 @@ if [[ ("${REFRESH_PACKAGES}" == "false" &&  -z "${DBT_PACKAGE_SETUP_DONE}") || "
 	spack_load_target_package dune-daqpackages
     else
 	spack_load_target_package $DBT_PKG_SET
+    fi
+
+    retval=$?
+    if [[ "$retval" != "0" ]]; then
+      error "Failed to load spack target package. Returning..."
+      return $retval
     fi
 
     # Assumption is you've already spack loaded python, etc...

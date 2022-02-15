@@ -83,9 +83,9 @@ else
 	fi
 
 	rm ${DBT_AREA_ROOT}/${DBT_VENV}/bin/python
-	pushd ${DBT_AREA_ROOT}/${DBT_VENV}/bin
+	pushd ${DBT_AREA_ROOT}/${DBT_VENV}/bin > /dev/null
 	ln -s $python_basedir/bin/python
-	popd
+	popd > /dev/null
     fi
 
 fi

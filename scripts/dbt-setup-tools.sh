@@ -231,14 +231,18 @@ function error() {
 #------------------------------------------------------------------------------
 function spack_setup_env() {
 
-    if [[ ! -e $SPACK_BASEPATH/setup-env.sh ]]; then
-	error "Unable to find Spack setup script \"$SPACK_BASEPATH/setup-env.sh\""
+    local spack_setup_script=$SPACK_BASEPATH/share/spack/setup-env.sh
+    if [[ ! -e $spack_setup_script ]]; then
+	error "Unable to find Spack setup script \"$spack_setup_script\""
+	return 1
     fi
 
-    source $SPACK_BASEPATH/setup-env.sh
-    if [[ "$?" != "0" ]]; then
-	error "There was a problem source-ing Spack setup script \"$SPACK_BASEPATH/setup-env.sh\""
+    source $spack_setup_script
+    retval=$?
+    if [[ "$retval" != "0" ]]; then
+	error "There was a problem source-ing Spack setup script \"$spack_setup_script\""
     fi
+    return $retval
 }  
 #------------------------------------------------------------------------------
 
@@ -249,12 +253,17 @@ function spack_load_target_package() {
     pkg_loaded_status=$(spack find --loaded $spack_pkgname)
 
     if [[ -z $pkg_loaded_status || $pkg_loaded_status =~ "0 loaded packages" || $pkg_loaded_status =~ "No package matches the query: $spack_pkgname" ]]; then
-	cmd="spack load $spack_pkgname@${DUNE_DAQ_BASE_RELEASE}"
+	cmd="spack load $spack_pkgname@${DUNE_DAQ_BASE_RELEASE}%gcc@8.2.0"
 	$cmd
-	test $? -eq 0 || error "There was a problem calling ${cmd}"
+	retval=$?
+	if [[ "$retval" != "0" ]]; then
+	    error "There was a problem calling ${cmd}"
+	    return $retval
+	fi
     else
 	spack find -p -l --loaded $spack_pkgname
 	error "There already appear to be \"$spack_pkgname\" packages loaded in; this is disallowed."
+	return 1
     fi
 
 }
@@ -272,7 +281,12 @@ function list_releases() {
 	done 
     elif [[ -n $1 && "$1" =~ "--spack" ]]; then
 	spack_setup_env
-	spack find -l dune-daqpackages
+	cmd="spack find -l dune-daqpackages"
+	$cmd
+	if [[ "$?" != "0" ]]; then
+	    error "There was a problem calling \"$cmd\"; returning..."
+	    return 1
+	fi
     else
 	echo "Developer error. Please contact John Freeman at jcfree@fnal.gov" >&2
     fi
