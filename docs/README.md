@@ -6,7 +6,7 @@ _JCF, Feb-15-2022: These instructions are for early testers of Spack installatio
 
 ## System requirements
 
-To get set up, you'll need access to the cvmfs Spack area `/cvmfs/dunedaq-development.opensciencegrid.org/sandbox/spack` as is the case, e.g., on the lxplus machines at CERN. 
+To get set up, you'll need access to the cvmfs Spack area `/cvmfs/dunedaq-development.opensciencegrid.org/sandbox/spack` as is the case, e.g., on the lxplus machines at CERN. If you've been doing your own Spack work on the system in question, you may also want to back up (rename) your existing `~/.spack` directory to give Spack a clean slate to start from in these instructions. 
 <a name="Setup_of_daq-buildtools"></a>
 ## Setup of `daq-buildtools`
 
