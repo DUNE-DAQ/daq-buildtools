@@ -284,12 +284,18 @@ function list_releases() {
             echo " - $(basename ${rel})"
 	done 
     elif [[ -n $1 && "$1" =~ "--spack" ]]; then
+
 	spack_setup_env
-	cmd="spack find -l dune-daqpackages"
-	$cmd
+	if [[ "$?" != "0" ]]; then
+	    error "There was a problem setting up the Spack environment; returning..."
+	    return 1
+	fi
+
+	cmd="spack find -l dune-daqpackages | sed -r -n \"s/^\\S+\\s+dune-daqpackages@(\\S+)\\s*\$/ - \\1/p\""
+	eval $cmd
 	if [[ "$?" != "0" ]]; then
 	    error "There was a problem calling \"$cmd\"; returning..."
-	    return 1
+	    return 2
 	fi
     else
 	echo "Developer error. Please contact John Freeman at jcfree@fnal.gov" >&2
