@@ -264,7 +264,12 @@ function spack_load_target_package() {
 
 Calling "$cmd"; will print "Finished" 
 when successfully done. If this takes more than O(1 minute) the command has 
-hung; hit Ctrl-c, type "export SPACK_VERBOSE=true" and try again. If the 
+hung; hit Ctrl-c, and try again after doing the following:
+
+export SPACK_VERBOSE=true
+rm -rf <the name of your work area directory you passed to dbt-create>
+
+If the 
 problem persists, try this on a different host and/or contact John Freeman at
 jcfree@fnal.gov"
 
