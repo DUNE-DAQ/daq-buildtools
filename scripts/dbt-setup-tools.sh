@@ -253,8 +253,22 @@ function spack_load_target_package() {
     pkg_loaded_status=$(spack find --loaded $spack_pkgname)
 
     if [[ -z $pkg_loaded_status || $pkg_loaded_status =~ "0 loaded packages" || $pkg_loaded_status =~ "No package matches the query: $spack_pkgname" ]]; then
-	cmd="spack load $spack_pkgname@${DUNE_DAQ_BASE_RELEASE}%gcc@8.2.0"
-	echo "Calling \"$cmd\"; will print \"Finished\" when successfully done"
+
+	local spack_args=""
+	if [[ -n $SPACK_VERBOSE ]] && $SPACK_VERBOSE ; then
+	    spack_args="--debug"
+	fi
+	cmd="spack $spack_args load $spack_pkgname@${DUNE_DAQ_BASE_RELEASE}%gcc@8.2.0"
+
+	cat<<EOF
+
+Calling "$cmd"; will print "Finished" 
+when successfully done. If this takes more than O(1 minute) the command has 
+hung; hit Ctrl-c, type "export SPACK_VERBOSE=true" and try again. If the 
+problem persists, try this on a different host and/or contact John Freeman at
+jcfree@fnal.gov"
+
+EOF
 	$cmd
 	retval=$?
 	if [[ "$retval" == "0" ]]; then
