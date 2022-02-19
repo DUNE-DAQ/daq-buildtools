@@ -1,21 +1,23 @@
 
-from colorama import Fore, Style
 from inspect import currentframe, getframeinfo
 import io
 import os
-import sh
+import subprocess
+from subprocess import Popen
 import sys
 
 exec(open(f'{os.environ["DBT_ROOT"]}/scripts/dbt_setup_constants.py').read())
 UPS_PKGLIST="{}.sh".format(DBT_AREA_FILE)
 
 def error(errmsg):
-    timenow = io.StringIO()
-    sh.date("+%D %T", _out=timenow)
+    proc = Popen(["date", "+%D %T"], stdout=subprocess.PIPE)
+    timenow = proc.stdout.readlines()[0].decode("utf-8").strip()
 
     frameinfo = getframeinfo(currentframe().f_back)
-
-    print("{}ERROR: [{}] [{}:{}]: {}{}".format(Fore.RED, timenow.getvalue().strip(), frameinfo.filename, frameinfo.lineno, errmsg, Style.RESET_ALL), file = sys.stderr)
+    
+    REDIFY="\033[91m"
+    UNREDIFY="\033[0m"
+    print("{}ERROR: [{}] [{}:{}]: {}{}".format(REDIFY, timenow, frameinfo.filename, frameinfo.lineno, errmsg, UNREDIFY), file = sys.stderr)
     sys.exit(1)
 
 def find_work_area():
@@ -30,29 +32,26 @@ def find_work_area():
             return ""
  
 def list_releases(release_basepath):
-    releases = io.StringIO()
-    sh.find("-L", release_basepath, "-maxdepth", "2", "-name", UPS_PKGLIST, "-printf", "'%h '", _out=releases)
 
-    for reldir in releases.getvalue().split("'"):
-        reldir=reldir.strip()
+    proc = Popen(["find", "-L", release_basepath, "-maxdepth", "2", "-name", UPS_PKGLIST, "-printf", "%h\n"], \
+                 stdout=subprocess.PIPE)
+
+    for reldir in proc.stdout.readlines():
+        reldir=reldir.decode("utf-8").strip()
         if reldir != "":
             print(" - {}".format(os.path.basename(reldir)))
 
 def get_num_processors():
-    nprocs=io.StringIO()
-    sh.wc(sh.grep("-E", "processor\s*:\s*[0-9]+", "/proc/cpuinfo"), "-l", _out=nprocs)
-    return nprocs.getvalue().strip()
+    proc = Popen(["grep", "-E", "processor\s*:\s*[0-9]+", "/proc/cpuinfo"], stdout=subprocess.PIPE)
+    nprocs = len(proc.stdout.readlines())
+    return str(nprocs)
 
 def get_time(kind):
-
-    stringio_obj = io.StringIO()
-
     if kind == "as_date":
-        sh.date(_out=stringio_obj)        
+        dateargs = ["date"]
     elif kind == "as_seconds_since_epoch":
-        sh.date("+%s", _out=stringio_obj)
+        dateargs = ["date", "+%s"]
     else:
         assert False, "Unknown argument passed to get_time"
 
-    return stringio_obj.getvalue().strip()
-
+    return Popen(dateargs, stdout=subprocess.PIPE).stdout.readlines()[0].decode("utf-8").strip()
