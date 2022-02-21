@@ -2,15 +2,13 @@ import os
 DBT_ROOT=os.environ["DBT_ROOT"]
 exec(open(f'{DBT_ROOT}/scripts/dbt_setup_constants.py').read())
 
-import sys
-sys.path.append(f'{PROD_BASEPATH}/dunedaq-v2.8.2/dbt-pyvenv/lib/python3.8/site-packages')
-
 import argparse
 import io
 import pathlib
-import sh
 from shutil import copy
 import subprocess
+from subprocess import Popen
+import sys
 from time import sleep
 
 
@@ -74,9 +72,8 @@ elif not args.release_tag or not args.workarea_dir:
 
 RELEASE=args.release_tag
 
-stringio_obj1 = io.StringIO()
-sh.realpath("-m", f"{RELEASE_BASEPATH}/{RELEASE}", _out=stringio_obj1)
-RELEASE_PATH=stringio_obj1.getvalue().strip()
+proc=Popen(["realpath", "-m", f"{RELEASE_BASEPATH}/{RELEASE}"], stdout=subprocess.PIPE)
+RELEASE_PATH=proc.stdout.readlines()[0].decode("utf-8").strip()
 
 TARGETDIR=args.workarea_dir
 
@@ -157,5 +154,4 @@ See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools for bui
 Script completed successfully
 
 """)
-
 
