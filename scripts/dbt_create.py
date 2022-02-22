@@ -7,7 +7,6 @@ import io
 import pathlib
 from shutil import copy
 import subprocess
-from subprocess import Popen
 import sys
 from time import sleep
 
@@ -71,9 +70,7 @@ elif not args.release_tag or not args.workarea_dir:
     error("Wrong number of arguments. Run '{} -h' for more information.".format(os.path.basename(__file__)))
 
 RELEASE=args.release_tag
-
-proc=Popen(["realpath", "-m", f"{RELEASE_BASEPATH}/{RELEASE}"], stdout=subprocess.PIPE)
-RELEASE_PATH=proc.stdout.readlines()[0].decode("utf-8").strip()
+RELEASE_PATH=os.path.realpath(f"{RELEASE_BASEPATH}/{RELEASE}")
 
 TARGETDIR=args.workarea_dir
 

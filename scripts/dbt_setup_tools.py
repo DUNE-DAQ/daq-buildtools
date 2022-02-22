@@ -1,18 +1,16 @@
 
+import glob
 from inspect import currentframe, getframeinfo
 import io
 import os
 import subprocess
-from subprocess import Popen
 import sys
 
 exec(open(f'{os.environ["DBT_ROOT"]}/scripts/dbt_setup_constants.py').read())
 UPS_PKGLIST="{}.sh".format(DBT_AREA_FILE)
 
 def error(errmsg):
-    proc = Popen(["date", "+%D %T"], stdout=subprocess.PIPE)
-    timenow = proc.stdout.readlines()[0].decode("utf-8").strip()
-
+    timenow = subprocess.run(["date"], capture_output=True).stdout.decode("utf-8").strip()
     frameinfo = getframeinfo(currentframe().f_back)
     
     REDIFY="\033[91m"
@@ -33,25 +31,16 @@ def find_work_area():
  
 def list_releases(release_basepath):
 
-    proc = Popen(["find", "-L", release_basepath, "-maxdepth", "2", "-name", UPS_PKGLIST, "-printf", "%h\n"], \
-                 stdout=subprocess.PIPE)
-
-    for reldir in proc.stdout.readlines():
-        reldir=reldir.decode("utf-8").strip()
-        if reldir != "":
-            print(" - {}".format(os.path.basename(reldir)))
-
-def get_num_processors():
-    proc = Popen(["grep", "-E", "processor\s*:\s*[0-9]+", "/proc/cpuinfo"], stdout=subprocess.PIPE)
-    nprocs = len(proc.stdout.readlines())
-    return str(nprocs)
+    for filename in glob.glob(f"{release_basepath}/*"):
+        if os.path.exists(f"{os.path.realpath(filename)}/{UPS_PKGLIST}"):
+            print(f" - {os.path.basename(filename)}")
 
 def get_time(kind):
     if kind == "as_date":
-        dateargs = ["date"]
+        dateargs=["date"]
     elif kind == "as_seconds_since_epoch":
-        dateargs = ["date", "+%s"]
+        dateargs=["date", "+%s"]
     else:
         assert False, "Unknown argument passed to get_time"
 
-    return Popen(dateargs, stdout=subprocess.PIPE).stdout.readlines()[0].decode("utf-8").strip()
+    return subprocess.run(dateargs, capture_output=True).stdout.decode("utf-8").strip()
