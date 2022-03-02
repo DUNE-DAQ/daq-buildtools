@@ -6,13 +6,14 @@ exec(open(f'{DBT_ROOT}/scripts/dbt_setup_constants.py').read())
 
 import sys
 if sys.prefix == sys.base_prefix:
-    rich.print("You need your Python virtualenv to be set up for this script to work; have you run dbt-workarea-env yet?", file=sys.stderr)
-    rich.print("See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools/ for details", file=sys.stderr)
+    sys.stderr.write("\nYou need your Python virtualenv to be set up for this script to work; have you run dbt-workarea-env yet?")
+    sys.stderr.write("\nSee https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools/ for details. Exiting...\n\n")
     sys.exit(1)
 
 import argparse
 from colorama import Fore, Style
 import io
+import multiprocessing
 import re
 import sh
 import shutil
@@ -23,7 +24,7 @@ import json
 
 sys.path.append(f'{DBT_ROOT}/scripts')
 
-from dbt_setup_tools import error, find_work_area, get_time, get_num_processors
+from dbt_setup_tools import error, find_work_area, get_time
 import pytee
 
 
@@ -206,7 +207,7 @@ if args.cmake_graphviz:
 if args.n_jobs:
     nprocs_argument = f"-j {args.n_jobs}"
 else:
-    nprocs = get_num_processors()
+    nprocs = multiprocessing.cpu_count()
     nprocs_argument = f"-j {nprocs}"
     
     rich.print(f"This script believes you have {nprocs} processors available on this system, and will use as many of them as it can")
