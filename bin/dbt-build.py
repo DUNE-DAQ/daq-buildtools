@@ -38,7 +38,7 @@ Usage
 -----
 
       {os.path.basename(__file__)} [-c/--clean] [-d/--debug] [-j<n>/--jobs <number parallel build jobs>] [--unittest (<optional package name>)] [--lint (<optional package name)>] [-v/--cpp-verbose] [-h/--help]
-      
+
         -c/--clean means the contents of ./build are deleted and CMake's config+generate+build stages are run
         -d/--debug means you want to build your software with optimizations off and debugging info on
         -j/--jobs means you want to specify the number of jobs used by cmake to build the project
@@ -49,9 +49,9 @@ Usage
         --cmake-trace enable cmake tracing
         --cmake-graphviz generates a target dependency graph
 
-    
-    All arguments are optional. With no arguments, CMake will typically just run 
-    build, unless build/CMakeCache.txt is missing    
+
+    All arguments are optional. With no arguments, CMake will typically just run
+    build, unless build/CMakeCache.txt is missing
 
 
 """
@@ -95,8 +95,8 @@ if args.install:
 
 if "DBT_WORKAREA_ENV_SCRIPT_SOURCED" not in os.environ:
     error("""
-It appears you haven't yet executed "dbt-workarea-env"; please do so before 
-running this script. Exiting...                                                                                 
+It appears you haven't yet executed "dbt-workarea-env"; please do so before
+running this script. Exiting...
     """)
 
 if not os.path.exists(BUILDDIR):
@@ -111,7 +111,7 @@ Clean build requested, will delete all the contents of build directory \"{os.get
 If you wish to abort, you have 5 seconds to hit Ctrl-c"
         """)
         sleep(5)
-        
+
         for filename in os.listdir(os.getcwd()):
             file_path = os.path.join(os.getcwd(), filename)
             if os.path.isfile(file_path) or os.path.islink(file_path):
@@ -120,7 +120,7 @@ If you wish to abort, you have 5 seconds to hit Ctrl-c"
                 rmtree(file_path)
     else:
         error(f"""
-You requested a clean build, but this script thinks that {os.getcwd()} isn't 
+You requested a clean build, but this script thinks that {os.getcwd()} isn't
 the build directory. Please contact John Freeman at jcfree@fnal.gov and notify him of this message.
         """)
 
@@ -154,7 +154,7 @@ if not os.path.exists("CMakeCache.txt"):
     the_which_cmd = sh.Command("which")  # Needed because of a complex alias, at least on mu2edaq
     the_which_cmd("moo", _out=stringio_obj3)
     moo_path=stringio_obj3.getvalue().strip().split()[-1]
-    
+
     starttime_cfggen_d=get_time("as_date")
     starttime_cfggen_s=get_time("as_seconds_since_epoch")
 
@@ -173,7 +173,7 @@ if not os.path.exists("CMakeCache.txt"):
 
     endtime_cfggen_d=get_time("as_date")
     endtime_cfggen_s=get_time("as_seconds_since_epoch")
-    
+
     if retval == 0:
         cfggentime=int(endtime_cfggen_s) - int(starttime_cfggen_s)
         rich.print("CMake's config+generate stages took {} seconds".format(cfggentime))
@@ -184,12 +184,12 @@ if not os.path.exists("CMakeCache.txt"):
 
         error(f"""
 
-This script ran into a problem running 
+This script ran into a problem running
 
-{fullcmd} 
+{fullcmd}
 
-from {BUILDDIR} (i.e., CMake's config+generate stages). 
-Scroll up for details or look at the build log via 
+from {BUILDDIR} (i.e., CMake's config+generate stages).
+Scroll up for details or look at the build log via
 
 less -R {BUILDDIR}
 
@@ -197,7 +197,7 @@ Exiting...
 
 """)
 
-else: 
+else:
     rich.print(f"The config+generate stage was skipped as CMakeCache.txt was already found in {BUILDDIR}")
 
 if args.cmake_graphviz:
@@ -209,10 +209,10 @@ if args.n_jobs:
 else:
     nprocs = multiprocessing.cpu_count()
     nprocs_argument = f"-j {nprocs}"
-    
+
     rich.print(f"This script believes you have {nprocs} processors available on this system, and will use as many of them as it can")
 
-starttime_build_d=get_time("as_date")    
+starttime_build_d=get_time("as_date")
 starttime_build_s=get_time("as_seconds_since_epoch")
 
 build_options=""
@@ -234,12 +234,12 @@ if retval == 0:
     buildtime=int(endtime_build_s) - int(starttime_build_s)
 else:
     error(f"""
-This script ran into a problem running 
+This script ran into a problem running
 
-{fullcmd} 
+{fullcmd}
 
 from {BUILDDIR} (i.e.,
-CMake's build stage). Scroll up for details or look at the build log via 
+CMake's build stage). Scroll up for details or look at the build log via
 
 less -R {build_log}
 
@@ -302,10 +302,11 @@ if run_tests:
     sh.date(_out=stringio_obj5)
     datestring=re.sub("[: ]+", "_", stringio_obj5.getvalue().strip())
 
-    test_log=f"{LOGDIR}/unit_tests_{datestring}.log"
+    test_log_dir = f"{LOGDIR}/unit_tests_{datestring}"
+    os.mkdir(test_log_dir)
 
     os.chdir(BUILDDIR)
-    
+
     if args.unittest == "all":
         stringio_obj6 = io.StringIO()
         sh.find("-L . -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles".split(), _out = stringio_obj6)
@@ -320,7 +321,7 @@ if run_tests:
         unittestdirs = stringio_obj7.getvalue().split()
 
         if len(unittestdirs) == 0:
-            rich.print("{}No unit tests have been written for {}{}".format(Fore.RED, pkgname, Style.RESET_ALL), file = sys.stderr)            
+            rich.print("{}No unit tests have been written for {}{}".format(Fore.RED, pkgname, Style.RESET_ALL), file = sys.stderr)
             continue
 
         if not "BOOST_TEST_LOG_LEVEL" in os.environ:
@@ -336,6 +337,7 @@ RUNNING UNIT TESTS IN {unittestdir}
 """)
             for unittest in os.listdir(unittestdir):
                 rich.print(f"unittest == {unittest}")
+                test_log = f"{test_log_dir}/{pkgname}_{unittest}_unittest_{datestring}.log"
                 if which(f"{unittestdir}/{unittest}", mode=os.X_OK) is not None:
                     pytee.run("echo", "-e Start of unit test suite {}".format(unittest).split(), test_log)
                     pytee.run(f"{unittestdir}/{unittest}", "", test_log)
@@ -343,7 +345,7 @@ RUNNING UNIT TESTS IN {unittestdir}
 
             rich.print("{}Testing complete for package \"{}\". Ran {} unit test suites.{}".format(Fore.YELLOW, pkgname, num_unit_tests, Style.RESET_ALL))
             rich.print("")
-            rich.print(f"Test results are saved in {test_log}")
+            rich.print(f"Test results are saved under {test_log_dir}")
 
 if args.lint:
     os.chdir(BASEDIR)
@@ -351,8 +353,8 @@ if args.lint:
     stringio_obj8 = io.StringIO()
     sh.date(_out=stringio_obj8)
     datestring=re.sub("[: ]+", "_", stringio_obj8.getvalue().strip())
-    
-    lint_log=f"{LOGDIR}/linting_{datestring}.log"
+
+    lint_log_dir=f"{LOGDIR}/linting_{datestring}"
 
     if not os.path.exists("styleguide"):
         rich.print(f"Cloning styleguide into {os.getcwd()} so linting can be applied")
@@ -372,6 +374,7 @@ if args.lint:
         pkgname=os.path.basename(pkgdir)
         rich.print(f"Package to lint is {pkgname}")
         fullcmd = f"./styleguide/cpplint/dune-cpp-style-check.sh build sourcecode/{pkgname}"
+        lint_log = f"{lint_log_dir}/{pkgname}_linting_{datestring}.log"
         pytee.run(fullcmd.split()[0], fullcmd.split()[1:], lint_log)
 
- 
+
