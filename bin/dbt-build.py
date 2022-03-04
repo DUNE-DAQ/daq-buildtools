@@ -303,6 +303,7 @@ if run_tests:
     datestring=re.sub("[: ]+", "_", stringio_obj5.getvalue().strip())
 
     test_log_dir = f"{LOGDIR}/unit_tests_{datestring}"
+    test_log_summary = f"{test_log_dir}/unit_test_summary.log"
     os.mkdir(test_log_dir)
 
     os.chdir(BUILDDIR)
@@ -338,14 +339,27 @@ RUNNING UNIT TESTS IN {unittestdir}
             for unittest in os.listdir(unittestdir):
                 rich.print(f"unittest == {unittest}")
                 test_log = f"{test_log_dir}/{pkgname}_{unittest}_unittest_{datestring}.log"
-                if which(f"{unittestdir}/{unittest}", mode=os.X_OK) is not None:
+                unittest_path = f"{unittestdir}/{unittest}"
+                unittest_relpath = os.path.relpath(unittest_path, BASEDIR)
+                if which(unittest_path, mode=os.X_OK) is not None:
                     pytee.run("echo", "-e Start of unit test suite {}".format(unittest).split(), test_log)
-                    pytee.run(f"{unittestdir}/{unittest}", "", test_log)
+                    pytee.run(unittest_path, "", test_log)
+                    ## Generate test_log_summary now
+                    f_test_log = open(test_log, 'r')
+                    test_result = re.findall(r'\*\*\* (No errors detected)', f_test_log.read())
+                    f_test_log.close()
+                    if len(test_result) == 0:
+                        echo_result = f"-e {unittest_relpath:.<70}FAILURE"
+                    else:
+                        # each individual log file should contain one "*** n failure" string at most.
+                        echo_result = f"-e {unittest_relpath:.<70}SUCCESS"
+                    pytee.run("echo", echo_result.split(), test_log_summary)
                     num_unit_tests += 1
 
             rich.print("{}Testing complete for package \"{}\". Ran {} unit test suites.{}".format(Fore.YELLOW, pkgname, num_unit_tests, Style.RESET_ALL))
             rich.print("")
-            rich.print(f"Test results are saved under {test_log_dir}")
+            rich.print(f"Test summary can be found in {test_log_summary}.")
+            rich.print(f"Detailed test results are saved under {test_log_dir}.")
 
 if args.lint:
     os.chdir(BASEDIR)
@@ -355,6 +369,7 @@ if args.lint:
     datestring=re.sub("[: ]+", "_", stringio_obj8.getvalue().strip())
 
     lint_log_dir=f"{LOGDIR}/linting_{datestring}"
+    os.mkdir(lint_log_dir)
 
     if not os.path.exists("styleguide"):
         rich.print(f"Cloning styleguide into {os.getcwd()} so linting can be applied")
