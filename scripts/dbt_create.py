@@ -48,7 +48,7 @@ See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools for mor
 
 parser = argparse.ArgumentParser(usage=usage_blurb)
 parser.add_argument("-n", "--nightly", action="store_true", help=argparse.SUPPRESS)
-parser.add_argument("-c", "--clone", action="store_true", help=argparse.SUPPRESS)
+parser.add_argument("-c", "--clone-pyvenv", action="store_true", dest="clone_pyvenv", help=argparse.SUPPRESS)
 parser.add_argument("-r", "--release-path", action='store', dest='release_path', help=argparse.SUPPRESS)
 parser.add_argument("-l", "--list", action="store_true", dest='_list', help=argparse.SUPPRESS)
 parser.add_argument("release_tag", nargs='?', help=argparse.SUPPRESS)
@@ -128,7 +128,7 @@ os.symlink(f"{DBT_ROOT}/env.sh", f"{TARGETDIR}/dbt-env.sh")
 
 print("Setting up the Python subsystem.") 
 
-if args.clone:
+if args.clone_pyvenv:
     cmd = f"{DBT_ROOT}/scripts/dbt-clone-pyvenv.sh {RELEASE_PATH}/{DBT_VENV}"
 else:
     print("Please be patient, this should take O(1 minute)...")
