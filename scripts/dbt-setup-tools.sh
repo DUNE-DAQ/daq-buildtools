@@ -263,15 +263,10 @@ function spack_load_target_package() {
 	cat<<EOF
 
 Calling "$cmd"; will print "Finished" 
-when successfully done. If this takes more than O(1 minute) the command has 
-hung; hit Ctrl-c, and try again after doing the following:
-
-export SPACK_VERBOSE=true
-rm -rf <the name of your work area directory you passed to dbt-create>
-
-If the 
-problem persists, try this on a different host and/or contact John Freeman at
-jcfree@fnal.gov"
+when successfully done. If this is the first time you've run this
+command in a while on this node it may take ~15 minutes; this is
+because cvmfs is populating its local cache. Please be patient;
+subsequent runs should take less than a minute.
 
 EOF
 	$cmd
