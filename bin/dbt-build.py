@@ -341,7 +341,7 @@ RUNNING UNIT TESTS IN {unittestdir}
 """)
             for unittest in os.listdir(unittestdir):
                 rich.print(f"unittest == {unittest}")
-                test_log = f"{test_log_dir}/{pkgname}_{unittest}_unittest_{datestring}.log"
+                test_log = f"{test_log_dir}/{pkgname}_{unittest}_unittest.log"
                 unittest_path = f"{unittestdir}/{unittest}"
                 unittest_relpath = os.path.relpath(unittest_path, BASEDIR)
                 if which(unittest_path, mode=os.X_OK) is not None:
@@ -392,7 +392,7 @@ if args.lint:
         pkgname=os.path.basename(pkgdir)
         rich.print(f"Package to lint is {pkgname}")
         fullcmd = f"./styleguide/cpplint/dune-cpp-style-check.sh build sourcecode/{pkgname}"
-        lint_log = f"{lint_log_dir}/{pkgname}_linting_{datestring}.log"
+        lint_log = f"{lint_log_dir}/{pkgname}_linting.log"
         pytee.run(fullcmd.split()[0], fullcmd.split()[1:], lint_log)
 
 
