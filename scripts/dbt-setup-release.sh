@@ -171,6 +171,8 @@ unset DBT_PKG_SET DBT_PKG_SETS
 
 export DBT_SETUP_RELEASE_SCRIPT_SOURCED=1
 
+export DBT_AREA_ROOT=$RELEASE_PATH
+
 echo -e "${COL_GREEN}This script has been sourced successfully${COL_RESET}"
 echo
 

@@ -290,7 +290,10 @@ summary_build_info = {}
 for pkg in get_package_list(BUILDDIR):
     try:
         with open(f"{INSTALLDIR}/{pkg}/{pkg}_build_info.json") as f:
-            summary_build_info[pkg] = json.load(f)
+            fs = f.read()
+            mp = [' ' for i in range(32)]
+            filter_f = fs.translate(mp)
+            summary_build_info[pkg] = json.loads(filter_f)
     except FileNotFoundError:
         summary_build_info[pkg] = "Build info not available"
 
