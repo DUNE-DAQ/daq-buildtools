@@ -33,6 +33,8 @@ if [ $# -gt 0 ]; then
 fi
 
 source ${DBT_ROOT}/scripts/dbt-setup-tools.sh
+LOGDIR=${DBT_AREA_ROOT}/log
+lcov_log=$LOGDIR/lcov_report_$( date | sed -r 's/[: ]+/_/g' ).log
 
 lcov_found=`type lcov >/dev/null 2>&1 && echo 0 || echo 1`
 if [ $lcov_found -ne 0 ]; then
@@ -50,21 +52,23 @@ if [ $gccver -lt 9 ]; then
   exit 2
 fi
 
-dbt-build.sh --clean || error "dbt-build.sh --clean returned nonzero; exiting..."
+echo "Performing clean build, please wait" |& tee -a $lcov_log
+dbt-build.py --clean >$lcov_log 2>&1 || error "dbt-build.py --clean returned nonzero; exiting..."
+echo "Clean build complete. Setting up LCOV counters" |& tee -a $lcov_log
 
-lcov -d $DBT_AREA_ROOT --zerocounters || error "lcov -d $DBT_AREA_ROOT --zerocounters returned nonzero; exiting..."
-lcov -c -i -d $DBT_AREA_ROOT -o  $DBT_AREA_ROOT/dunedaq.base || error "lcov -c -i -d $DBT_AREA_ROOT -o  $DBT_AREA_ROOT/dunedaq.base returned nonzero; exiting..."
+lcov -d $DBT_AREA_ROOT --zerocounters >>$lcov_log 2>&1 || error "lcov -d $DBT_AREA_ROOT --zerocounters returned nonzero; exiting..."
+lcov -c -i -d $DBT_AREA_ROOT -o  $DBT_AREA_ROOT/dunedaq.base >>$lcov_log 2>&1 || error "lcov -c -i -d $DBT_AREA_ROOT -o  $DBT_AREA_ROOT/dunedaq.base returned nonzero; exiting..."
 
 # RUN THE TESTS
-dbt-build.sh --unittest || "dbt-build.sh --unittest returned nonzero; exiting..."
+dbt-unittest-summary.sh |& tee -a $lcov_log
 
        
   COL_YELLOW="\e[33m"
   COL_RESET="\e[0m"
   COL_RED="\e[31m"
-  echo
-  echo
-  echo 
+  echo |& tee -a $lcov_log
+  echo |& tee -a $lcov_log
+  echo |& tee -a $lcov_log
 
   package_list=$( find -L  $DBT_INSTALL_DIR -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles )
 
@@ -73,45 +77,50 @@ dbt-build.sh --unittest || "dbt-build.sh --unittest returned nonzero; exiting...
     testdirs=$( find -L $pkgname/test -type d -name "bin" -not -regex ".*CMakeFiles.*" )
 
     if [[ -z $testdirs ]]; then
-      echo
-      echo -e "${COL_RED}No test applications or scripts for $pkgname${COL_RESET}"
-      echo
+      echo |& tee -a $lcov_log
+      echo -e "${COL_RED}No test applications or scripts for $pkgname${COL_RESET}" |& tee -a $lcov_log
+      echo |& tee -a $lcov_log
       continue
     fi
 
     num_tests=0
 
     for testdir in $testdirs; do
-      echo
-      echo
-      echo "RUNNING TESTS IN $testdir"
-      echo "======================================================================"
+      echo |& tee -a $lcov_log
+      echo |& tee -a $lcov_log
+      echo "RUNNING TESTS IN $testdir" |& tee -a $lcov_log
+      echo "======================================================================" |& tee -a $lcov_log
       for atest in $testdir/* ; do
         if [[ -x $atest ]]; then
-          echo
-          echo -e "${COL_YELLOW}Start of test \"$atest\"${COL_RESET}"
-          $atest
-          echo -e "${COL_YELLOW}End of test \"$atest\"${COL_RESET}"
+          echo |& tee -a $lcov_log
+          echo -e "${COL_YELLOW}Start of test \"$atest\"${COL_RESET}" |& tee -a $lcov_log
+          $atest |& tee -a $lcov_log
+          echo -e "${COL_YELLOW}End of test \"$atest\"${COL_RESET}" |& tee -a $lcov_log
           num_tests=$((num_tests + 1))
         fi
       done
 
     done
 
-    echo 
-    echo -e "${COL_YELLOW}Testing complete for package \"$pkgname\". Ran $num_tests tests.${COL_RESET}"
+    echo  |& tee -a $lcov_log
+    echo -e "${COL_YELLOW}Testing complete for package \"$pkgname\". Ran $num_tests tests.${COL_RESET}" |& tee -a $lcov_log
   done
      
-
-lcov -d  $DBT_AREA_ROOT --capture --output-file  $DBT_AREA_ROOT/dunedaq.info || \
+  echo "Collecting coverage results"  |& tee -a $lcov_log
+lcov -d  $DBT_AREA_ROOT --capture --output-file  $DBT_AREA_ROOT/dunedaq.info >>$lcov_log 2>&1 || \
 error "lcov -d  $DBT_AREA_ROOT --capture --output-file  $DBT_AREA_ROOT/dunedaq.info returned nonzero; exiting..."
 
-lcov -a dunedaq.base -a  $DBT_AREA_ROOT/dunedaq.info --output-file  $DBT_AREA_ROOT/dunedaq.total || \
+lcov -a dunedaq.base -a  $DBT_AREA_ROOT/dunedaq.info --output-file  $DBT_AREA_ROOT/dunedaq.total >>$lcov_log 2>&1 || \
 error "lcov -a dunedaq.base -a  $DBT_AREA_ROOT/dunedaq.info --output-file  $DBT_AREA_ROOT/dunedaq.total returned nonzero; exiting..."
 
-lcov --remove  $DBT_AREA_ROOT/dunedaq.total '*/products/*' '/usr/include/*' '/cvmfs/*' "$DBT_AREA_ROOT/build/*" --output-file  $DBT_AREA_ROOT/dunedaq.info.cleaned || \
+lcov --remove  $DBT_AREA_ROOT/dunedaq.total '*/products/*' '/usr/include/*' '/cvmfs/*' "$DBT_AREA_ROOT/build/*" "*/pybindsrc/*" --output-file  $DBT_AREA_ROOT/dunedaq.info.cleaned >>$lcov_log 2>&1 || \
 error "lcov --remove  $DBT_AREA_ROOT/dunedaq.total '*/products/*' '/usr/include/*' '/cvmfs/*' "$DBT_AREA_ROOT/build/*" --output-file  $DBT_AREA_ROOT/dunedaq.info.cleaned returned nonzero; exiting..."
 
-genhtml --demangle-cpp -o  $DBT_AREA_ROOT/coverage  $DBT_AREA_ROOT/dunedaq.info.cleaned || \
+  echo "Creationg HTML output"  |& tee -a $lcov_log
+genhtml --demangle-cpp -o  $DBT_AREA_ROOT/coverage  $DBT_AREA_ROOT/dunedaq.info.cleaned >>$lcov_log 2>&1 || \
 error "genhtml --demangle-cpp -o  $DBT_AREA_ROOT/coverage  $DBT_AREA_ROOT/dunedaq.info.cleaned returned nonzero; exiting..."
 #genhtml -o coverage dunedaq.info
+
+echo
+echo "Full LCOV output saved in $lcov_log"
+echo 
