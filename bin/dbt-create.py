@@ -51,10 +51,6 @@ See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools for mor
 
 """ 
 
-print(f"""
-EXPERIMENTAL WARNING: {os.path.basename(__file__)} is still experimental and may not behave as expected. Please use {os.path.splitext(os.path.basename(__file__))[0]}.sh instead.
-""")
-
 
 parser = argparse.ArgumentParser(usage=usage_blurb)
 parser.add_argument("-n", "--nightly", action="store_true", help=argparse.SUPPRESS)
@@ -75,7 +71,10 @@ else:
     RELEASE_BASEPATH=NIGHTLY_BASEPATH
 
 if args._list:
-    list_releases(RELEASE_BASEPATH)
+    if not args.spack:
+        list_releases(RELEASE_BASEPATH)
+    else:
+        print("Official release listing not yet available in Spack. However as of Mar-13-2022, the only available release is dunedaq-v2.9.0")
     sys.exit(0)
 elif not args.release_tag or not args.workarea_dir:
     error("Wrong number of arguments. Run '{} -h' for more information.".format(os.path.basename(__file__)))

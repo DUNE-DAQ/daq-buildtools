@@ -254,11 +254,13 @@ function spack_load_target_package() {
 
     if [[ -z $pkg_loaded_status || $pkg_loaded_status =~ "0 loaded packages" || $pkg_loaded_status =~ "No package matches the query: $spack_pkgname" ]]; then
 
-	local spack_args=""
+	local cmd=""
 	if [[ -n $SPACK_VERBOSE ]] && $SPACK_VERBOSE ; then
-	    spack_args="--debug"
+	    cmd="spack --debug load $spack_pkgname@${DUNE_DAQ_BASE_RELEASE}%gcc@8.2.0"
+	else
+	    cmd="spack load $spack_pkgname@${DUNE_DAQ_BASE_RELEASE}%gcc@8.2.0"
 	fi
-	cmd="spack $spack_args load $spack_pkgname@${DUNE_DAQ_BASE_RELEASE}%gcc@8.2.0"
+
 
 	cat<<EOF
 
