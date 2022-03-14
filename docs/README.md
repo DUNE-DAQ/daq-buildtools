@@ -19,11 +19,11 @@ source daq-buildtools/env.sh
 
 Then you'll see something like:
 ```
-Added /your/path/to/daq-buildtools/bin to PATH
-Added /your/path/to/daq-buildtools/scripts to PATH
+Updated /your/path/to/daq-buildtools/bin -> PATH
+Updated /your/path/to/daq-buildtools/scripts -> PATH
 DBT setuptools loaded
 ```
-If you type `dbt-` followed by the `<tab>` key you'll see a listing of available commands, which include `dbt-create.sh`, `dbt-build.py`, `dbt-setup-release` and `dbt-workarea-env`. These are all described in the following sections. 
+If you type `dbt-` followed by the `<tab>` key you'll see a listing of available commands, which include `dbt-create.py`, `dbt-build.py`, `dbt-setup-release` and `dbt-workarea-env`. These are all described in the following sections. 
 
 Each time that you want to work with a DUNE DAQ work area in a fresh Linux shell, you'll need to set up daq-buildtools, either by repeating the method above, or by `cd`'ing into your work area and sourcing the link file named `dbt-env.sh`. Work areas are described momentarily. 
 
@@ -44,13 +44,13 @@ It will set up both the external packages and DAQ packages, as well as activate 
 
 Find a directory in which you want your work area to be a subdirectory (home directories are a popular choice) and `cd` into that directory. Then think of a good name for the work area (give it any name, but we'll refer to it as "MyTopDir" on this wiki). Run:
 ```sh
-dbt-create.sh [-c/--clone-pyvenv] --spack dunedaq-v2.9.0 <name of work area subdirectory> 
+dbt-create.py [-c/--clone-pyvenv] --spack dunedaq-v2.9.0 <name of work area subdirectory> 
 cd <name of work area subdirectory>
 ```
 
-The option `-c/--clone-pyvenv` for `dbt-create.sh` is optional. If used, the python virtual environment created in the work area will be a clone of an existing one from the release directory. This avoids the compilation/installation of python modules using the `pyvenv_requirements.txt` in the release directory, and speeds up the work-area creation significantly. The first time running `dbt-create.sh` with this option on a node may take longer timer since cvmfs needs to fetch these files into local cache first.
+The option `-c/--clone-pyvenv` for `dbt-create.py` is optional. If used, the python virtual environment created in the work area will be a clone of an existing one from the release directory. This avoids the compilation/installation of python modules using the `pyvenv_requirements.txt` in the release directory, and speeds up the work-area creation significantly. The first time running `dbt-create.py` with this option on a node may take longer timer since cvmfs needs to fetch these files into local cache first.
 
-The second step's important: remember to `cd` into the subdirectory you just created after `dbt-create.sh` finishes running. 
+The second step's important: remember to `cd` into the subdirectory you just created after `dbt-create.py` finishes running. 
 
 The structure of your work area will look like the following:
 ```txt
