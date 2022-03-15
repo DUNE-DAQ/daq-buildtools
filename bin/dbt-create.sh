@@ -42,7 +42,7 @@ NIGHTLY=false
 # Load DBT common constants
 source ${DBT_ROOT}/scripts/dbt-setup-tools.sh
 
-# deprecation_warning
+deprecation_warning
 
 # This is a horrible lash-up and should be replaced with a proper manifest file or equivalent.
 # UPS_PKGLIST="${DBT_AREA_FILE:1}.sh"
@@ -130,12 +130,6 @@ BUILDDIR=${TARGETDIR}/build
 LOGDIR=${TARGETDIR}/log
 SRCDIR=${TARGETDIR}/sourcecode
 
-export USER=${USER:-$(whoami)}
-export HOSTNAME=${HOSTNAME:-$(hostname)}
-
-if [[ -z $USER || -z $HOSTNAME ]]; then
-    error "Problem getting one or both of the environment variables \$USER and \$HOSTNAME. Exiting..." 
-fi
 
 if $EMPTY_DIR_CHECK && [[ -n $( ls -a1 $TARGETDIR | grep -E -v "^\.\.?$" ) ]]; then
 
