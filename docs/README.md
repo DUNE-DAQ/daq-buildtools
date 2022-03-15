@@ -1,6 +1,6 @@
 _n.b. These instructions assume you're using daq-buildtools from the dunedaq-v2.9.0 frozen release or later_
 
-_n.b. If you want to build your repo area against Spack packlages rather than UPS packages, please read [the instructions from the Spack feature branch of daq-buildtools](https://github.com/DUNE-DAQ/daq-buildtools/blob/johnfreeman/issue161_spack/docs/README.md)_
+_n.b. If you want to build your repo area against Spack packages rather than UPS packages, please read [the instructions from the Spack feature branch of daq-buildtools](https://github.com/DUNE-DAQ/daq-buildtools/blob/johnfreeman/issue161_spack/docs/README.md)_
 
 # DUNE DAQ Buildtools
 
@@ -97,7 +97,7 @@ dbt-build.py
 
 ### Working with more repos
 
-To work with more repos, add them to the `./sourcecode` subdirectory as we did with listrev. Be aware, though: if you're developing a new repo which itself depends on another new repo, daq-buildtools may not already know about this dependency. "New" in this context means "not listed in `/cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.9.0/dbt-build-order.cmake`". If this is the case, you have one of two options:
+To work with more repos, add them to the `./sourcecode` subdirectory as we did with listrev. Be aware, though: if you're developing a new repo which itself depends on another new repo, daq-buildtools may not already know about this dependency. "New" in this context means "not listed in `/cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.10.0-c7/dbt-build-order.cmake`". If this is the case, you have one of two options:
 
 * (Recommended) Add the names of your new packages to the `build_order` list found in `./sourcecode/dbt-build-order.cmake`, placing them in the list in the relative order in which you want them to be built. 
 * First clone and build your new base repo, and THEN clone and build your other new repo which depends on your new base repo. 
@@ -269,4 +269,4 @@ As the names suggest, `dune_products_dirs` contains the list of UPS product pool
 
 ## Next Step
 
-* You can learn how to create a new package by taking a look at the [daq-cmake documentation](https://dune-daq-sw.readthedocs.io/en/v2.9.0/packages/daq-cmake/)
+* You can learn how to create a new package by taking a look at the [daq-cmake documentation](https://dune-daq-sw.readthedocs.io/en/v2.10.0/packages/daq-cmake/)
