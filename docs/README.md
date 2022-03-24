@@ -1,12 +1,26 @@
 _JCF, Feb-15-2022: These instructions are for early testers of Spack installations of the DUNE DAQ packages. For the regular daq-buildtools instructions, please go [here](https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools/). If you're performing these tests no nightly releases are yet available, and the only frozen release available is dunedaq-v2.9.0_
 
+_n.b. If you want to build your repo area against Spack packages rather than UPS packages, please read [the instructions from the Spack feature branch of daq-buildtools](https://github.com/DUNE-DAQ/daq-buildtools/blob/johnfreeman/issue161_spack/docs/README.md)_
+
 # DUNE DAQ Buildtools
 
 `daq-buildtools` is the toolset to simplify the development of DUNE DAQ packages. It provides environment and building utilities for the DAQ Suite.
 
 ## System requirements
 
-To get set up, you'll need access to the cvmfs Spack area `/cvmfs/dunedaq-development.opensciencegrid.org/sandbox/spack` as is the case, e.g., on the lxplus machines at CERN. If you've been doing your own Spack work on the system in question, you may also want to back up (rename) your existing `~/.spack` directory to give Spack a clean slate to start from in these instructions. 
+To get set up, you'll need access to the cvmfs Spack area
+`/cvmfs/dunedaq-development.opensciencegrid.org/sandbox/spack` as is
+the case, e.g., on the lxplus machines at CERN. If you've been doing
+your own Spack work on the system in question, you may also want to
+back up (rename) your existing `~/.spack` directory to give Spack a
+clean slate to start from in these instructions.
+
+You'll also want `python` to be version 3; to find out whether this is the case, run `python --version`. If it isn't, then you can switch over to Python 3 with the following simple commands:
+```
+source /cvmfs/dunedaq.opensciencegrid.org/products/setup
+setup python
+```
+
 <a name="Setup_of_daq-buildtools"></a>
 ## Setup of `daq-buildtools`
 
@@ -19,8 +33,8 @@ source daq-buildtools/env.sh
 
 Then you'll see something like:
 ```
-Updated /your/path/to/daq-buildtools/bin -> PATH
-Updated /your/path/to/daq-buildtools/scripts -> PATH
+Added /your/path/to/daq-buildtools/bin -> PATH
+Added /your/path/to/daq-buildtools/scripts -> PATH
 DBT setuptools loaded
 ```
 If you type `dbt-` followed by the `<tab>` key you'll see a listing of available commands, which include `dbt-create.py`, `dbt-build.py`, `dbt-setup-release` and `dbt-workarea-env`. These are all described in the following sections. 
@@ -42,15 +56,16 @@ It will set up both the external packages and DAQ packages, as well as activate 
 <a name="Creating_a_work_area"></a>
 ## Creating a work area
 
-Find a directory in which you want your work area to be a subdirectory (home directories are a popular choice) and `cd` into that directory. Then think of a good name for the work area (give it any name, but we'll refer to it as "MyTopDir" on this wiki). Run:
+Find a directory in which you want your work area to be a subdirectory (home directories are a popular choice) and `cd` into that directory. Then think of a good name for the work area (give it any name, but we'll refer to it as "MyTopDir" on this wiki). If you want to build against the nightly release (i.e., the official DUNE DAQ package installation which updates every night), run:
 ```sh
 dbt-create.py [-c/--clone-pyvenv] --spack dunedaq-v2.9.0 <name of work area subdirectory> 
 cd <name of work area subdirectory>
 ```
+...where examples of nightly releases are `last_successful`, `N22-03-13`, `N22-03-13-cs8`, etc. To see all available nightly releases, run `dbt-create.py -l -n`. Less common but also possible is to build your repos not against a nightly release but against a frozen release; the commands you pass to `dbt-create.py` are the same, but with the `-n` dropped. 
 
-The option `-c/--clone-pyvenv` for `dbt-create.py` is optional. If used, the python virtual environment created in the work area will be a clone of an existing one from the release directory. This avoids the compilation/installation of python modules using the `pyvenv_requirements.txt` in the release directory, and speeds up the work-area creation significantly. The first time running `dbt-create.py` with this option on a node may take longer timer since cvmfs needs to fetch these files into local cache first.
+The option `-c/--clone-pyvenv` for `dbt-create.py` is optional. If used, the python virtual environment created in the work area will be a clone of an existing one from the release directory. This avoids the compilation/installation of python modules using the `pyvenv_requirements.txt` in the release directory, and speeds up the work-area creation significantly. The first time running `dbt-create.py` with this option on a node may take a longer time since cvmfs needs to fetch these files into local cache first.
 
-The second step's important: remember to `cd` into the subdirectory you just created after `dbt-create.py` finishes running. 
+The second of the two commands above is important: remember to `cd` into the subdirectory you just created after `dbt-create.py` finishes running. 
 
 The structure of your work area will look like the following:
 ```txt
@@ -73,9 +88,12 @@ MyTopDir
 For the purposes of instruction, let's build the `listrev` package. Downloading it is simple:
 ```
 cd sourcecode
-git clone https://github.com/DUNE-DAQ/listrev.git -b dunedaq-v2.9.0 
+git clone https://github.com/DUNE-DAQ/listrev.git 
 cd ..
 ```
+
+Note that in a "real world" situation [you'd be doing your development on a feature branch](https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-release/development_workflow_gitflow/) in which case you'd add `-b <branch you want to work on>` to the `git clone` command above. 
+
 
 We're about to build and install the `listrev` package. (&#x1F534; Note: if you are working with other packages, have a look at the [Working with more repos](#working-with-more-repos) subsection before running the following build command.) By default, the scripts will create a subdirectory of MyTopDir called `./install ` and install any packages you build off your repos there. If you wish to install them in another location, you'll want to set the environment variable `DBT_INSTALL_DIR` to the desired installation path before calling the `dbt-workarea-env` command described below. You'll also want to remember to set the variable during subsequent logins to the work area if you don't go with the default. 
 
@@ -91,7 +109,7 @@ Run `dbt-create.sh --spack -l` in order to list all available frozen releases.
 
 ### Working with more repos
 
-To work with more repos, add them to the `./sourcecode` subdirectory as we did with listrev. Be aware, though: if you're developing a new repo which itself depends on another new repo, daq-buildtools may not already know about this dependency. "New" in this context means "not listed in `/cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.9.0/dbt-build-order.cmake`". If this is the case, you have one of two options:
+To work with more repos, add them to the `./sourcecode` subdirectory as we did with listrev. Be aware, though: if you're developing a new repo which itself depends on another new repo, daq-buildtools may not already know about this dependency. "New" in this context means "not listed in `/cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.10.0-c7/dbt-build-order.cmake`". If this is the case, you have one of two options:
 
 * (Recommended) Add the names of your new packages to the `build_order` list found in `./sourcecode/dbt-build-order.cmake`, placing them in the list in the relative order in which you want them to be built. 
 * First clone and build your new base repo, and THEN clone and build your other new repo which depends on your new base repo. 
@@ -264,4 +282,4 @@ As the names suggest, `dune_products_dirs` contains the list of UPS product pool
 
 ## Next Step
 
-* You can learn how to create a new package by taking a look at the [daq-cmake documentation](https://dune-daq-sw.readthedocs.io/en/v2.9.0/packages/daq-cmake/)
+* You can learn how to create a new package by taking a look at the [daq-cmake documentation](https://dune-daq-sw.readthedocs.io/en/v2.10.0/packages/daq-cmake/)
