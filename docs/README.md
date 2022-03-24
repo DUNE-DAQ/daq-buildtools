@@ -1,7 +1,5 @@
 _JCF, Feb-15-2022: These instructions are for early testers of Spack installations of the DUNE DAQ packages. For the regular daq-buildtools instructions, please go [here](https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools/). If you're performing these tests no nightly releases are yet available, and the only frozen release available is dunedaq-v2.9.0_
 
-_n.b. If you want to build your repo area against Spack packages rather than UPS packages, please read [the instructions from the Spack feature branch of daq-buildtools](https://github.com/DUNE-DAQ/daq-buildtools/blob/johnfreeman/issue161_spack/docs/README.md)_
-
 # DUNE DAQ Buildtools
 
 `daq-buildtools` is the toolset to simplify the development of DUNE DAQ packages. It provides environment and building utilities for the DAQ Suite.
@@ -17,8 +15,8 @@ clean slate to start from in these instructions.
 
 You'll also want `python` to be version 3; to find out whether this is the case, run `python --version`. If it isn't, then you can switch over to Python 3 with the following simple commands:
 ```
-source /cvmfs/dunedaq.opensciencegrid.org/products/setup
-setup python
+. /cvmfs/dunedaq-development.opensciencegrid.org/sandbox/spack/spack/share/spack/setup-env.sh 
+spack load python@3.8.3%gcc@8.2.0
 ```
 
 <a name="Setup_of_daq-buildtools"></a>
@@ -88,7 +86,7 @@ MyTopDir
 For the purposes of instruction, let's build the `listrev` package. Downloading it is simple:
 ```
 cd sourcecode
-git clone https://github.com/DUNE-DAQ/listrev.git 
+git clone https://github.com/DUNE-DAQ/listrev.git -b dunedaq-v2.9.0
 cd ..
 ```
 
