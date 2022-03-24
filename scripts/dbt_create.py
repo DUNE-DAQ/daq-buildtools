@@ -66,7 +66,10 @@ else:
     RELEASE_BASEPATH=NIGHTLY_BASEPATH
 
 if args._list:
-    list_releases(RELEASE_BASEPATH)
+    if not args.spack:
+        list_releases(RELEASE_BASEPATH, use_spack=False)
+    else:
+        list_releases(RELEASE_BASEPATH, use_spack=True)
     sys.exit(0)
 elif not args.release_tag or not args.workarea_dir:
     error("Wrong number of arguments. Run '{} -h' for more information.".format(os.path.basename(__file__)))
