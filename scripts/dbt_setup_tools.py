@@ -1,14 +1,11 @@
 
 import glob
 from inspect import currentframe, getframeinfo
-import io
 import os
-import re
 import subprocess
 import sys
 
 exec(open(f'{os.environ["DBT_ROOT"]}/scripts/dbt_setup_constants.py').read())
-UPS_PKGLIST="{}.sh".format(DBT_AREA_FILE)
 
 def error(errmsg):
     timenow = subprocess.run(["date"], capture_output=True).stdout.decode("utf-8").strip()
@@ -20,36 +17,22 @@ def error(errmsg):
     sys.exit(1)
 
 def find_work_area():
-    currdir=os.getcwd()
+    return os.environ["DBT_AREA_ROOT"]
 
-    while True:
-        if os.path.exists("{}/{}".format(currdir, DBT_AREA_FILE)):
-            return currdir
-        elif currdir != "":
-            currdir="/".join(currdir.split("/")[:-1])
-        else:
-            return ""
+def list_releases(release_basepath):
 
-def list_releases(release_basepath, use_spack):
+    versions = []
 
-    if not use_spack:
-        for filename in sorted(glob.glob(f"{release_basepath}/*")):
-            if os.path.exists(f"{os.path.realpath(filename)}/{UPS_PKGLIST}"):
-                print(f" - {os.path.basename(filename)}")
-    else:
-        versions = []
-        basedir=f"{SPACK_BASEPATH}/opt/spack/linux-scientific7-sandybridge"
-        if not os.path.exists(basedir):
-            error(f"Unable to find expected directory {basedir}; exiting...")
+    origdir=os.getcwd()
+    os.chdir(f"{release_basepath}")
+    for dirname in glob.glob(f"*"):
+        versions.append(dirname)
 
-        for dirname in glob.glob(f"{basedir}/gcc-*/dune-daqpackages-*"):
-            res = re.search(r".*dune-daqpackages-(.*)-[a-z0-9]{32}.*", dirname)
-            assert res
-            versions.append(res.group(1))
+    for version in sorted(versions):
+        print(f" - {version}")
 
-        for version in sorted(versions):
-            print(version)
-
+    os.chdir(origdir)
+        
 def get_time(kind):
     if kind == "as_date":
         dateargs=["date"]

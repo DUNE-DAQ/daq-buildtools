@@ -3,7 +3,6 @@ DBT_ROOT=os.environ["DBT_ROOT"]
 exec(open(f'{DBT_ROOT}/scripts/dbt_setup_constants.py').read())
 
 import argparse
-import io
 import pathlib
 from shutil import copy
 import subprocess
@@ -27,7 +26,7 @@ Usage
 
 To create a new DUNE DAQ development area:
       
-    {os.path.basename(__file__)} [-n/--nightly] [-c/--clone-pyvenv] [--spack] [-r/--release-path <path to release area>] <dunedaq-release> <target directory>
+    {os.path.basename(__file__)} [-n/--nightly] [-c/--clone-pyvenv] [-r/--release-path <path to release area>] <dunedaq-release> <target directory>
 
 To list the available DUNE DAQ releases:
 
@@ -39,7 +38,6 @@ Arguments and options:
     -n/--nightly: switch from frozen to nightly releases
     -l/--list: show the list of available releases
     -c/--clone-pyvenv: cloning the dbt-pyvenv from cvmfs instead of installing from scratch    
-    --spack: create the the work area using Spack packages rather than UPS packages 
     -r/--release-path: is the path to the release archive (defaults to either {PROD_BASEPATH} (frozen) or {NIGHTLY_BASEPATH} (nightly))
 
 See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools for more
@@ -50,7 +48,6 @@ See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools for mor
 parser = argparse.ArgumentParser(usage=usage_blurb)
 parser.add_argument("-n", "--nightly", action="store_true", help=argparse.SUPPRESS)
 parser.add_argument("-c", "--clone-pyvenv", action="store_true", dest="clone_pyvenv", help=argparse.SUPPRESS)
-parser.add_argument("-s", "--spack", action="store_true", help=argparse.SUPPRESS)
 parser.add_argument("-r", "--release-path", action='store', dest='release_path', help=argparse.SUPPRESS)
 parser.add_argument("-l", "--list", action="store_true", dest='_list', help=argparse.SUPPRESS)
 parser.add_argument("release_tag", nargs='?', help=argparse.SUPPRESS)
@@ -66,10 +63,7 @@ else:
     RELEASE_BASEPATH=NIGHTLY_BASEPATH
 
 if args._list:
-    if not args.spack:
-        list_releases(RELEASE_BASEPATH, use_spack=False)
-    else:
-        list_releases(RELEASE_BASEPATH, use_spack=True)
+    list_releases(RELEASE_BASEPATH)
     sys.exit(0)
 elif not args.release_tag or not args.workarea_dir:
     error("Wrong number of arguments. Run '{} -h' for more information.".format(os.path.basename(__file__)))
@@ -105,8 +99,8 @@ SRCDIR=f"{TARGETDIR}/sourcecode"
 
 if EMPTY_DIR_CHECK and os.listdir("."):
     error(f"""
-There appear to be files in {TARGETDIR} besides this script                                                  
-(run "ls -a1 {TARGETDIR}" to see this); this script should only be run in a clean                                  directory. Exiting...  
+There appear to be files in {TARGETDIR} besides this script
+(run "ls -a1 {TARGETDIR}" to see this); this script should only be run in a clean directory. Exiting...  
 """)
 elif not EMPTY_DIR_CHECK:
     print("""
@@ -127,21 +121,29 @@ for dbtfile in [f"{DBT_ROOT}/configs/CMakeLists.txt", \
                 ]:
     copy(dbtfile, SRCDIR)
 
-copy(f"{RELEASE_PATH}/{UPS_PKGLIST}", f"{TARGETDIR}/{DBT_AREA_FILE}")
-
 os.symlink(f"{DBT_ROOT}/env.sh", f"{TARGETDIR}/dbt-env.sh")
 
+# Set these so the dbt-clone-pyvenv.sh and dbt-create-pyvenv.sh scripts get info they need
+os.environ["DBT_DUNE_DAQ_BASE_RELEASE"] = f"{RELEASE}"
+os.environ["SPACK_RELEASES_DIR"] = f"{RELEASE_BASEPATH}"
+os.environ["DBT_AREA_ROOT"] = f"{TARGETDIR}"
+
+workarea_constants_file_contents = \
+    f"""export DBT_DUNE_DAQ_BASE_RELEASE="{os.environ["DBT_DUNE_DAQ_BASE_RELEASE"]}"
+export SPACK_RELEASES_DIR="{os.environ["SPACK_RELEASES_DIR"]}"
+export DBT_AREA_ROOT="{os.environ["DBT_AREA_ROOT"]}"
+export DBT_ROOT_WHEN_CREATED="{os.environ["DBT_ROOT"]}"
+"""
+
+with open(f'{os.environ["DBT_AREA_ROOT"]}/dbt-workarea-constants.sh', "w") as outf:
+    outf.write(workarea_constants_file_contents)
+
 print("Setting up the Python subsystem.") 
-
-spack_arg=""
-if args.spack:
-    spack_arg="--spack"
-
 if args.clone_pyvenv:
-    cmd = f"{DBT_ROOT}/scripts/dbt-clone-pyvenv.sh {spack_arg} {RELEASE_PATH}/{DBT_VENV}"
+    cmd = f"{DBT_ROOT}/scripts/dbt-clone-pyvenv.sh {RELEASE_PATH}/{DBT_VENV}"
 else:
     print("Please be patient, this should take O(1 minute)...")
-    cmd = f"{DBT_ROOT}/scripts/dbt-create-pyvenv.sh {spack_arg} {RELEASE_PATH}/{PY_PKGLIST}"
+    cmd = f"{DBT_ROOT}/scripts/dbt-create-pyvenv.sh {RELEASE_PATH}/{PY_PKGLIST}"
 
 res = subprocess.run( cmd.split(), capture_output=True, text=True )
 if res.returncode != 0:

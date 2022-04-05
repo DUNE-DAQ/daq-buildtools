@@ -6,25 +6,12 @@ HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 # Import find_work_area function
 source ${HERE}/dbt-setup-tools.sh
 
-DBT_AREA_ROOT=$(find_work_area)
-if [[ -z ${DBT_AREA_ROOT} ]]; then
-    error "Expected work area directory ${DBT_AREA_ROOT} not found. Exiting..." 
-fi
-
 if (( $# < 1 || $# > 2)); then
-    error "Usage: $( basename $0 ) (--spack) <path to requirements.txt>"
+    error "Usage: $( basename $0 ) <path to requirements.txt>"
     exit 1
 fi
 
-SPACK=false
-PYENV_REQS=""
-
-if (( $# == 1 )); then
-    PYENV_REQS=$1
-else
-    SPACK=true
-    PYENV_REQS=$2
-fi
+PYENV_REQS=$1
 
 #------------------------------------------------------------------------------
 timenow="date \"+%D %T\""
@@ -37,26 +24,20 @@ then
   error "You are already in a virtual env. Please deactivate first. Exiting..."
 fi
 
-###
-# Source dune system packages
-###
-
-# Source the area settings to determine the origin and version of
-# system packages, as well as to get the environment variable storing
-# the release in use
-
-source ${DBT_AREA_ROOT}/${DBT_AREA_FILE}
-
-test $? -eq 0 || error "There was a problem sourcing ${DBT_AREA_ROOT}/${DBT_AREA_FILE}. Exiting..."
-
-if ! $SPACK ; then
-    setup_ups_product_areas
-    setup_ups_products dune_systems
-    test $? -eq 0 || error "Failed to setup 'dune_system' products, required to build the python venv. Exiting..." 
-else
-    spack_setup_env
-    spack_load_target_package systems  # Error checking occurs inside function
+if [[ -z $DBT_AREA_ROOT ]]; then
+    error "Environment variable DBT_AREA_ROOT needs to be set for this script to work. Exiting..."
 fi
+
+if [[ -z $DBT_DUNE_DAQ_BASE_RELEASE ]]; then
+    error "Environment variable DBT_DUNE_DAQ_BASE_RELEASE needs to be set for this script to work. Exiting..."
+fi
+
+if [[ -z $SPACK_RELEASES_DIR ]]; then
+    error "Environment variable SPACK_RELEASES_DIR needs to be set for this script to work. Exiting..."
+fi
+
+spack_setup_env
+spack_load_target_package systems  # Error checking occurs inside function
 
 ###
 # Check existance/create the default virtual_env

@@ -1,21 +1,25 @@
 #------------------------------------------------------------------------------
 
+
+
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 scriptname=$(basename $(readlink -f ${BASH_SOURCE}))
 
 DBT_PKG_SETS=( devtools systems externals daqpackages )
-FORCE_UPS_RELOAD=false
+    
+DEFAULT_BUILD_TYPE=RelWithDebInfo
+REFRESH_PACKAGES=false
 # We use "$@" instead of $* to preserve argument-boundary information
-options=$(getopt -o 'hs:r' -l 'help, subset:, force-ups-reload' -- "$@") || return 10
+options=$(getopt -o 'hs:r' -l 'help, subset:, refresh' -- "$@") || return 10
 eval "set -- $options"
 
 DBT_PKG_SET="${DBT_PKG_SETS[-1]}"
 while true; do
     case $1 in
-        (-r|--force-ups-reload)
-            FORCE_UPS_RELOAD=true
+        (-r|--refresh)
+            REFRESH_PACKAGES=true
             shift;;
-        (-s|--subset)
+	(-s|--subset)
             DBT_PKG_SET=$2
             shift 2;;
         (-h|--help)
@@ -23,14 +27,15 @@ while true; do
 Usage
 -----
 
-  ${scriptname} [-h/--help] [--force-ups-reload] [-s/--subset [devtools systems externals daqpackages]]
+  ${scriptname} [-h/--help] [--refresh] [-s/--subset [devtools systems externals daqpackages]]
 
   Sets up the environment of a dbt development area
 
   Arguments and options:
 
-    --force-ups-reload: re-runs the build environment setup
-    -s/--subset: optional set of ups packages to load. [choices: ${DBT_PKG_SETS[@]}]
+    --refresh: re-runs the build environment setup
+    -s/--subset: optional set of ups packages to load. [choices: ${DBT_PKG_SETS[@]}] 
+
     
 EOU
             return 0;;           # error
@@ -42,15 +47,12 @@ EOU
 done
 
 source ${HERE}/dbt-setup-tools.sh
-# Import find_work_area function
 
-export DBT_AREA_ROOT=$(find_work_area)
-
-if [[ -z $DBT_AREA_ROOT ]]; then
-    error "Expected work area directory not found. Returning..." 
-    return 1
+if [[ -e $PWD/dbt-workarea-constants.sh ]]; then
+    . $PWD/dbt-workarea-constants.sh 
 else
-  echo -e "${COL_BLUE}Work area: '${DBT_AREA_ROOT}'${COL_RESET}\n"
+    error "Unable to find dbt-workarea-constants.sh file; you need to be in the base of a work area to run this"
+    return 3
 fi
 
 SOURCE_DIR="${DBT_AREA_ROOT}/sourcecode"
@@ -60,7 +62,7 @@ if [ ! -d "$BUILD_DIR" ]; then
     error "$( cat <<EOF 
 
 There doesn't appear to be a "build" subdirectory in ${DBT_AREA_ROOT}.
-Please run a copy of this script from the base directory of a development area installed with dbt-create.sh
+Please run a copy of this script from the base directory of a development area installed with dbt-create.py
 Returning...
 EOF
 )"
@@ -68,71 +70,65 @@ EOF
 
 fi
 
-if [[ ("${FORCE_UPS_RELOAD}" == "false" &&  -z "${DBT_UPS_SETUP_DONE}") || "${FORCE_UPS_RELOAD}" == "true" ]]; then
-    # 
-    if [[ -z "${DBT_UPS_SETUP_DONE}" ]]; then
-        echo -e "${COL_GREEN}This script hasn't yet been sourced (successfully) in this shell; setting up the build environment${COL_RESET}\n"
+spack_setup_env
+retval=$?
+if [[ "$retval" != "0" ]]; then
+    error "Problem setting up the spack environment"
+    return $retval
+fi
+
+if [[ ("${REFRESH_PACKAGES}" == "false" &&  -z "${DBT_PACKAGE_SETUP_DONE}") || "${REFRESH_PACKAGES}" == "true" ]]; then
+    
+     if [[ -z "${DBT_PACKAGE_SETUP_DONE}" ]]; then
+         echo -e "${COL_GREEN}This script hasn't yet been sourced (successfully) in this shell; setting up the build environment${COL_RESET}\n"
+     else
+         echo -e "${COL_GREEN}Refreshing package setup${COL_RESET}\n"
+         # Clean up
+         echo -e "${COL_BLUE}Deactivating python environment${COL_RESET}\n"
+         deactivate
+         echo -e "${COL_BLUE}Unloading packages${COL_RESET}\n"
+	 cmd=""
+         if [[ "$DBT_PKG_SET" == "daqpackages" ]]; then
+             cmd="spack unload dunedaq@${DBT_DUNE_DAQ_BASE_RELEASE}"
+         else
+	     cmd="spack unload $DBT_PKG_SET@${DBT_DUNE_DAQ_BASE_RELEASE}"
+         fi
+	 $cmd
+	 retval="$?"
+
+	 if [[ "$retval" != "0" ]]; then
+	     error "There was a problem calling \"$cmd\"; returning..."
+	     return $retval
+	 fi
+
+     fi
+
+    if [[ "$DBT_PKG_SET" =~ "daqpackages" ]]; then
+	spack_load_target_package dunedaq
     else
-        echo -e "${COL_GREEN}Refreshing UPS package setup${COL_RESET}\n"
-        # Clean up
-        echo -e "${COL_BLUE}Deactivating python environment${COL_RESET}\n"
-        deactivate
-        echo -e "${COL_BLUE}Running ups un-setup${COL_RESET}\n"
-        unsetup_all
+	spack_load_target_package $DBT_PKG_SET
     fi
 
-    # 1. Load the UPS area information from the local area file
-    source ${DBT_AREA_ROOT}/${DBT_AREA_FILE}
-    if ! [[ $? -eq 0 ]]; then
-        error "There was a problem sourcing ${DBT_AREA_ROOT}/${DBT_AREA_FILE}. Returning..." 
-        return 1
+    retval=$?
+    if [[ "$retval" != "0" ]]; then
+      error "Failed to load spack target package. Returning..."
+      return $retval
     fi
 
-    echo "Product directories ${dune_products_dirs[@]}"
-    echo "Products ${dune_products[@]}"
-
-    setup_ups_product_areas
-
-    # 2. Setup the python environment
-    setup_ups_products dune_systems
-
-    if ! [[ $? -eq 0 ]]; then
-        error "The \"setup_ups_products dune_systems\" (for gcc and python) call failed. Returning..." 
-        return 5
-    fi
+    # Assumption is you've already spack loaded python, etc...
 
     source ${DBT_AREA_ROOT}/${DBT_VENV}/bin/activate
 
     if [[ "$VIRTUAL_ENV" == "" ]]
     then
-      error "You are already in a virtual env. Please deactivate first. Returning..." 
-      return 11
+	error "You are already in a virtual env. Please deactivate first. Returning..." 
+	return 11
     fi
-
-    all_setup_returns=""
-
-    for ps in ${DBT_PKG_SETS[@]}; do
-      setup_ups_products dune_$ps
-      all_setup_returns="${setup_ups_returns} ${all_setup_returns}"
-
-      if [ $ps == "$DBT_PKG_SET" ]; then
-        break
-      fi
-    done
-
-    if ! [[ "$all_setup_returns" =~ [1-9] ]]; then
-      echo "All setup calls on the packages returned 0, indicative of success"
-    else
-      error "At least one of the required packages this script attempted to set up didn't set up correctly. Returning..." 
-      return 1
-    fi
-
-    export DBT_UPS_SETUP_DONE=1
-
-    unset DBT_PKG_SET DBT_PKG_SETS
+     
+    export DBT_PACKAGE_SETUP_DONE=1
 
 else
-    echo -e "${COL_YELLOW}The build environment has been already setup.\nUse '${scriptname} --force-ups-reload' to force a reload.${COL_RESET}\n"
+     echo -e "${COL_YELLOW}The build environment has been already setup.\nUse '${scriptname} --refresh' to force a reload.${COL_RESET}\n"
 fi
 
 if [[ -z $DBT_INSTALL_DIR ]]; then
@@ -166,16 +162,6 @@ for p in ${DBT_PACKAGES}; do
     add_many_paths LD_LIBRARY_PATH "${PKG_INSTALL_PATH}/lib64"  "${PKG_INSTALL_PATH}/test/lib64"
     add_many_paths CET_PLUGIN_PATH "${PKG_INSTALL_PATH}/lib64" "${PKG_INSTALL_PATH}/test/lib64"
     add_many_paths DUNEDAQ_SHARE_PATH  "${PKG_INSTALL_PATH}/share" 
-done
-
-for envvar in PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH ; do
-    
-    for pkg in $( eval echo \$$envvar | tr ":" "\n" | sed -r -n 's!'$DBT_INSTALL_DIR'/?([^/]+).*!\1!p' ); do
-	if [[ ! -d $DBT_AREA_ROOT/sourcecode/$pkg ]]; then
-           remove_path $envvar ${DBT_INSTALL_DIR}/?${pkg}/[^:]+
-	fi
-    done
-
 done
 
 export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH
