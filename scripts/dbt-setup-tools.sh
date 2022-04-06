@@ -22,62 +22,13 @@ function deprecation_warning() {
   echo 
 }
 
-#------------------------------------------------------------------------------
-function setup_ups_product_areas() {
-  
-  if [ -z "${dune_products_dirs}" ]; then
-    echo "UPS product directories variable (dune_products_dirs) undefined; no products areas will be set up" >&2
-  fi
-
-  for proddir in ${dune_products_dirs[@]}; do
-      source ${proddir}/setup
-      if ! [[ $? -eq 0 ]]; then
-	  echo "Warning: unable to set up products area \"${proddir}\"" >&2
-      fi
-  done
-
-}
-#------------------------------------------------------------------------------
-
-
-#------------------------------------------------------------------------------
-function setup_ups_products() {
-
-  if [ -z "${1}" ]; then
-    echo "Usage: setup_ups_products <product list name>";
-  fi
-
-  if [ -z "${!1}" ]; then
-    echo "Product list '${1}' doesn't exist";
-    return 5
-  fi
-
-
-  product_set_name=${1}
-  product_set="${product_set_name}[@]"
-
-  # And another function here?
-  setup_ups_returns=""
-
-  for prod in "${!product_set}"; do
-      prodArr=(${prod})
-
-      setup_cmd="setup -B ${prodArr[0]//-/_} ${prodArr[1]}"
-      if [[ ${#prodArr[@]} -eq 3 ]]; then
-          setup_cmd="${setup_cmd} -q ${prodArr[2]}"
-      fi
-      echo $setup_cmd
-      ${setup_cmd}
-      setup_ups_returns=$setup_ups_returns"$? "
-  done
-
-  # Adding code here make setup return disappear. Mhhh...
-}
-#------------------------------------------------------------------------------
-
 
 #------------------------------------------------------------------------------
 function find_work_area() {
+
+    echo "Should not be calling this function"
+    return 123
+    
   SLASHES=${PWD//[^\/]/}
 
   SEARCH_PATH=${PWD}
@@ -309,31 +260,11 @@ EOF
 
 #------------------------------------------------------------------------------
 function list_releases() {
-    if [[ -z $1 ]]; then
-	# How? RELEASE_BASEPATH subdirs matching some condition? i.e. dunedaq_area.sh file in it?
-	FOUND_RELEASES=($(find -L ${RELEASE_BASEPATH} -maxdepth 2 -name ${UPS_PKGLIST} -printf '%h '))
-	readarray -t SORTED_RELEASES < <(printf '%s\n' "${FOUND_RELEASES[@]}" | sort)
 
-	for rel in "${SORTED_RELEASES[@]}"; do
-            echo " - $(basename ${rel})"
-	done 
-    elif [[ -n $1 && "$1" =~ "--spack" ]]; then
-
-	spack_setup_env
-	if [[ "$?" != "0" ]]; then
-	    error "There was a problem setting up the Spack environment; returning..."
-	    return 1
-	fi
-
-	cmd="spack find -l dune-daqpackages | sed -r -n \"s/^\\S+\\s+dune-daqpackages@(\\S+)\\s*\$/ - \\1/p\""
-	eval $cmd
-	if [[ "$?" != "0" ]]; then
-	    error "There was a problem calling \"$cmd\"; returning..."
-	    return 2
-	fi
-    else
-	echo "Developer error. Please contact John Freeman at jcfree@fnal.gov" >&2
-    fi
-
+    local release_path=$1
+    pushd $release_path >& /dev/null
+    ls | sort | xargs -i printf " - %s" {}
+    popd >& /dev/null
+    echo
 }
 #------------------------------------------------------------------------------
