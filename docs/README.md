@@ -1,5 +1,5 @@
 
-_JCF, Feb-15-2022: These instructions are for early testers of Spack installations of the DUNE DAQ packages. For the regular daq-buildtools instructions, please go [here](https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools/). If you're performing these tests no nightly releases are yet available, and the only frozen release available is dunedaq-v2.9.0_
+_JCF, Apr-6-2022: These instructions are for early testers of Spack installations of the DUNE DAQ packages. For the regular daq-buildtools instructions, please go [here](https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools/). As of today the only frozen release available is dunedaq-v2.10.1, and the only nightly release is N22-04-02; by the time you read this there may be more releases available, however._
 
 # DUNE DAQ Buildtools
 
