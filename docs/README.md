@@ -1,4 +1,3 @@
-_JCF, Apr-6-2022: this feature branch is currently undergoing changes, so the instructions may not work as advertised_
 
 _JCF, Feb-15-2022: These instructions are for early testers of Spack installations of the DUNE DAQ packages. For the regular daq-buildtools instructions, please go [here](https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools/). If you're performing these tests no nightly releases are yet available, and the only frozen release available is dunedaq-v2.9.0_
 
@@ -9,7 +8,7 @@ _JCF, Feb-15-2022: These instructions are for early testers of Spack installatio
 ## System requirements
 
 To get set up, you'll need access to the cvmfs Spack area
-`/cvmfs/dunedaq-development.opensciencegrid.org/sandbox/spack` as is
+`/cvmfs/dunedaq-development.opensciencegrid.org/sandbox/spack-nightly` as is
 the case, e.g., on the lxplus machines at CERN. If you've been doing
 your own Spack work on the system in question, you may also want to
 back up (rename) your existing `~/.spack` directory to give Spack a
@@ -17,7 +16,7 @@ clean slate to start from in these instructions.
 
 You'll also want `python` to be version 3; to find out whether this is the case, run `python --version`. If it isn't, then you can switch over to Python 3 with the following simple commands:
 ```
-. /cvmfs/dunedaq-development.opensciencegrid.org/sandbox/spack/spack/share/spack/setup-env.sh 
+source /cvmfs/dunedaq-development.opensciencegrid.org/sandbox/spack-externals/spack-0.17.1/share/spack/setup-env.sh
 spack load python@3.8.3%gcc@8.2.0
 ```
 
@@ -47,7 +46,7 @@ Each time that you want to work with a DUNE DAQ work area in a fresh Linux shell
 Running a release from cvmfs without creating a work area can be done if you simply run the following:
 
 ```sh
-dbt-setup-release --spack dunedaq-v2.9.0
+dbt-setup-release dunedaq-v2.10.1
 ```
 
 It will set up both the external packages and DAQ packages, as well as activate the python virtual environment. Note that the python virtual environment activated here is read-only. You'd want to run `dbt-setup-release` only if you weren't developing DUNE DAQ software, the topic covered for the remainder of this document. However, if you don't want a frozen set of versioned packages - which you wouldn't, if you were developing code - please continue reading.
@@ -58,10 +57,10 @@ It will set up both the external packages and DAQ packages, as well as activate 
 
 Find a directory in which you want your work area to be a subdirectory (home directories are a popular choice) and `cd` into that directory. Then think of a good name for the work area (give it any name, but we'll refer to it as "MyTopDir" on this wiki). If you want to build against the nightly release (i.e., the official DUNE DAQ package installation which updates every night), run:
 ```sh
-dbt-create.py [-c/--clone-pyvenv] dunedaq-v2.9.0 <name of work area subdirectory> 
+dbt-create.py [-c/--clone-pyvenv] -n N22-04-02 <name of work area subdirectory> 
 cd <name of work area subdirectory>
 ```
-...where examples of nightly releases are `last_successful`, `N22-03-13`, `N22-03-13-cs8`, etc. To see all available nightly releases, run `dbt-create.py -l -n`. Less common but also possible is to build your repos not against a nightly release but against a frozen release; the commands you pass to `dbt-create.py` are the same, but with the `-n` dropped. 
+To see all available nightly releases, run `dbt-create.py -l -n`. Less common but also possible is to build your repos not against a nightly release but against a frozen release; the commands you pass to `dbt-create.py` are the same, but with the `-n` dropped. 
 
 The option `-c/--clone-pyvenv` for `dbt-create.py` is optional. If used, the python virtual environment created in the work area will be a clone of an existing one from the release directory. This avoids the compilation/installation of python modules using the `pyvenv_requirements.txt` in the release directory, and speeds up the work-area creation significantly. The first time running `dbt-create.py` with this option on a node may take a longer time since cvmfs needs to fetch these files into local cache first.
 
@@ -88,7 +87,7 @@ MyTopDir
 For the purposes of instruction, let's build the `listrev` package. Downloading it is simple:
 ```
 cd sourcecode
-git clone https://github.com/DUNE-DAQ/listrev.git -b dunedaq-v2.9.0
+git clone https://github.com/DUNE-DAQ/listrev.git
 cd ..
 ```
 
@@ -104,7 +103,7 @@ dbt-build.py
 ```
 ...and this will build `listrev` in the local `./build` subdirectory and then install it as a package either in the local `./install` subdirectory or in whatever you pointed `DBT_INSTALL_DIR` to. 
 
-Run `dbt-create.sh -l` in order to list all available frozen releases.
+Run `dbt-create.py -l` in order to list all available frozen releases.
 
 
 ### Working with more repos
@@ -168,46 +167,11 @@ Note that if you add a new repo to your work area, after building your new code 
 
 Once the runtime environment is set, just run the application you need. listrev, however, has no applications; it's just a set of DAQ module plugins which get added to CET_PLUGIN_PATH.  
 
-We're now going to go through a demo in which we'll use a DAQ module from listrev called RandomDataListGenerator to generate vectors of random numbers and then reverse them with listrev's ListReverser module.  
+Now that you know how to set up a work area, a nice place to learn a bit about the DUNE DAQ suite is via the `daqconf` package. Take a look at its documentation [here](https://dune-daq-sw.readthedocs.io/en/latest/packages/daqconf/); note that in parts of the `daqconf` instructions you're told to run daq-buildtools commands which you may already have run (e.g., to create a new work area) in which case you can skip those specific commands.
 
-One of the packages that's part of the standard DUNE DAQ package suite which gets set up when you run `dbt-workarea-env` is cmdlib. This package comes with a basic implementation that is capable of sending available command objects from a pre-loaded file, by typing their command IDs to standard input. This command facility is useful for local, test oriented use-cases. In the same runtime area, launch the application like this:
-```
-daq_application -n <some name for the application instance> -c stdin://sourcecode/listrev/test/list-reversal-app.json
-```
-and (keeping in mind that you'll want to scroll the contents below horizontally to see the full output) you'll see something like
-```
-2021-Mar-02 13:09:35,342 LOG [stdinCommandFacility::stdinCommandFacility(...) at /scratch/workdir0/sourcecode/cmdlib/plugins/stdinCommandFacility.cpp:55] Loading commands from file: sourcecode/listrev/test/list-reversal-app.json
-2021-Mar-02 13:09:35,342 LOG [stdinCommandFacility::run(...) at /scratch/workdir0/sourcecode/cmdlib/plugins/stdinCommandFacility.cpp:83] Available commands: | init | conf | start | stop
-```
-What you want to do first is type `init`. Next, type `conf` to execute the configuration, and then `start` to begin the actual process of moving vectors between the two modules. You should see output like the following:
-```log
-2021-Mar-02 13:12:40,291 DEBUG_63 [dunedaq::listrev::RandomDataListGenerator::do_work(...) at /scratch/workdir0/sourcecode/listrev/plugins/RandomDataListGenerator.cpp:163] Generated list #3 with contents {363, 28, 691, 60, 764} and size 5.  DAQModule: rdlg
-2021-Mar-02 13:12:40,291 DEBUG_63 [dunedaq::listrev::ListReverser::do_work(...) at /scratch/workdir0/sourcecode/listrev/plugins/ListReverser.cpp:134] Reversed list #3, new contents {764, 60, 691, 28, 363} and size 5.  DAQModule: lr
-2021-Mar-02 13:12:40,291 DEBUG_63 [dunedaq::listrev::ReversedListValidator::do_work(...) at /scratch/workdir0/sourcecode/listrev/plugins/ReversedListValidator.cpp:159] Validating list #3, original contents {363, 28, 691, 60, 764} and reversed contents {764, 60, 691, 28, 363}.  DAQModule: rlv
-```
-To stop this, type the `stop` command. Ctrl-c will exit you out. 
+A classic option for learning about how to run DAQ modules in a work area is [the listrev documentation](https://dune-daq-sw.readthedocs.io/en/latest/packages/listrev/).
 
-For a more realistic use-case where you can send commands to the application from other services and applications, the [restcmd](https://dune-daq-sw.readthedocs.io/en/latest/packages/restcmd/) package provides a command handling implementation through HTTP. To use this plugin, we call `daq_application` in the following manner:
-```sh
-daq_application -n <some name for the application instance> --commandFacility rest://localhost:12345
-```
-To control it, let's open up a second terminal, set up the daq-buildtools environment, and start sending daq_application commands:
-```sh
-cd MyTopDir
-dbt-workarea-env
-curl -O https://raw.githubusercontent.com/DUNE-DAQ/restcmd/v1.1.0/scripts/send-restcmd.py
-python ./send-restcmd.py --interactive --file ./sourcecode/listrev/test/list-reversal-app.json
-```
-You'll now see
-```txt
-Target url: http://localhost:12345/command
-This is a list of commands.
-Interactive mode. Type the ID of the next command to send, or type 'end' to finish.
-
-Available commands: [u'init', u'conf', u'start', u'stop']
-Press enter a command to send next: 
-```
-And you can again type `init`, etc. However, unlike previously, now you'll want to look in the other terminal running daq_application to see it responding to the commands. As before, Ctrl-c will exit you out of these applications. 
+In both the links above you'll notice you'll be running a program called `nanorc` to run the DAQ. To learn more about `nanorc` itself, take a look at [the nanorc documentation](https://dune-daq-sw.readthedocs.io/en/latest/packages/nanorc/).
 
 <a name="adding_extra_ups_products"></a>
 ## Adding extra UPS products and product pools
