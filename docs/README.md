@@ -1,3 +1,5 @@
+_JCF, Apr-6-2022: this feature branch is currently undergoing changes, so the instructions may not work as advertised_
+
 _JCF, Feb-15-2022: These instructions are for early testers of Spack installations of the DUNE DAQ packages. For the regular daq-buildtools instructions, please go [here](https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools/). If you're performing these tests no nightly releases are yet available, and the only frozen release available is dunedaq-v2.9.0_
 
 # DUNE DAQ Buildtools
@@ -56,10 +58,10 @@ It will set up both the external packages and DAQ packages, as well as activate 
 
 Find a directory in which you want your work area to be a subdirectory (home directories are a popular choice) and `cd` into that directory. Then think of a good name for the work area (give it any name, but we'll refer to it as "MyTopDir" on this wiki). If you want to build against the nightly release (i.e., the official DUNE DAQ package installation which updates every night), run:
 ```sh
-dbt-create.py [-c/--clone-pyvenv] --spack dunedaq-v2.9.0 <name of work area subdirectory> 
+dbt-create.py [-c/--clone-pyvenv] dunedaq-v2.9.0 <name of work area subdirectory> 
 cd <name of work area subdirectory>
 ```
-...where examples of nightly releases are `last_successful`, `N22-03-13`, `N22-03-13-cs8`, etc. To see all available nightly releases, run `dbt-create.py --spack -l -n`. Less common but also possible is to build your repos not against a nightly release but against a frozen release; the commands you pass to `dbt-create.py` are the same, but with the `-n` dropped. 
+...where examples of nightly releases are `last_successful`, `N22-03-13`, `N22-03-13-cs8`, etc. To see all available nightly releases, run `dbt-create.py -l -n`. Less common but also possible is to build your repos not against a nightly release but against a frozen release; the commands you pass to `dbt-create.py` are the same, but with the `-n` dropped. 
 
 The option `-c/--clone-pyvenv` for `dbt-create.py` is optional. If used, the python virtual environment created in the work area will be a clone of an existing one from the release directory. This avoids the compilation/installation of python modules using the `pyvenv_requirements.txt` in the release directory, and speeds up the work-area creation significantly. The first time running `dbt-create.py` with this option on a node may take a longer time since cvmfs needs to fetch these files into local cache first.
 
@@ -97,12 +99,12 @@ We're about to build and install the `listrev` package. (&#x1F534; Note: if you 
 
 Now, do the following:
 ```sh
-dbt-workarea-env --spack # If you haven't already run this
-dbt-build.py  # No --spack argument needed, Spack vs. ups is transparent to dbt-build.py
+dbt-workarea-env # If you haven't already run this
+dbt-build.py 
 ```
 ...and this will build `listrev` in the local `./build` subdirectory and then install it as a package either in the local `./install` subdirectory or in whatever you pointed `DBT_INSTALL_DIR` to. 
 
-Run `dbt-create.sh --spack -l` in order to list all available frozen releases.
+Run `dbt-create.sh -l` in order to list all available frozen releases.
 
 
 ### Working with more repos
@@ -112,7 +114,7 @@ To work with more repos, add them to the `./sourcecode` subdirectory as we did w
 * (Recommended) Add the names of your new packages to the `build_order` list found in `./sourcecode/dbt-build-order.cmake`, placing them in the list in the relative order in which you want them to be built. 
 * First clone and build your new base repo, and THEN clone and build your other new repo which depends on your new base repo. 
 
-Once you've added your repos and built them, you'll want to run `dbt-workarea-env --spack --refresh` so the environment picks up their applications, libraries, etc. 
+Once you've added your repos and built them, you'll want to run `dbt-workarea-env --refresh` so the environment picks up their applications, libraries, etc. 
 
 ### Useful build options
 
@@ -159,10 +161,10 @@ Finally, note that both the output of your builds and your unit tests are logged
 In order to access the applications, libraries and plugins built and installed into the `$DBT_INSTALL_DIR` area during the above procedure, the system needs to be instructed on where to look for them. Log into a new shell and set up the daq-buildtools environment as described at the top of this document, then do the following:
 ```
 export DBT_INSTALL_DIR=<your installation directory> # Only needed if you didn't use the default
-dbt-workarea-env --spack
+dbt-workarea-env
 ```
 
-Note that if you add a new repo to your work area, after building your new code - and hence putting its output in `./build` - you'll need to run `dbt-workarea-env --spack --refresh`.
+Note that if you add a new repo to your work area, after building your new code - and hence putting its output in `./build` - you'll need to run `dbt-workarea-env --refresh`.
 
 Once the runtime environment is set, just run the application you need. listrev, however, has no applications; it's just a set of DAQ module plugins which get added to CET_PLUGIN_PATH.  
 
@@ -192,7 +194,7 @@ daq_application -n <some name for the application instance> --commandFacility re
 To control it, let's open up a second terminal, set up the daq-buildtools environment, and start sending daq_application commands:
 ```sh
 cd MyTopDir
-dbt-workarea-env --spack
+dbt-workarea-env
 curl -O https://raw.githubusercontent.com/DUNE-DAQ/restcmd/v1.1.0/scripts/send-restcmd.py
 python ./send-restcmd.py --interactive --file ./sourcecode/listrev/test/list-reversal-app.json
 ```
