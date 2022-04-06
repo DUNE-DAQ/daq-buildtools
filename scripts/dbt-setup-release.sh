@@ -112,40 +112,7 @@ fi
 spack_setup_env
 spack_load_target_package dunedaq
 
-echo "Cloning the Python virtual environment..."
-
-export PYTHON_SPACK_VIRTUALENV=`mktemp -d -t ${DBT_DUNE_DAQ_BASE_RELEASE}-XXXX`
-pushd $PYTHON_SPACK_VIRTUALENV >/dev/null
-
-${HERE}/../bin/clonevirtualenv.py ${RELEASE_PATH}/${DBT_VENV} ${DBT_VENV}
-test $? -eq 0 || error "Problem creating virtual_env ${RELEASE_PATH}/${DBT_VENV}. Exiting..." 
-
-python_basedir=$( spack find -d -p --loaded dunedaq | sed -r -n "s/^\s*python.*\s+(\S+)$/\1/p" )
-if [[ -z $python_basedir || "$python_basedir" == "" ]]; then
-    error "Somehow unable to determine the location of Spack-installed python. Exiting..."
-fi
-	
-if [[ ! -e ${PYTHON_SPACK_VIRTUALENV}/${DBT_VENV}/pyvenv.cfg ]]; then
-    error "${PYTHON_SPACK_VIRTUALENV}/${DBT_VENV}/pyvenv.cfg expected to exist but doesn't. Exiting..."
-fi
-
-sed -i -r 's!^\s*home\s*=.*!home = '${python_basedir}'/bin!' ${PYTHON_SPACK_VIRTUALENV}/${DBT_VENV}/pyvenv.cfg
-
-if [[ ! -L ${PYTHON_SPACK_VIRTUALENV}/${DBT_VENV}/bin/python ]]; then
-    error "Expected ${PYTHON_SPACK_VIRTUALENV}/${DBT_VENV}/bin/python linkfile to exist but it doesn't. Exiting..."
-fi
-
-if [[ ! -e $python_basedir/bin/python ]]; then
-    error "Expected $python_basedir/bin/python to exist but it doesn't. Exiting..."
-fi
-
-rm -f ${PYTHON_SPACK_VIRTUALENV}/${DBT_VENV}/bin/python
-pushd ${PYTHON_SPACK_VIRTUALENV}/${DBT_VENV}/bin > /dev/null
-ln -s $python_basedir/bin/python
-popd > /dev/null
-popd > /dev/null
-
-source ${PYTHON_SPACK_VIRTUALENV}/${DBT_VENV}/bin/activate
+source ${RELEASE_PATH}/${DBT_VENV}/bin/activate
 
 if [[ "$VIRTUAL_ENV" == "" ]]
 then
