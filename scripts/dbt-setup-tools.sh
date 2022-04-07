@@ -204,7 +204,7 @@ function spack_setup_env() {
 	return $retval
     fi
 
-    spack env activate ${DBT_DUNE_DAQ_BASE_RELEASE//./-}
+    spack env activate ${DBT_DUNE_DAQ_BASE_RELEASE//./-} -p
     retval=$?
     if [[ "$retval" != "0" ]]; then
 	error "There was a problem running \"spack env activate $DBT_DUNE_DAQ_BASE_RELEASE\""
@@ -233,17 +233,19 @@ function spack_load_target_package() {
 
 	cat<<EOF
 
-Calling "$cmd"; will print "Finished" 
-when successfully done. If this is the first time you've run this
-command in a while on this node it may take ~15 minutes; this is
-because cvmfs is populating its local cache. Please be patient;
-subsequent runs should take less than a minute.
+This script is calling "$cmd"; it will print "Finished loading" 
+on successful completion. 
+
+If this is the first time the "spack load ..." command has been run in
+a while on this node it may take ~15 minutes; this is because cvmfs is
+populating its local cache. Please be patient; subsequent runs should
+take less than a minute.
 
 EOF
 	$cmd
 	retval=$?
 	if [[ "$retval" == "0" ]]; then
-	    echo "Finished"
+	    echo "Finished loading"
 	else
 	    error "There was a problem calling ${cmd}"
 	    return $retval
