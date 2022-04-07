@@ -28,8 +28,8 @@ if [[ -z $DBT_AREA_ROOT ]]; then
     error "Environment variable DBT_AREA_ROOT needs to be set for this script to work. Exiting..."
 fi
 
-if [[ -z $DBT_DUNE_DAQ_BASE_RELEASE ]]; then
-    error "Environment variable DBT_DUNE_DAQ_BASE_RELEASE needs to be set for this script to work. Exiting..."
+if [[ -z $SPACK_RELEASE ]]; then
+    error "Environment variable SPACK_RELEASE needs to be set for this script to work. Exiting..."
 fi
 
 if [[ -z $SPACK_RELEASES_DIR ]]; then

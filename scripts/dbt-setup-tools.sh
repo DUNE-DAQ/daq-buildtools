@@ -183,15 +183,15 @@ function error() {
 function spack_setup_env() {
 
     
-    if [[ -z $DBT_DUNE_DAQ_BASE_RELEASE ]]; then
-	error "Environment variable DBT_DUNE_DAQ_BASE_RELEASE needs to be set for this script to work. Exiting..."
+    if [[ -z $SPACK_RELEASE ]]; then
+	error "Environment variable SPACK_RELEASE needs to be set for this script to work. Exiting..."
     fi
 
     if [[ -z $SPACK_RELEASES_DIR ]]; then
 	error "Environment variable SPACK_RELEASES_DIR needs to be set for this script to work. Exiting..."
     fi
     
-    local spack_setup_script=$SPACK_RELEASES_DIR/$DBT_DUNE_DAQ_BASE_RELEASE/spack-0.17.1/share/spack/setup-env.sh
+    local spack_setup_script=$SPACK_RELEASES_DIR/$SPACK_RELEASE/spack-0.17.1/share/spack/setup-env.sh
     if [[ ! -e $spack_setup_script ]]; then
 	error "Unable to find Spack setup script \"$spack_setup_script\""
 	return 1
@@ -204,10 +204,10 @@ function spack_setup_env() {
 	return $retval
     fi
 
-    spack env activate ${DBT_DUNE_DAQ_BASE_RELEASE//./-} -p
+    spack env activate ${SPACK_RELEASE//./-} -p
     retval=$?
     if [[ "$retval" != "0" ]]; then
-	error "There was a problem running \"spack env activate $DBT_DUNE_DAQ_BASE_RELEASE\""
+	error "There was a problem running \"spack env activate $SPACK_RELEASE\""
 	return $retval
     fi
 
@@ -219,15 +219,15 @@ function spack_setup_env() {
 function spack_load_target_package() {
 
     local spack_pkgname=$1
-    pkg_loaded_status=$(spack find --loaded -l $spack_pkgname@${DBT_DUNE_DAQ_BASE_RELEASE} | sed -r -n '/^\w{7} '$spack_pkgname'/p' )
+    pkg_loaded_status=$(spack find --loaded -l $spack_pkgname@${SPACK_RELEASE} | sed -r -n '/^\w{7} '$spack_pkgname'/p' )
     
     if [[ -z $pkg_loaded_status || $pkg_loaded_status =~ "0 loaded packages" || $pkg_loaded_status =~ "No package matches the query: $spack_pkgname" ]]; then
 
 	local cmd=""
 	if [[ -n $SPACK_VERBOSE ]] && $SPACK_VERBOSE ; then
-	    cmd="spack --debug load $spack_pkgname@${DBT_DUNE_DAQ_BASE_RELEASE}"
+	    cmd="spack --debug load $spack_pkgname@${SPACK_RELEASE}"
 	else
-	    cmd="spack load $spack_pkgname@${DBT_DUNE_DAQ_BASE_RELEASE}"
+	    cmd="spack load $spack_pkgname@${SPACK_RELEASE}"
 	fi
 
 

@@ -77,8 +77,8 @@ if [[ ${#ARGS[@]} -eq 0 ]]; then
     return 11 
 fi
 
-DBT_DUNE_DAQ_BASE_RELEASE=${ARGS[0]}
-RELEASE_PATH=$(realpath -m "${SPACK_RELEASES_DIR}/${DBT_DUNE_DAQ_BASE_RELEASE}")
+SPACK_RELEASE=${ARGS[0]}
+RELEASE_PATH=$(realpath -m "${SPACK_RELEASES_DIR}/${SPACK_RELEASE}")
 
 if [[ ! -d ${RELEASE_PATH} ]]; then 
     error  "Release path '${RELEASE_PATH}' does not exist. Note that you need to pass \"-n\" for a nightly build. Exiting..." 
@@ -120,7 +120,7 @@ then
     return 13
 fi
 
-export PYTHONPYCACHEPREFIX=`mktemp -d -t ${DBT_DUNE_DAQ_BASE_RELEASE}-XXXX`
+export PYTHONPYCACHEPREFIX=`mktemp -d -t ${SPACK_RELEASE}-XXXX`
 
 export DBT_PACKAGE_SETUP_DONE=1
 export DBT_SETUP_RELEASE_SCRIPT_SOURCED=1

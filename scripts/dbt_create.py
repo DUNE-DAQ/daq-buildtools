@@ -124,12 +124,12 @@ for dbtfile in [f"{DBT_ROOT}/configs/CMakeLists.txt", \
 os.symlink(f"{DBT_ROOT}/env.sh", f"{TARGETDIR}/dbt-env.sh")
 
 # Set these so the dbt-clone-pyvenv.sh and dbt-create-pyvenv.sh scripts get info they need
-os.environ["DBT_DUNE_DAQ_BASE_RELEASE"] = f"{RELEASE}"
+os.environ["SPACK_RELEASE"] = f"{RELEASE}"
 os.environ["SPACK_RELEASES_DIR"] = f"{RELEASE_BASEPATH}"
 os.environ["DBT_AREA_ROOT"] = f"{TARGETDIR}"
 
 workarea_constants_file_contents = \
-    f"""export DBT_DUNE_DAQ_BASE_RELEASE="{os.environ["DBT_DUNE_DAQ_BASE_RELEASE"]}"
+    f"""export SPACK_RELEASE="{os.environ["SPACK_RELEASE"]}"
 export SPACK_RELEASES_DIR="{os.environ["SPACK_RELEASES_DIR"]}"
 export DBT_AREA_ROOT="{os.environ["DBT_AREA_ROOT"]}"
 export DBT_ROOT_WHEN_CREATED="{os.environ["DBT_ROOT"]}"
