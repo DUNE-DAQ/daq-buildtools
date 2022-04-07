@@ -86,13 +86,9 @@ if [[ ("${REFRESH_PACKAGES}" == "false" &&  -z "${DBT_PACKAGE_SETUP_DONE}") || "
          # Clean up
          echo -e "${COL_BLUE}Deactivating python environment${COL_RESET}\n"
          deactivate
-         echo -e "${COL_BLUE}Unloading packages${COL_RESET}\n"
-	 cmd=""
-         if [[ "$DBT_PKG_SET" == "daqpackages" ]]; then
-             cmd="spack unload dunedaq@${DBT_DUNE_DAQ_BASE_RELEASE}"
-         else
-	     cmd="spack unload $DBT_PKG_SET@${DBT_DUNE_DAQ_BASE_RELEASE}"
-         fi
+         echo -e "${COL_BLUE}Unloading all packages${COL_RESET}\n"
+
+         cmd="spack unload --all"
 	 $cmd
 	 retval="$?"
 
