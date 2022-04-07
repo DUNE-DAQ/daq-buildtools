@@ -57,7 +57,7 @@ It will set up both the external packages and DAQ packages, as well as activate 
 
 Find a directory in which you want your work area to be a subdirectory (home directories are a popular choice) and `cd` into that directory. Then think of a good name for the work area (give it any name, but we'll refer to it as "MyTopDir" on this wiki). If you want to build against the nightly release (i.e., the official DUNE DAQ package installation which updates every night), run:
 ```sh
-dbt-create.py [-c/--clone-pyvenv] -n N22-04-02 <name of work area subdirectory> 
+dbt-create.py [-c/--clone-pyvenv] -n <nightly release> <name of work area subdirectory> # E.g., N22-04-02
 cd <name of work area subdirectory>
 ```
 To see all available nightly releases, run `dbt-create.py -l -n`. Less common but also possible is to build your repos not against a nightly release but against a frozen release; the commands you pass to `dbt-create.py` are the same, but with the `-n` dropped. 
@@ -73,6 +73,7 @@ MyTopDir
 ├── dbt-pyvenv
 ├── dbt-settings
 ├── dbt-env.sh -> /path/to/daq-buildtools/env.sh
+├── dbt-workarea-constants.sh
 ├── log
 └── sourcecode
     ├── CMakeLists.txt
@@ -103,8 +104,6 @@ dbt-build.py
 ```
 ...and this will build `listrev` in the local `./build` subdirectory and then install it as a package either in the local `./install` subdirectory or in whatever you pointed `DBT_INSTALL_DIR` to. 
 
-Run `dbt-create.py -l` in order to list all available frozen releases.
-
 
 ### Working with more repos
 
@@ -127,7 +126,7 @@ And if, after the build, you want to run the unit tests, just add the `--unittes
 ```
 dbt-build.py --clean --unittest  # Blow away the contents of ./build, run config+generate+build, and then run the unit tests
 ```
-..where in the above case, you blow away the contents of `./build`,  run config+generate+build, install the result in `$DBT_INSTALL_DIR` and then run the unit tests. Be aware that for many packages, unit tests will only (fully) work if you've also rerun `dbt-workarea-env` with the argument `--force-ups-reload` added. 
+..where in the above case, you blow away the contents of `./build`,  run config+generate+build, install the result in `$DBT_INSTALL_DIR` and then run the unit tests. Be aware that for many packages, unit tests will only (fully) work if you've also rerun `dbt-workarea-env`. 
 
 To check for deviations from the coding rules described in the [DUNE C++ Style Guide](https://dune-daq-sw.readthedocs.io/en/latest/packages/styleguide/), run with the `--lint` option:
 ```
