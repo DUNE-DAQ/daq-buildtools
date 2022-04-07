@@ -185,16 +185,18 @@ function spack_setup_env() {
     
     if [[ -z $SPACK_RELEASE ]]; then
 	error "Environment variable SPACK_RELEASE needs to be set for this script to work. Exiting..."
+	return 1
     fi
 
     if [[ -z $SPACK_RELEASES_DIR ]]; then
 	error "Environment variable SPACK_RELEASES_DIR needs to be set for this script to work. Exiting..."
+	return 2
     fi
     
     local spack_setup_script=$SPACK_RELEASES_DIR/$SPACK_RELEASE/spack-0.17.1/share/spack/setup-env.sh
     if [[ ! -e $spack_setup_script ]]; then
 	error "Unable to find Spack setup script \"$spack_setup_script\""
-	return 1
+	return 3
     fi
 
     source $spack_setup_script

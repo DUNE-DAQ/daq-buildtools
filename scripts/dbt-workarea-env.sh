@@ -8,17 +8,14 @@ scriptname=$(basename $(readlink -f ${BASH_SOURCE}))
 DBT_PKG_SETS=( devtools systems externals daqpackages )
     
 DEFAULT_BUILD_TYPE=RelWithDebInfo
-REFRESH_PACKAGES=false
+
 # We use "$@" instead of $* to preserve argument-boundary information
-options=$(getopt -o 'hs:r' -l 'help, subset:, refresh' -- "$@") || return 10
+options=$(getopt -o 'hs:' -l 'help, subset:' -- "$@") || return 10
 eval "set -- $options"
 
 DBT_PKG_SET="${DBT_PKG_SETS[-1]}"
 while true; do
     case $1 in
-        (-r|--refresh)
-            REFRESH_PACKAGES=true
-            shift;;
 	(-s|--subset)
             DBT_PKG_SET=$2
             shift 2;;
@@ -27,13 +24,12 @@ while true; do
 Usage
 -----
 
-  ${scriptname} [-h/--help] [--refresh] [-s/--subset [devtools systems externals daqpackages]]
+  ${scriptname} [-h/--help] [-s/--subset [devtools systems externals daqpackages]]
 
   Sets up the environment of a dbt development area
 
   Arguments and options:
 
-    --refresh: re-runs the build environment setup
     -s/--subset: optional set of ups packages to load. [choices: ${DBT_PKG_SETS[@]}] 
 
     
@@ -77,28 +73,10 @@ if [[ "$retval" != "0" ]]; then
     return $retval
 fi
 
-if [[ ("${REFRESH_PACKAGES}" == "false" &&  -z "${DBT_PACKAGE_SETUP_DONE}") || "${REFRESH_PACKAGES}" == "true" ]]; then
+if [[ -z "${DBT_PACKAGE_SETUP_DONE}" ]]; then
     
-     if [[ -z "${DBT_PACKAGE_SETUP_DONE}" ]]; then
-         echo -e "${COL_GREEN}This script hasn't yet been sourced (successfully) in this shell; setting up the build environment${COL_RESET}\n"
-     else
-         echo -e "${COL_GREEN}Refreshing package setup${COL_RESET}\n"
-         # Clean up
-         echo -e "${COL_BLUE}Deactivating python environment${COL_RESET}\n"
-         deactivate
-         echo -e "${COL_BLUE}Unloading all packages${COL_RESET}\n"
-
-         cmd="spack unload --all"
-	 $cmd
-	 retval="$?"
-
-	 if [[ "$retval" != "0" ]]; then
-	     error "There was a problem calling \"$cmd\"; returning..."
-	     return $retval
-	 fi
-
-     fi
-
+    echo -e "${COL_GREEN}This script hasn't yet been sourced (successfully) in this shell; setting up the build environment${COL_RESET}\n"
+    
     if [[ "$DBT_PKG_SET" =~ "daqpackages" ]]; then
 	spack_load_target_package dunedaq
     else
@@ -124,7 +102,7 @@ if [[ ("${REFRESH_PACKAGES}" == "false" &&  -z "${DBT_PACKAGE_SETUP_DONE}") || "
     export DBT_PACKAGE_SETUP_DONE=1
 
 else
-     echo -e "${COL_YELLOW}The build environment has been already setup.\nUse '${scriptname} --refresh' to force a reload.${COL_RESET}\n"
+     echo -e "${COL_YELLOW}The build environment has already been setup. Skipping package load/Python environment activation.${COL_RESET}"
 fi
 
 if [[ -z $DBT_INSTALL_DIR ]]; then
