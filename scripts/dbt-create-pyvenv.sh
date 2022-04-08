@@ -3,7 +3,6 @@
 #------------------------------------------------------------------------------
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
-# Import find_work_area function
 source ${HERE}/dbt-setup-tools.sh
 
 if (( $# < 1 || $# > 2)); then
