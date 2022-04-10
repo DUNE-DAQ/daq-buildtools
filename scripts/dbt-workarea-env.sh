@@ -66,14 +66,14 @@ EOF
 
 fi
 
-spack_setup_env
-retval=$?
-if [[ "$retval" != "0" ]]; then
-    error "Problem setting up the spack environment"
-    return $retval
-fi
 
 if [[ -z "${DBT_PACKAGE_SETUP_DONE}" ]]; then
+    spack_setup_env
+    retval=$?
+    if [[ "$retval" != "0" ]]; then
+        error "Problem setting up the spack environment"
+        return $retval
+    fi
     
     echo -e "${COL_GREEN}This script hasn't yet been sourced (successfully) in this shell; setting up the build environment${COL_RESET}\n"
     
