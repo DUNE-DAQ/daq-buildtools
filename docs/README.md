@@ -16,7 +16,7 @@ clean slate to start from in these instructions.
 
 You'll also want `python` to be version 3; to find out whether this is the case, run `python --version`. If it isn't, then you can switch over to Python 3 with the following simple commands:
 ```
-source /cvmfs/dunedaq.opensciencegrid.org/spack-externals/spack-0.17.1/share/spack/setup-env.sh
+source `realpath /cvmfs/dunedaq.opensciencegrid.org/spack-externals/spack-installation/share/spack/setup-env.sh`
 spack load python@3.8.3%gcc@8.2.0
 ```
 
