@@ -8,7 +8,7 @@ _JCF, Apr-6-2022: These instructions are for early testers of Spack installation
 ## System requirements
 
 To get set up, you'll need access to the cvmfs Spack area
-`/cvmfs/dunedaq-development.opensciencegrid.org/sandbox/spack-nightly` as is
+`/cvmfs/dunedaq-development.opensciencegrid.org/spack-nightly` as is
 the case, e.g., on the lxplus machines at CERN. If you've been doing
 your own Spack work on the system in question, you may also want to
 back up (rename) your existing `~/.spack` directory to give Spack a
@@ -16,7 +16,7 @@ clean slate to start from in these instructions.
 
 You'll also want `python` to be version 3; to find out whether this is the case, run `python --version`. If it isn't, then you can switch over to Python 3 with the following simple commands:
 ```
-source /cvmfs/dunedaq-development.opensciencegrid.org/sandbox/spack-externals/spack-0.17.1/share/spack/setup-env.sh
+source /cvmfs/dunedaq.opensciencegrid.org/spack-externals/spack-0.17.1/share/spack/setup-env.sh
 spack load python@3.8.3%gcc@8.2.0
 ```
 
