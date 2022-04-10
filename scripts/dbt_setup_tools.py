@@ -4,11 +4,13 @@ from inspect import currentframe, getframeinfo
 import os
 import subprocess
 import sys
+import datetime
+import time
 
 exec(open(f'{os.environ["DBT_ROOT"]}/scripts/dbt_setup_constants.py').read())
 
 def error(errmsg):
-    timenow = subprocess.run(["date"], capture_output=True).stdout.decode("utf-8").strip()
+    timenow = get_time("as_date")
     frameinfo = getframeinfo(currentframe().f_back)
 
     REDIFY="\033[91m"
@@ -35,10 +37,10 @@ def list_releases(release_basepath):
         
 def get_time(kind):
     if kind == "as_date":
-        dateargs=["date"]
+        timenow = datetime.datetime.now().astimezone().strftime("%a %b %-d %H:%M:%S %Z %Y")
     elif kind == "as_seconds_since_epoch":
-        dateargs=["date", "+%s"]
+        timenow = int(time.time())
     else:
         assert False, "Unknown argument passed to get_time"
 
-    return subprocess.run(dateargs, capture_output=True).stdout.decode("utf-8").strip()
+    return timenow

@@ -145,12 +145,14 @@ else:
     print("Please be patient, this should take O(1 minute)...")
     cmd = f"{DBT_ROOT}/scripts/dbt-create-pyvenv.sh {RELEASE_PATH}/{PY_PKGLIST}"
 
-res = subprocess.run( cmd.split(), capture_output=True, text=True )
+res = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
+out = res.communicate()
 if res.returncode != 0:
     print(f"stdout from {cmd}:")
-    print(res.stdout)
+    print(out[0].decode('utf-8'))
     print(f"stderr from {cmd}:")
-    print(res.stderr)
+    print(out[1].decode('utf-8'))
     error(f"There was a problem running \"{cmd}\" (return value {res.returncode}); exiting...")
 
 endtime_d=get_time("as_date")
