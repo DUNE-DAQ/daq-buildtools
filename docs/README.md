@@ -78,6 +78,7 @@ MyTopDir
     ├── CMakeLists.txt
     └── dbt-build-order.cmake
 ```
+The next section of this document concerns how to build code in your new work area. However, if you'd like to learn about how to retrieve information about your work area such as the release of the DUNE DAQ suite it builds against, you can skip ahead to [Finding Info on Your Work Area](#Finding_Info).
 
 <a name="Cloning_and_building"></a>
 ## Cloning and building a package repo
@@ -171,76 +172,29 @@ A classic option for learning about how to run DAQ modules in a work area is [th
 
 In both the links above you'll notice you'll be running a program called `nanorc` to run the DAQ. To learn more about `nanorc` itself, take a look at [the nanorc documentation](https://dune-daq-sw.readthedocs.io/en/latest/packages/nanorc/).
 
-<a name="adding_extra_ups_products"></a>
-## Adding extra UPS products and product pools
-_JCF, Feb-15-2022: this section is irrelevant to your Spack testing_
+<a name="Finding_Info"></a>
+## Finding Info on Your Work Area
 
-Sometimes it is necessary to tweak the baseline list of UPS products or even UPS product pools to add extra dependencies; skip ahead to the next section if you don't need to worry about this. Adding extra dependencies can be easily done by editing the `dbt-settings` file copied over from daq-buildtools by `dbt-create.py` and adding the new entries to `dune_products_dirs`  and `dune_daqpackages` as needed. See `/example/of/additional/user/declared/product/pool` and `package_declared_by_user v1_2_3 e19:prof` in the example of an edited `dbt-settings` file, below. Please note that package versions in your `dbt-settings` file may be different than those in this example since what you see below is simply a snapshot used for educational reasons:
+A couple of things need to be kept in mind when you're building code in a work area. The first is that when you call `dbt-build.py`, it will build your repos against a specific release of the DUNE DAQ software stack - namely, the release you (or someone else) provided to `dbt-create.py` when the work area was first created. Another is that the layout and behavior of a work area is a function of the version of daq-buildtools which was used to create it. As a work area ages it becomes increasingly likely that a problem will occur when you try to build a repo in it; this is natural and unavoidable. 
 
-```bash
-dune_products_dirs=(
-    "/cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.5.0/externals"
-    "/cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.5.0/packages"
-    "/example/of/additional/user/declared/product/pool" 
-    #"/cvmfs/dunedaq.opensciencegrid.org/products" 
-    #"/cvmfs/dunedaq-development.opensciencegrid.org/products" 
-)
-
-dune_systems=(
-    "gcc               v8_2_0"
-    "python            v3_8_3b"
-)
-
-dune_devtools=(
-    "cmake             v3_17_2"
-    "gdb               v9_2"
-    "ninja             v1_10_0"
-)
-
-dune_externals=(
-    "cetlib            v3_11_01     e19:prof"
-    "TRACE             v3_16_02"
-    "folly             v2020_05_25a e19:prof"
-    "nlohmann_json     v3_9_0c      e19:prof"
-    "pistache          v2020_10_07  e19:prof"
-    "highfive          v2_2_2b      e19:prof"
-    "zmq               v4_3_1c      e19:prof"
-    "cppzmq            v4_3_0       e19:prof"
-    "msgpack_c         v3_3_0       e19:prof"
-    "felix             v1_1_1       e19:prof"
-    "pybind11          v2_6_2       e19:prof"
-    "uhal              v2_8_0       e19:prof"
-)
-
-dune_daqpackages=(
-    "daq_cmake         v1_3_3       e19:prof"
-    "ers               v1_1_2       e19:prof"
-    "logging           v1_0_1b      e19:prof"
-    "cmdlib            v1_1_2       e19:prof"
-    "restcmd           v1_1_2       e19:prof"
-    "opmonlib          v1_1_0       e19:prof"
-    "rcif              v1_0_1b      e19:prof"
-    "appfwk            v2_2_2       e19:prof"
-    "listrev           v2_1_1b      e19:prof"
-    "serialization     v1_1_0       e19:prof"
-    "flxlibs           v1_0_0       e19:prof"
-    "dataformats       v2_0_0       e19:prof"
-    "dfmessages        v2_0_0       e19:prof"
-    "dfmodules         v2_0_2       e19:prof"
-    "trigemu           v2_1_0       e19:prof"
-    "readout           v1_2_0       e19:prof"
-    "minidaqapp        v2_1_1       e19:prof"
-    "ipm               v2_0_1       e19:prof"
-    "timing            v5_3_0       e19:prof"
-    "timinglibs        v1_0_0       e19:prof"
-    "influxopmon       v1_0_1       e19:prof"
-    "nwqueueadapters   v1_2_0       e19:prof"
-    "package_declared_by_user v1_2_3 e19:prof"
-)
+As such, it's important to know the assumptions a work area makes when you use it to build code. In the base of your work area is a file called `dbt-workarea-constants.sh`, which will look something like the following:
 ```
-As the names suggest, `dune_products_dirs` contains the list of UPS product pools and `dune_daqpackages` contains a list of UPS products sourced when you first run `dbt-workarea-env` (described below). If you've already run `dbt-workarea-env` before editing the `dbt-settings` file, you'll need to run `dbt-workarea-env --force-ups-reload` to force a reload.
+export SPACK_RELEASE="N22-04-09"
+export SPACK_RELEASES_DIR="/cvmfs/dunedaq-development.opensciencegrid.org/spack-nightly"
+export DBT_AREA_ROOT="/home/jcfree/daqbuild_N22-04-09_spack"
+export DBT_ROOT_WHEN_CREATED="/home/jcfree/daq-buildtools"
+```
+This file is sourced whenever you run `dbt-workarea-env`, and it tells both the build system and the developer where they can find crucial information about the work areas' builds. Specifically, these environment variables mean the following:
+* `$SPACK_RELEASE`: this is the release of the DUNE DAQ software stack against which repos will build (e.g. `dunedaq-v2.10.1`, `N22-04-09`, etc.)
+* `$SPACK_RELEASES_DIR`: The base of the directory containing the DUNE DAQ software installations. The directory `$SPACK_RELEASES_DIR/$SPACK_RELEASE` contains the installation of the packages for your release
+* `DBT_AREA_ROOT`: The directory which is the base of the work area
+* `DBT_ROOT_WHEN_CREATED`: The directory containing the `env.sh` file which was sourced before this work area was first created
 
-&#x1F534; Hint 💡 `dbt-workarea-env` now has a new option `-s/--subset <externals, daqpackages, systems, devtools>` which allows user to set up a subset of UPS products listed in `dbt-settings`.
+There are also useful Spack commands which can be executed to learn about the versions of the individual packages you're working with. An [excellent Spack tutorial](https://spack-tutorial.readthedocs.io/en/latest/tutorial_basics.html) inside the official Spack documentation is worth a look, but a few Spack commands can be used right away to learn about a work area:
+* `spack find --loaded -N | grep $SPACK_RELEASE` will tell you all the DUNE DAQ packages which have been loaded by `dbt-workarea-env` (or `dbt-setup-release`, for that matter)
+* `spack find --loaded -N | grep dunedaq-externals` is the same, but will tell you all the external packages
+* `spack find --loaded -p <package name>` will tell you the path to the actual contents of a Spack-installed package
+
 
 ## Next Step
 
