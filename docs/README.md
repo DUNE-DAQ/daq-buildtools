@@ -1,5 +1,5 @@
 
-_JCF, Apr-6-2022: These instructions are for early testers of Spack installations of the DUNE DAQ packages. For the regular daq-buildtools instructions, please go [here](https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools/). As of today the only frozen release available is dunedaq-v2.10.1, and the only nightly release is N22-04-02; by the time you read this there may be more releases available, however._
+_JCF, Apr-11-2022: These instructions are for early testers of Spack installations of the DUNE DAQ packages. For the regular daq-buildtools instructions, please go [here](https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools/). As of today the only frozen release available is dunedaq-v2.10.1, and the only nightly release is N22-04-09; by the time you read this there may be more releases available, however._
 
 # DUNE DAQ Buildtools
 
@@ -57,7 +57,7 @@ It will set up both the external packages and DAQ packages, as well as activate 
 
 Find a directory in which you want your work area to be a subdirectory (home directories are a popular choice) and `cd` into that directory. Then think of a good name for the work area (give it any name, but we'll refer to it as "MyTopDir" on this wiki). If you want to build against the nightly release (i.e., the official DUNE DAQ package installation which updates every night), run:
 ```sh
-dbt-create.py [-c/--clone-pyvenv] -n <nightly release> <name of work area subdirectory> # E.g., N22-04-02
+dbt-create.py [-c/--clone-pyvenv] -n <nightly release> <name of work area subdirectory> # E.g., N22-04-09
 cd <name of work area subdirectory>
 ```
 To see all available nightly releases, run `dbt-create.py -l -n`. Less common but also possible is to build your repos not against a nightly release but against a frozen release; the commands you pass to `dbt-create.py` are the same, but with the `-n` dropped. 
@@ -71,7 +71,6 @@ The structure of your work area will look like the following:
 MyTopDir
 ├── build
 ├── dbt-pyvenv
-├── dbt-settings
 ├── dbt-env.sh -> /path/to/daq-buildtools/env.sh
 ├── dbt-workarea-constants.sh
 ├── log
@@ -107,7 +106,7 @@ dbt-build.py
 
 ### Working with more repos
 
-To work with more repos, add them to the `./sourcecode` subdirectory as we did with listrev. Be aware, though: if you're developing a new repo which itself depends on another new repo, daq-buildtools may not already know about this dependency. "New" in this context means "not listed in `/cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.10.0-c7/dbt-build-order.cmake`". If this is the case, you have one of two options:
+To work with more repos, add them to the `./sourcecode` subdirectory as we did with listrev. Be aware, though: if you're developing a new repo which itself depends on another new repo, daq-buildtools may not already know about this dependency. "New" in this context means "not listed in `/cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.10.1-c7/dbt-build-order.cmake`". If this is the case, you have one of two options:
 
 * (Recommended) Add the names of your new packages to the `build_order` list found in `./sourcecode/dbt-build-order.cmake`, placing them in the list in the relative order in which you want them to be built. 
 * First clone and build your new base repo, and THEN clone and build your other new repo which depends on your new base repo. 
@@ -132,7 +131,7 @@ To check for deviations from the coding rules described in the [DUNE C++ Style G
 ```
 dbt-build.py --lint
 ```
-...though be aware that some guideline violations (e.g., having a function which tries to do unrelated things) can't be picked up by the automated linter. Also note that you can use `dbt-clang-format.sh` in order to automatically fix whitespace issues in your code; type it at the command line without arguments to learn how to use it. 
+...though be aware that some guideline violations (e.g., having a function which tries to do unrelated things) can't be picked up by the automated linter. Also note that you can use `dbt-clang-format.sh` in order to automatically fix whitespace issues in your code; type it at the command line without arguments to learn how to use it. (_n.b. Apr-11-2022: dbt-clang-format.sh is not yet supported for Spack-based work areas_)
 
 Note that unlike the other options to `dbt-build.py`, `--lint` and `--unittest` are both capable of taking an optional argument, which is the name of a specific repo in your work area which you'd like to either lint or run unit tests for. This can be useful if you're focusing on developing one of several repos in your work area. It should appear after an equals sign, e.g., `dbt-build.py --lint=<repo you're working on>`.
 
