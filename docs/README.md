@@ -99,10 +99,10 @@ We're about to build and install the `listrev` package. (&#x1F534; Note: if you 
 
 Now, do the following:
 ```sh
-dbt-workarea-env # If you haven't already run this
-dbt-build.py 
+dbt-workarea-env  # To set up your work area's environment
+dbt-build.py
 ```
-...and this will build `listrev` in the local `./build` subdirectory and then install it as a package either in the local `./install` subdirectory or in whatever you pointed `DBT_INSTALL_DIR` to. 
+...and this will build `listrev` in the local `./build` subdirectory and then install it as a package either in the local `./install` subdirectory or in whatever you pointed `DBT_INSTALL_DIR` to. Note that whenever you add a new repo to your work area, you'll want to rerun `dbt-workarea-env` so that environment variables such as `LD_LIBRARY_PATH`, etc, are updated accordingly. 
 
 
 ### Working with more repos
@@ -112,7 +112,7 @@ To work with more repos, add them to the `./sourcecode` subdirectory as we did w
 * (Recommended) Add the names of your new packages to the `build_order` list found in `./sourcecode/dbt-build-order.cmake`, placing them in the list in the relative order in which you want them to be built. 
 * First clone and build your new base repo, and THEN clone and build your other new repo which depends on your new base repo. 
 
-Once you've added your repos and built them, you'll want to run `dbt-workarea-env` so the environment picks up their applications, libraries, etc. 
+As a reminder, once you've added your repos and built them, you'll want to run `dbt-workarea-env` so the environment picks up their applications, libraries, etc. 
 
 ### Useful build options
 
