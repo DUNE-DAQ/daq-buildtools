@@ -26,8 +26,8 @@ spack load python@3.8.3%gcc@8.2.0
 Simply do:
 
 ```bash
-git clone https://github.com/DUNE-DAQ/daq-buildtools -b johnfreeman/issue161_spack
-source daq-buildtools/env.sh
+source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
+setup_dbt v5.0.0
 ```
 
 Then you'll see something like:
