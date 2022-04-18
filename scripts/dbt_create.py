@@ -68,8 +68,10 @@ if args._list:
 elif not args.release_tag or not args.workarea_dir:
     error("Wrong number of arguments. Run '{} -h' for more information.".format(os.path.basename(__file__)))
 
-RELEASE=args.release_tag
-RELEASE_PATH=os.path.realpath(f"{RELEASE_BASEPATH}/{RELEASE}")
+RELEASE_PATH=os.path.realpath(f"{RELEASE_BASEPATH}/{args.release_tag}")
+RELEASE=RELEASE_PATH.rstrip("/").split("/")[-1]
+if RELEASE != args.release_tag:
+    print(f"Release \"{args.release_tag}\" requested; interpreting this as release \"{RELEASE}\"")
 
 TARGETDIR=args.workarea_dir
 
