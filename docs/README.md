@@ -1,5 +1,5 @@
 
-_JCF, Apr-13-2022: These instructions are for early testers of Spack installations of the DUNE DAQ packages. For the regular daq-buildtools instructions, please go [here](https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools/). As of today the latest frozen release available is dunedaq-v2.10.2, and the only nightly release is N22-04-09; by the time you read this there may be more nightly releases available, however._
+_JCF, Apr-18-2022: These instructions are for early testers of Spack installations of the DUNE DAQ packages. For the regular daq-buildtools instructions, please go [here](https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools/)._
 
 # DUNE DAQ Buildtools
 
@@ -25,15 +25,15 @@ spack load python@3.8.3%gcc@8.2.0
 
 Simply do:
 
-```bash
-git clone https://github.com/DUNE-DAQ/daq-buildtools -b johnfreeman/issue161_spack
-source daq-buildtools/env.sh
+```
+source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
+setup_dbt latest-spack
 ```
 
 Then you'll see something like:
 ```
-Added /your/path/to/daq-buildtools/bin -> PATH
-Added /your/path/to/daq-buildtools/scripts -> PATH
+Updated /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v5.0.0/bin -> PATH
+Updated /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v5.0.0/scripts -> PATH
 DBT setuptools loaded
 ```
 If you type `dbt-` followed by the `<tab>` key you'll see a listing of available commands, which include `dbt-create.py`, `dbt-build.py`, `dbt-setup-release` and `dbt-workarea-env`. These are all described in the following sections. 
@@ -57,7 +57,7 @@ It will set up both the external packages and DAQ packages, as well as activate 
 
 Find a directory in which you want your work area to be a subdirectory (home directories are a popular choice) and `cd` into that directory. Then think of a good name for the work area (give it any name, but we'll refer to it as "MyTopDir" on this wiki). If you want to build against the nightly release (i.e., the official DUNE DAQ package installation which updates every night), run:
 ```sh
-dbt-create.py [-c/--clone-pyvenv] -n <nightly release> <name of work area subdirectory> # E.g., N22-04-09
+dbt-create.py [-c/--clone-pyvenv] -n <nightly release> <name of work area subdirectory> # E.g., N22-04-18 or last_successful
 cd <name of work area subdirectory>
 ```
 To see all available nightly releases, run `dbt-create.py -l -n`. Less common but also possible is to build your repos not against a nightly release but against a frozen release; the commands you pass to `dbt-create.py` are the same, but with the `-n` dropped. 
