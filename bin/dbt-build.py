@@ -11,7 +11,6 @@ if sys.prefix == sys.base_prefix:
     sys.exit(1)
 
 import argparse
-from colorama import Fore, Style
 import io
 import multiprocessing
 import re
@@ -332,7 +331,7 @@ if run_tests:
         unittestdirs = stringio_obj7.getvalue().split()
 
         if len(unittestdirs) == 0:
-            rich.print("{}No unit tests have been written for {}{}".format(Fore.RED, pkgname, Style.RESET_ALL), file = sys.stderr)
+            rich.print(f"[red]No unit tests have been written for {pkgname}[/red]", file = sys.stderr)
             continue
 
         if not "BOOST_TEST_LOG_LEVEL" in os.environ:
@@ -366,7 +365,7 @@ RUNNING UNIT TESTS IN {unittestdir}
                     pytee.run("echo", echo_result.split(), test_log_summary)
                     num_unit_tests += 1
 
-            rich.print("{}Testing complete for package \"{}\". Ran {} unit test suites.{}".format(Fore.YELLOW, pkgname, num_unit_tests, Style.RESET_ALL))
+            rich.print(f"[yellow]Testing complete for package \"{pkgname}\". Ran {num_unit_tests} unit test suites.[/yellow]")
             rich.print("")
             rich.print(f"Test summary can be found in {test_log_summary}.")
             rich.print(f"Detailed test results are saved under {test_log_dir}.")
