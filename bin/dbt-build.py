@@ -152,9 +152,10 @@ running_config_and_generate=False
 if not os.path.exists("CMakeCache.txt"):
     running_config_and_generate = True
 
-    generator_arg=""
-    if "SETUP_NINJA" in os.environ:
-        generator_arg="-G Ninja"
+    try:
+        re.search(r"^/cvmfs", sh.which("ninja"))
+    except:
+        error("Ninja seems to be missing. The \"which ninja\" command did not yield an executable in the /cvmfs area. Exiting...")
 
     stringio_obj3 = io.StringIO()
     the_which_cmd = sh.Command("which")  # Needed because of a complex alias, at least on mu2edaq
@@ -172,7 +173,7 @@ if not os.path.exists("CMakeCache.txt"):
     if args.cmake_msg_lvl:
         cmake_msg_lvl = args.cmake_msg_lvl
 
-    fullcmd="{} -DCMAKE_MESSAGE_LOG_LEVEL={} -DMOO_CMD={} -DDBT_ROOT={} -DDBT_DEBUG={} -DCMAKE_INSTALL_PREFIX={} {} {}".format(cmake, cmake_msg_lvl, moo_path, os.environ["DBT_ROOT"], debug_build, os.environ["DBT_INSTALL_DIR"], generator_arg, SRCDIR)
+    fullcmd="{} -DCMAKE_MESSAGE_LOG_LEVEL={} -DMOO_CMD={} -DDBT_ROOT={} -DDBT_DEBUG={} -DCMAKE_INSTALL_PREFIX={} -G Ninja {}".format(cmake, cmake_msg_lvl, moo_path, os.environ["DBT_ROOT"], debug_build, os.environ["DBT_INSTALL_DIR"], SRCDIR)
 
     rich.print(f"Executing '{fullcmd}'")
     retval=pytee.run(fullcmd.split(" ")[0], fullcmd.split(" ")[1:], build_log)
