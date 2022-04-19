@@ -76,6 +76,7 @@ parser.add_argument("-i", "--install", action="store_true", help=argparse.SUPPRE
 parser.add_argument("--cmake-msg-lvl", dest="cmake_msg_lvl", help=argparse.SUPPRESS)
 parser.add_argument("--cmake-trace", action="store_true", dest="cmake_trace", help=argparse.SUPPRESS)
 parser.add_argument("--cmake-graphviz", action="store_true", dest="cmake_graphviz", help=argparse.SUPPRESS)
+parser.add_argument("-y", "--yes-to-all", action="store_true", dest="yes_to_all", help=argparse.SUPPRESS)
 
 args = parser.parse_args()
 
@@ -93,6 +94,10 @@ if args.lint:
 if args.install:
     error("Use of -i/--install is deprecated as installation always occurs now; run with \" --help\" to see valid options. Exiting...")
 
+force_clean = False
+if args.yes_to_all:
+    force_clean = True
+
 if "DBT_WORKAREA_ENV_SCRIPT_SOURCED" not in os.environ:
     error("""
 It appears you haven't yet executed "dbt-workarea-env"; please do so before
@@ -106,11 +111,13 @@ os.chdir(BUILDDIR)
 if args.clean_build:
     # Want to be damn sure we're in the right directory, recursive directory removal is no joke...
     if os.path.basename(os.getcwd()) == "build":
-        rich.print(f"""
-Clean build requested, will delete all the contents of build directory \"{os.getcwd()}\".
-If you wish to abort, you have 5 seconds to hit Ctrl-c"
-        """)
-        sleep(5)
+
+        if not force_clean:
+            rich.print(f"""
+    Clean build requested, will delete all the contents of build directory \"{os.getcwd()}\".
+    If you wish to abort, you have 5 seconds to hit Ctrl-c"
+            """)
+            sleep(5)
 
         for filename in os.listdir(os.getcwd()):
             file_path = os.path.join(os.getcwd(), filename)
