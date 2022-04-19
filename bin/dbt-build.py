@@ -85,6 +85,7 @@ if args.unittest:
     if args.unittest != "all":
         package_to_test = args.unittest
 
+lint = False
 if args.lint:
     lint=True
     if args.lint != "all":
@@ -148,6 +149,7 @@ if args.cmake_trace:
 # gets renamed if it's produced but there's a failure.
 
 running_config_and_generate=False
+cfggentime=None
 
 if not os.path.exists("CMakeCache.txt"):
     running_config_and_generate = True
@@ -173,7 +175,7 @@ if not os.path.exists("CMakeCache.txt"):
     if args.cmake_msg_lvl:
         cmake_msg_lvl = args.cmake_msg_lvl
 
-    fullcmd="{} -DCMAKE_MESSAGE_LOG_LEVEL={} -DMOO_CMD={} -DDBT_ROOT={} -DDBT_DEBUG={} -DCMAKE_INSTALL_PREFIX={} -G Ninja {}".format(cmake, cmake_msg_lvl, moo_path, os.environ["DBT_ROOT"], debug_build, os.environ["DBT_INSTALL_DIR"], SRCDIR)
+    fullcmd="{} -DCMAKE_MESSAGE_LOG_LEVEL={} -DMOO_CMD={} -DDBT_ROOT={} -DDBT_DEBUG={} -DCMAKE_INSTALL_PREFIX={} -G Ninja {}".format(cmake, cmake_msg_lvl, moo_path, os.environ["DBT_ROOT"], debug_build, INSTALLDIR, SRCDIR)
 
     rich.print(f"Executing '{fullcmd}'")
     retval=pytee.run(fullcmd.split(" ")[0], fullcmd.split(" ")[1:], build_log)
@@ -183,9 +185,6 @@ if not os.path.exists("CMakeCache.txt"):
 
     if retval == 0:
         cfggentime=int(endtime_cfggen_s) - int(starttime_cfggen_s)
-        rich.print("CMake's config+generate stages took {} seconds".format(cfggentime))
-        rich.print("Start time: {}".format(starttime_cfggen_d))
-        rich.print("End time:   {}".format(endtime_cfggen_d))
     else:
         shutil.move("CMakeCache.txt", "CMakeCache.txt.most_recent_failure")
 
@@ -264,11 +263,6 @@ except sh.ErrorReturnCode_1:
 
 rich.print("")
 
-if running_config_and_generate:
-    rich.print("CMake's config+generate+build stages all completed successfully")
-    rich.print("")
-else:
-    rich.print("CMake's build stage completed successfully")
 
 if "DBT_INSTALL_DIR" in os.environ and not re.search(r"^/?$", os.environ["DBT_INSTALL_DIR"]):
     for filename in os.listdir(os.environ["DBT_INSTALL_DIR"]):
@@ -284,12 +278,12 @@ else:
 os.chdir(BUILDDIR)
 
 fullcmd=f"cmake --build . --target install -- {nprocs_argument}"
+
 retval = pytee.run(fullcmd.split()[0], fullcmd.split()[1:], None)
 if retval == 0:
     rich.print(f"""
-Installation complete.
-This implies your code successfully compiled before installation; you can
-either scroll up or run \"less -R {build_log}\" to see build results""")
+Installation in {INSTALLDIR} complete.
+""")
 else:
     error(f"Installation failed. There was a problem running \"{fullcmd}\". Exiting...")
 
@@ -368,8 +362,6 @@ RUNNING UNIT TESTS IN {unittestdir}
 
             rich.print(f"[yellow]Testing complete for package \"{pkgname}\". Ran {num_unit_tests} unit test suites.[/yellow]")
             rich.print("")
-            rich.print(f"Test summary can be found in {test_log_summary}.")
-            rich.print(f"Detailed test results are saved under {test_log_dir}.")
 
 if args.lint:
     os.chdir(BASEDIR)
@@ -402,4 +394,41 @@ if args.lint:
         lint_log = f"{lint_log_dir}/{pkgname}_linting.log"
         pytee.run(fullcmd.split()[0], fullcmd.split()[1:], lint_log)
 
+rich.print("")
+if cfggentime is not None:
+    rich.print(f"CMake's config+generate stages took {cfggentime} seconds")
+    rich.print(f"Start time: {starttime_cfggen_d}")
+    rich.print(f"End time:   {endtime_cfggen_d}")
+else:
+    rich.print(f"CMake's config+generate stages were skipped as the needed build files already existed")
+
+rich.print("")
+rich.print(f"CMake's build stage took {buildtime} seconds")
+rich.print(f"Start time: {starttime_build_d}")
+rich.print(f"End time:   {endtime_build_d}")
+
+testinfo = ""
+if run_tests:
+    testinfo=f"""
+Unit test summary can be found in {test_log_summary}.
+Detailed unit test results are saved in the following directory:
+{test_log_dir}.
+"""
+
+lintinfo = ""
+if args.lint:
+    lintinfo=f"""
+Automated code linting results can be found in the following directory:
+{lint_log_dir}.
+"""
+
+rich.print(f"""
+This script is ending normally. This implies your code successfully compiled; you can
+either scroll up or run the following to see build details:
+
+less -R {build_log}
+
+{testinfo}
+{lintinfo}
+""")
 
