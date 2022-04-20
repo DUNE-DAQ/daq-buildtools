@@ -194,7 +194,7 @@ This script ran into a problem running
 
 {fullcmd}
 
-from {BUILDDIR} (i.e., CMake's config+generate stages).
+from {BUILDDIR} (i.e., CMake's build file config+generate stages).
 Scroll up for details or look at the build log via
 
 less -R {BUILDDIR}
@@ -204,7 +204,7 @@ Exiting...
 """)
 
 else:
-    rich.print(f"The config+generate stage was skipped as CMakeCache.txt was already found in {BUILDDIR}")
+    rich.print(f"The CMake build file config+generate stage was skipped as CMakeCache.txt was already found in {BUILDDIR}")
 
 if args.cmake_graphviz:
     output = sh.cmake(["--graphviz=graphviz/targets.dot", "."])
@@ -396,11 +396,11 @@ if args.lint:
 
 rich.print("")
 if cfggentime is not None:
-    rich.print(f"CMake's config+generate stages took {cfggentime} seconds")
+    rich.print(f"CMake's build file config+generate stages took {cfggentime} seconds")
     rich.print(f"Start time: {starttime_cfggen_d}")
     rich.print(f"End time:   {endtime_cfggen_d}")
 else:
-    rich.print(f"CMake's config+generate stages were skipped as the needed build files already existed")
+    rich.print(f"CMake's build file config+generate stages were skipped as the needed build files already existed")
 
 rich.print("")
 rich.print(f"CMake's build stage took {buildtime} seconds")
