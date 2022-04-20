@@ -423,8 +423,8 @@ Automated code linting results can be found in the following directory:
 """
 
 rich.print(f"""
-This script is ending normally. This implies your code successfully compiled; you can
-either scroll up or run the following to see build details:
+This script is ending normally. This implies your code successfully compiled; to see
+build details you can either scroll up or run the following:
 
 less -R {build_log}
 
