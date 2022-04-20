@@ -142,19 +142,23 @@ with open(f'{os.environ["DBT_AREA_ROOT"]}/dbt-workarea-constants.sh', "w") as ou
 
 print("Setting up the Python subsystem.") 
 if args.clone_pyvenv:
-    cmd = f"{DBT_ROOT}/scripts/dbt-clone-pyvenv.sh {RELEASE_PATH}/{DBT_VENV}"
+    cmd = f"{DBT_ROOT}/scripts/dbt-clone-pyvenv.sh {RELEASE_PATH}/{DBT_VENV} 2>&1"
 else:
     print("Please be patient, this should take O(1 minute)...")
-    cmd = f"{DBT_ROOT}/scripts/dbt-create-pyvenv.sh {RELEASE_PATH}/{PY_PKGLIST}"
+    cmd = f"{DBT_ROOT}/scripts/dbt-create-pyvenv.sh {RELEASE_PATH}/{PY_PKGLIST} 2>&1"
 
 res = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE)
-out = res.communicate()
+
+while True:
+    output = res.stdout.readline()
+    if res.poll() is not None:
+        break
+    if output:
+        print(output.rstrip().decode("utf-8"))
+    res.poll()
+
 if res.returncode != 0:
-    print(f"stdout from {cmd}:")
-    print(out[0].decode('utf-8'))
-    print(f"stderr from {cmd}:")
-    print(out[1].decode('utf-8'))
     error(f"There was a problem running \"{cmd}\" (return value {res.returncode}); exiting...")
 
 endtime_d=get_time("as_date")
