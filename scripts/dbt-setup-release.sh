@@ -55,11 +55,11 @@ EOU
 done
 
 if [[ ! -z "${CUSTOM_BASEPATH}" ]]; then
-    SPACK_RELEASES_DIR="${CUSTOM_BASEPATH}"
+    export SPACK_RELEASES_DIR="${CUSTOM_BASEPATH}"
 elif [ "${NIGHTLY}" = false ]; then
-    SPACK_RELEASES_DIR="${PROD_BASEPATH}"
+    export SPACK_RELEASES_DIR="${PROD_BASEPATH}"
 else
-    SPACK_RELEASES_DIR="${NIGHTLY_BASEPATH}"
+    export SPACK_RELEASES_DIR="${NIGHTLY_BASEPATH}"
 fi
 
 
@@ -77,8 +77,11 @@ if [[ ${#ARGS[@]} -eq 0 ]]; then
     return 11 
 fi
 
-SPACK_RELEASE=${ARGS[0]}
-RELEASE_PATH=$(realpath -m "${SPACK_RELEASES_DIR}/${SPACK_RELEASE}")
+RELEASE_TAG=${ARGS[0]}
+RELEASE_PATH=$(realpath -m "${SPACK_RELEASES_DIR}/${RELEASE_TAG}")
+export SPACK_RELEASE=$( echo $RELEASE_PATH | sed -r 's!.*/([^/]+)/?$!\1!' )
+
+test ! "$SPACK_RELEASE" == "$RELEASE_TAG"  && echo "Release \"$RELEASE_TAG\" requested; interpreting this as release \"$SPACK_RELEASE\""
 
 if [[ ! -d ${RELEASE_PATH} ]]; then 
     error  "Release path '${RELEASE_PATH}' does not exist. Note that you need to pass \"-n\" for a nightly build. Exiting..." 
