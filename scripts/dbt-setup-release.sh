@@ -113,7 +113,18 @@ EOF
 fi
 
 spack_setup_env
+retval=$?
+if [[ "$retval" != "0" ]]; then
+    error "Problem setting up the spack environment"
+    return $retval
+fi
+
 spack_load_target_package dunedaq
+retval=$?
+if [[ "$retval" != "0" ]]; then
+    error "Failed to load spack target package. Returning..." 
+    return $retval
+fi
 
 source ${RELEASE_PATH}/${DBT_VENV}/bin/activate
 
