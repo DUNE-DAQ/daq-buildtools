@@ -23,11 +23,11 @@ spack load python@3.8.3%gcc@8.2.0
 <a name="Setup_of_daq-buildtools"></a>
 ## Setup of `daq-buildtools`
 
-Simply do:
+In a directory which doesn't contain a daq-buildtools repository, simply do:
 
 ```
-source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt latest-spack
+git clone https://github.com/DUNE-DAQ/daq-buildtools -b johnfreeman/issue161_spack
+. daq-buildtools/env.sh
 ```
 
 Then you'll see something like:
