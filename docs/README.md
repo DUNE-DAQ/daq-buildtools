@@ -32,8 +32,8 @@ git clone https://github.com/DUNE-DAQ/daq-buildtools -b johnfreeman/issue161_spa
 
 Then you'll see something like:
 ```
-Updated /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v5.0.0/bin -> PATH
-Updated /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v5.0.0/scripts -> PATH
+Added /tmp/daq-buildtools/bin -> PATH
+Added /tmp/daq-buildtools/scripts -> PATH
 DBT setuptools loaded
 ```
 If you type `dbt-` followed by the `<tab>` key you'll see a listing of available commands, which include `dbt-create.py`, `dbt-build.py`, `dbt-setup-release` and `dbt-workarea-env`. These are all described in the following sections. 
@@ -46,7 +46,7 @@ Each time that you want to work with a DUNE DAQ work area in a fresh Linux shell
 Running a release from cvmfs without creating a work area can be done if you simply run the following:
 
 ```sh
-dbt-setup-release dunedaq-v2.10.2
+dbt-setup-release dunedaq-v2.11.0
 ```
 
 It will set up both the external packages and DAQ packages, as well as activate the python virtual environment. Note that the python virtual environment activated here is read-only. You'd want to run `dbt-setup-release` only if you weren't developing DUNE DAQ software, the topic covered for the remainder of this document. However, if you don't want a frozen set of versioned packages - which you wouldn't, if you were developing code - please continue reading.
@@ -107,7 +107,7 @@ dbt-build.py
 
 ### Working with more repos
 
-To work with more repos, add them to the `./sourcecode` subdirectory as we did with listrev. Be aware, though: if you're developing a new repo which itself depends on another new repo, daq-buildtools may not already know about this dependency. "New" in this context means "not listed in `/cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.10.2-c7/dbt-build-order.cmake`". If this is the case, you have one of two options:
+To work with more repos, add them to the `./sourcecode` subdirectory as we did with listrev. Be aware, though: if you're developing a new repo which itself depends on another new repo, daq-buildtools may not already know about this dependency. "New" in this context means "not listed in `/cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.11.0-c7/dbt-build-order.cmake`". If this is the case, you have one of two options:
 
 * (Recommended) Add the names of your new packages to the `build_order` list found in `./sourcecode/dbt-build-order.cmake`, placing them in the list in the relative order in which you want them to be built. 
 * First clone and build your new base repo, and THEN clone and build your other new repo which depends on your new base repo. 
@@ -198,4 +198,4 @@ There are also useful Spack commands which can be executed to learn about the ve
 
 ## Next Step
 
-* You can learn how to create a new package by taking a look at the [daq-cmake documentation](https://dune-daq-sw.readthedocs.io/en/v2.10.0/packages/daq-cmake/)
+* You can learn how to create a new package by taking a look at the [daq-cmake documentation](https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-cmake/)
