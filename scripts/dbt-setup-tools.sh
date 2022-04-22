@@ -237,8 +237,9 @@ function list_releases() {
 
     local release_path=$1
     pushd $release_path >& /dev/null
-    ls | sort | xargs -i printf " - %s" {}
-    popd >& /dev/null
     echo
+    ls | sort | xargs -i printf " - %s\n" {}
+    echo
+    popd >& /dev/null
 }
 #------------------------------------------------------------------------------
