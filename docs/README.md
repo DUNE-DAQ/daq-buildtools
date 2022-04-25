@@ -1,6 +1,4 @@
-_n.b. These instructions assume you're using daq-buildtools from the dunedaq-v2.9.0 frozen release or later_
-
-_n.b. If you want to build your repo area against Spack packages rather than UPS packages, please read [the instructions from the Spack feature branch of daq-buildtools](https://github.com/DUNE-DAQ/daq-buildtools/blob/johnfreeman/issue161_spack/docs/README.md)_
+_n.b. These instructions are intended for people who develop daq-buildtools itself, as opposed to people who use daq-buildtools in order to develop other packages. Unless you're a member of the Software Coordination group, you probably want to go to the [documentation of the most recent release of daq-buildtools](https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools/) or the [the instructions from the Spack feature branch of daq-buildtools](https://github.com/DUNE-DAQ/daq-buildtools/blob/johnfreeman/issue161_spack/docs/README.md)_
 
 # DUNE DAQ Buildtools
 
