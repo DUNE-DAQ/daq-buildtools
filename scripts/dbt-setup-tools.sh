@@ -176,7 +176,7 @@ function spack_setup_env() {
 	return $retval
     fi
 
-    spack env activate ${SPACK_RELEASE//./-} -p
+    spack env activate ${SPACK_RELEASE//./-}
     retval=$?
     if [[ "$retval" != "0" ]]; then
 	error "There was a problem running \"spack env activate $SPACK_RELEASE\""
