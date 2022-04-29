@@ -1,7 +1,7 @@
 #!/bin/env python
 #
 # Download all the repos that are not archived in the DUNE-DAQ organization
-# Usage: python clone.py
+# Usage: python dbt-clone.py or ./dbt-clone.py
 #
 import urllib.request
 import json
