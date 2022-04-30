@@ -1,5 +1,7 @@
 
+
 _JCF, Apr-18-2022: These instructions are for early testers of Spack installations of the DUNE DAQ packages. For the regular daq-buildtools instructions, please go [here](https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools/)._
+
 
 # DUNE DAQ Buildtools
 
@@ -156,21 +158,24 @@ Finally, note that both the output of your builds and your unit tests are logged
 
 ## Running
 
-In order to access the applications, libraries and plugins built and installed into the `$DBT_INSTALL_DIR` area during the above procedure, the system needs to be instructed on where to look for them. Log into a new shell and set up the daq-buildtools environment as described at the top of this document, then do the following:
+In order to access the applications, libraries and plugins built and installed into the `$DBT_INSTALL_DIR` area during the above procedure, the system needs to be instructed on where to look for them. This is accomplished via tha `dbt-workarea-env` command you've already seen. E.g., log into a new shell and set up the daq-buildtools environment as described at the top of this document, cd into your work area, then do the following:
 ```
 export DBT_INSTALL_DIR=<your installation directory> # Only needed if you didn't use the default
 dbt-workarea-env
 ```
 
+
 Note that if you add a new repo to your work area, after building your new code - and hence putting its output in `./build` - you'll need to run `dbt-workarea-env`.
 
 Once the runtime environment is set, just run the application you need. listrev, however, has no applications; it's just a set of DAQ module plugins which get added to CET_PLUGIN_PATH.  
+
 
 Now that you know how to set up a work area, a nice place to learn a bit about the DUNE DAQ suite is via the `daqconf` package. Take a look at its documentation [here](https://dune-daq-sw.readthedocs.io/en/latest/packages/daqconf/); note that in parts of the `daqconf` instructions you're told to run daq-buildtools commands which you may already have run (e.g., to create a new work area) in which case you can skip those specific commands.
 
 A classic option for learning about how to run DAQ modules in a work area is [the listrev documentation](https://dune-daq-sw.readthedocs.io/en/latest/packages/listrev/).
 
 In both the links above you'll notice you'll be running a program called `nanorc` to run the DAQ. To learn more about `nanorc` itself, take a look at [the nanorc documentation](https://dune-daq-sw.readthedocs.io/en/latest/packages/nanorc/).
+
 
 <a name="Finding_Info"></a>
 ## Finding Info on Your Work Area
