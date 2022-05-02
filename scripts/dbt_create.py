@@ -3,7 +3,6 @@ DBT_ROOT=os.environ["DBT_ROOT"]
 exec(open(f'{DBT_ROOT}/scripts/dbt_setup_constants.py').read())
 
 import argparse
-import io
 import pathlib
 from shutil import copy
 import subprocess
@@ -69,8 +68,10 @@ if args._list:
 elif not args.release_tag or not args.workarea_dir:
     error("Wrong number of arguments. Run '{} -h' for more information.".format(os.path.basename(__file__)))
 
-RELEASE=args.release_tag
-RELEASE_PATH=os.path.realpath(f"{RELEASE_BASEPATH}/{RELEASE}")
+RELEASE_PATH=os.path.realpath(f"{RELEASE_BASEPATH}/{args.release_tag}")
+RELEASE=RELEASE_PATH.rstrip("/").split("/")[-1]
+if RELEASE != args.release_tag:
+    print(f"Release \"{args.release_tag}\" requested; interpreting this as release \"{RELEASE}\"")
 
 TARGETDIR=args.workarea_dir
 
@@ -100,8 +101,8 @@ SRCDIR=f"{TARGETDIR}/sourcecode"
 
 if EMPTY_DIR_CHECK and os.listdir("."):
     error(f"""
-There appear to be files in {TARGETDIR} besides this script                                                  
-(run "ls -a1 {TARGETDIR}" to see this); this script should only be run in a clean                                  directory. Exiting...  
+There appear to be files in {TARGETDIR} besides this script
+(run "ls -a1 {TARGETDIR}" to see this); this script should only be run in a clean directory. Exiting...  
 """)
 elif not EMPTY_DIR_CHECK:
     print("""
@@ -122,24 +123,42 @@ for dbtfile in [f"{DBT_ROOT}/configs/CMakeLists.txt", \
                 ]:
     copy(dbtfile, SRCDIR)
 
-copy(f"{RELEASE_PATH}/{UPS_PKGLIST}", f"{TARGETDIR}/{DBT_AREA_FILE}")
-
 os.symlink(f"{DBT_ROOT}/env.sh", f"{TARGETDIR}/dbt-env.sh")
 
-print("Setting up the Python subsystem.") 
+# Set these so the dbt-clone-pyvenv.sh and dbt-create-pyvenv.sh scripts get info they need
+os.environ["SPACK_RELEASE"] = f"{RELEASE}"
+os.environ["SPACK_RELEASES_DIR"] = f"{RELEASE_BASEPATH}"
+os.environ["DBT_AREA_ROOT"] = f"{TARGETDIR}"
 
+workarea_constants_file_contents = \
+    f"""export SPACK_RELEASE="{os.environ["SPACK_RELEASE"]}"
+export SPACK_RELEASES_DIR="{os.environ["SPACK_RELEASES_DIR"]}"
+export DBT_AREA_ROOT="{os.environ["DBT_AREA_ROOT"]}"
+export DBT_ROOT_WHEN_CREATED="{os.environ["DBT_ROOT"]}"
+"""
+
+with open(f'{os.environ["DBT_AREA_ROOT"]}/dbt-workarea-constants.sh', "w") as outf:
+    outf.write(workarea_constants_file_contents)
+
+print("Setting up the Python subsystem.") 
 if args.clone_pyvenv:
-    cmd = f"{DBT_ROOT}/scripts/dbt-clone-pyvenv.sh {RELEASE_PATH}/{DBT_VENV}"
+    cmd = f"{DBT_ROOT}/scripts/dbt-clone-pyvenv.sh {RELEASE_PATH}/{DBT_VENV} 2>&1"
 else:
     print("Please be patient, this should take O(1 minute)...")
-    cmd = f"{DBT_ROOT}/scripts/dbt-create-pyvenv.sh {RELEASE_PATH}/{PY_PKGLIST}"
+    cmd = f"{DBT_ROOT}/scripts/dbt-create-pyvenv.sh {RELEASE_PATH}/{PY_PKGLIST} 2>&1"
 
-res = subprocess.run( cmd.split(), capture_output=True, text=True )
+res = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
+
+while True:
+    output = res.stdout.readline()
+    if res.poll() is not None:
+        break
+    if output:
+        print(output.rstrip().decode("utf-8"))
+    res.poll()
+
 if res.returncode != 0:
-    print(f"stdout from {cmd}:")
-    print(res.stdout)
-    print(f"stderr from {cmd}:")
-    print(res.stderr)
     error(f"There was a problem running \"{cmd}\" (return value {res.returncode}); exiting...")
 
 endtime_d=get_time("as_date")

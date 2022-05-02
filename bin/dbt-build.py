@@ -11,7 +11,6 @@ if sys.prefix == sys.base_prefix:
     sys.exit(1)
 
 import argparse
-from colorama import Fore, Style
 import io
 import multiprocessing
 import re
@@ -76,6 +75,7 @@ parser.add_argument("-i", "--install", action="store_true", help=argparse.SUPPRE
 parser.add_argument("--cmake-msg-lvl", dest="cmake_msg_lvl", help=argparse.SUPPRESS)
 parser.add_argument("--cmake-trace", action="store_true", dest="cmake_trace", help=argparse.SUPPRESS)
 parser.add_argument("--cmake-graphviz", action="store_true", dest="cmake_graphviz", help=argparse.SUPPRESS)
+parser.add_argument("-y", "--yes-to-all", action="store_true", dest="yes_to_all", help=argparse.SUPPRESS)
 
 args = parser.parse_args()
 
@@ -85,6 +85,7 @@ if args.unittest:
     if args.unittest != "all":
         package_to_test = args.unittest
 
+lint = False
 if args.lint:
     lint=True
     if args.lint != "all":
@@ -92,6 +93,10 @@ if args.lint:
 
 if args.install:
     error("Use of -i/--install is deprecated as installation always occurs now; run with \" --help\" to see valid options. Exiting...")
+
+force_clean = False
+if args.yes_to_all:
+    force_clean = True
 
 if "DBT_WORKAREA_ENV_SCRIPT_SOURCED" not in os.environ:
     error("""
@@ -106,11 +111,13 @@ os.chdir(BUILDDIR)
 if args.clean_build:
     # Want to be damn sure we're in the right directory, recursive directory removal is no joke...
     if os.path.basename(os.getcwd()) == "build":
-        rich.print(f"""
-Clean build requested, will delete all the contents of build directory \"{os.getcwd()}\".
-If you wish to abort, you have 5 seconds to hit Ctrl-c"
-        """)
-        sleep(5)
+
+        if not force_clean:
+            rich.print(f"""
+    Clean build requested, will delete all the contents of build directory \"{os.getcwd()}\".
+    If you wish to abort, you have 5 seconds to hit Ctrl-c"
+            """)
+            sleep(5)
 
         for filename in os.listdir(os.getcwd()):
             file_path = os.path.join(os.getcwd(), filename)
@@ -142,13 +149,15 @@ if args.cmake_trace:
 # gets renamed if it's produced but there's a failure.
 
 running_config_and_generate=False
+cfggentime=None
 
 if not os.path.exists("CMakeCache.txt"):
     running_config_and_generate = True
 
-    generator_arg=""
-    if "SETUP_NINJA" in os.environ:
-        generator_arg="-G Ninja"
+    try:
+        re.search(r"^/cvmfs", sh.which("ninja"))
+    except:
+        error("Ninja seems to be missing. The \"which ninja\" command did not yield an executable in the /cvmfs area. Exiting...")
 
     stringio_obj3 = io.StringIO()
     the_which_cmd = sh.Command("which")  # Needed because of a complex alias, at least on mu2edaq
@@ -166,7 +175,7 @@ if not os.path.exists("CMakeCache.txt"):
     if args.cmake_msg_lvl:
         cmake_msg_lvl = args.cmake_msg_lvl
 
-    fullcmd="{} -DCMAKE_MESSAGE_LOG_LEVEL={} -DMOO_CMD={} -DDBT_ROOT={} -DDBT_DEBUG={} -DCMAKE_INSTALL_PREFIX={} {} {}".format(cmake, cmake_msg_lvl, moo_path, os.environ["DBT_ROOT"], debug_build, os.environ["DBT_INSTALL_DIR"], generator_arg, SRCDIR)
+    fullcmd="{} -DCMAKE_POLICY_DEFAULT_CMP0116=NEW -DCMAKE_MESSAGE_LOG_LEVEL={} -DMOO_CMD={} -DDBT_ROOT={} -DDBT_DEBUG={} -DCMAKE_INSTALL_PREFIX={} -G Ninja {}".format(cmake, cmake_msg_lvl, moo_path, os.environ["DBT_ROOT"], debug_build, INSTALLDIR, SRCDIR)
 
     rich.print(f"Executing '{fullcmd}'")
     retval=pytee.run(fullcmd.split(" ")[0], fullcmd.split(" ")[1:], build_log)
@@ -176,9 +185,6 @@ if not os.path.exists("CMakeCache.txt"):
 
     if retval == 0:
         cfggentime=int(endtime_cfggen_s) - int(starttime_cfggen_s)
-        rich.print("CMake's config+generate stages took {} seconds".format(cfggentime))
-        rich.print("Start time: {}".format(starttime_cfggen_d))
-        rich.print("End time:   {}".format(endtime_cfggen_d))
     else:
         shutil.move("CMakeCache.txt", "CMakeCache.txt.most_recent_failure")
 
@@ -188,7 +194,7 @@ This script ran into a problem running
 
 {fullcmd}
 
-from {BUILDDIR} (i.e., CMake's config+generate stages).
+from {BUILDDIR} (i.e., CMake's build file config+generate stages).
 Scroll up for details or look at the build log via
 
 less -R {BUILDDIR}
@@ -198,7 +204,7 @@ Exiting...
 """)
 
 else:
-    rich.print(f"The config+generate stage was skipped as CMakeCache.txt was already found in {BUILDDIR}")
+    rich.print(f"The CMake build file config+generate stage was skipped as CMakeCache.txt was already found in {BUILDDIR}")
 
 if args.cmake_graphviz:
     output = sh.cmake(["--graphviz=graphviz/targets.dot", "."])
@@ -257,11 +263,6 @@ except sh.ErrorReturnCode_1:
 
 rich.print("")
 
-if running_config_and_generate:
-    rich.print("CMake's config+generate+build stages all completed successfully")
-    rich.print("")
-else:
-    rich.print("CMake's build stage completed successfully")
 
 if "DBT_INSTALL_DIR" in os.environ and not re.search(r"^/?$", os.environ["DBT_INSTALL_DIR"]):
     for filename in os.listdir(os.environ["DBT_INSTALL_DIR"]):
@@ -277,12 +278,12 @@ else:
 os.chdir(BUILDDIR)
 
 fullcmd=f"cmake --build . --target install -- {nprocs_argument}"
+
 retval = pytee.run(fullcmd.split()[0], fullcmd.split()[1:], None)
 if retval == 0:
     rich.print(f"""
-Installation complete.
-This implies your code successfully compiled before installation; you can
-either scroll up or run \"less -R {build_log}\" to see build results""")
+Installation in {INSTALLDIR} complete.
+""")
 else:
     error(f"Installation failed. There was a problem running \"{fullcmd}\". Exiting...")
 
@@ -325,7 +326,7 @@ if run_tests:
         unittestdirs = stringio_obj7.getvalue().split()
 
         if len(unittestdirs) == 0:
-            rich.print("{}No unit tests have been written for {}{}".format(Fore.RED, pkgname, Style.RESET_ALL), file = sys.stderr)
+            rich.print(f"[red]No unit tests have been written for {pkgname}[/red]", file = sys.stderr)
             continue
 
         if not "BOOST_TEST_LOG_LEVEL" in os.environ:
@@ -359,10 +360,8 @@ RUNNING UNIT TESTS IN {unittestdir}
                     pytee.run("echo", echo_result.split(), test_log_summary)
                     num_unit_tests += 1
 
-            rich.print("{}Testing complete for package \"{}\". Ran {} unit test suites.{}".format(Fore.YELLOW, pkgname, num_unit_tests, Style.RESET_ALL))
+            rich.print(f"[yellow]Testing complete for package \"{pkgname}\". Ran {num_unit_tests} unit test suites.[/yellow]")
             rich.print("")
-            rich.print(f"Test summary can be found in {test_log_summary}.")
-            rich.print(f"Detailed test results are saved under {test_log_dir}.")
 
 if args.lint:
     os.chdir(BASEDIR)
@@ -395,4 +394,41 @@ if args.lint:
         lint_log = f"{lint_log_dir}/{pkgname}_linting.log"
         pytee.run(fullcmd.split()[0], fullcmd.split()[1:], lint_log)
 
+rich.print("")
+if cfggentime is not None:
+    rich.print(f"CMake's build file config+generate stages took {cfggentime} seconds")
+    rich.print(f"Start time: {starttime_cfggen_d}")
+    rich.print(f"End time:   {endtime_cfggen_d}")
+else:
+    rich.print(f"CMake's build file config+generate stages were skipped as the needed build files already existed")
+
+rich.print("")
+rich.print(f"CMake's build stage took {buildtime} seconds")
+rich.print(f"Start time: {starttime_build_d}")
+rich.print(f"End time:   {endtime_build_d}")
+
+testinfo = ""
+if run_tests:
+    testinfo=f"""
+Unit test summary can be found in {test_log_summary}.
+Detailed unit test results are saved in the following directory:
+{test_log_dir}.
+"""
+
+lintinfo = ""
+if args.lint:
+    lintinfo=f"""
+Automated code linting results can be found in the following directory:
+{lint_log_dir}.
+"""
+
+rich.print(f"""
+This script is ending normally. This implies your code successfully compiled; to see
+build details you can either scroll up or run the following:
+
+less -R {build_log}
+
+{testinfo}
+{lintinfo}
+""")
 
