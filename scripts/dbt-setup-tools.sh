@@ -18,7 +18,7 @@ source ${HERE}/dbt-setup-constants.sh
 function deprecation_warning() {
   SCRIPT_NAME=$( basename -- $0 )
   echo 
-  echo -e "${COL_YELLOW}DEPRECATION WARNING: ${SCRIPT_NAME} has been replaced by ${SCRIPT_NAME%.*}.py. ${SCRIPT_NAME} is deprecated and will be removed in future releases.${COL_RESET}"
+  echo -e "${COL_YELLOW}DEPRECATION WARNING: ${SCRIPT_NAME} has been replaced by ${SCRIPT_NAME%.*}. ${SCRIPT_NAME} is deprecated and will be removed in future releases.${COL_RESET}"
   echo 
 }
 

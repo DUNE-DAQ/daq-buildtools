@@ -53,7 +53,7 @@ if [ $gccver -lt 9 ]; then
 fi
 
 echo "Performing clean build, please wait" |& tee -a $lcov_log
-dbt-build.py --clean >$lcov_log 2>&1 || error "dbt-build.py --clean returned nonzero; exiting..."
+dbt-build --clean >$lcov_log 2>&1 || error "dbt-build --clean returned nonzero; exiting..."
 echo "Clean build complete. Setting up LCOV counters" |& tee -a $lcov_log
 
 lcov -d $DBT_AREA_ROOT --zerocounters >>$lcov_log 2>&1 || error "lcov -d $DBT_AREA_ROOT --zerocounters returned nonzero; exiting..."
