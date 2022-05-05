@@ -257,7 +257,7 @@ stringio_obj4 = io.StringIO()
 num_estimated_warnings = 0
 try:
     sh.wc(sh.grep("warning: ", build_log), "-l", _out=stringio_obj4)
-    num_estimated_warnings=stringio_obj4.getvalue().strip()
+    num_estimated_warnings=int(stringio_obj4.getvalue().strip())
 except sh.ErrorReturnCode_1:
     pass
 
@@ -406,6 +406,11 @@ rich.print("")
 rich.print(f"CMake's build stage took {buildtime} seconds")
 rich.print(f"Start time: {starttime_build_d}")
 rich.print(f"End time:   {endtime_build_d}")
+
+if num_estimated_warnings > 0:
+    rich.print("")
+    rich.print(f"The build found an estimated {num_estimated_warnings} warnings")
+    rich.print("")
 
 testinfo = ""
 if run_tests:
