@@ -25,7 +25,7 @@ function echo_dots() {
 }
 
 function check_unit_tests() {
-  dbt-build.py >/dev/null 2>&1 || error "DAQ build FAILED, exiting"
+  dbt-build >/dev/null 2>&1 || error "DAQ build FAILED, exiting"
   pushd $DBT_AREA_ROOT/build >/dev/null
   echo
   echo
