@@ -28,13 +28,15 @@ def list_releases(release_basepath):
     origdir=os.getcwd()
     os.chdir(f"{release_basepath}")
     for dirname in glob.glob(f"*"):
+        if os.path.isfile(dirname):
+            continue
         versions.append(dirname)
 
     for version in sorted(versions):
         print(f" - {version}")
 
     os.chdir(origdir)
-        
+
 def get_time(kind):
     if kind == "as_date":
         timenow = datetime.datetime.now().astimezone().strftime("%a %b %-d %H:%M:%S %Z %Y")
