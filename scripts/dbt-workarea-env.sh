@@ -89,6 +89,13 @@ if [[ -z "${DBT_PACKAGE_SETUP_DONE}" ]]; then
       return $retval
     fi
 
+    # Note: temporary solution - DPF May-19-2022
+    # if trace is loaded, source "trace_functions.sh"
+    #if spack find --loaded trace; then
+    #    source `which trace_functions.sh`
+    #fi
+    [[ $(type -P "trace_functions.sh") ]] && source `which trace_functions.sh`
+
     # Assumption is you've already spack loaded python, etc...
 
     source ${DBT_AREA_ROOT}/${DBT_VENV}/bin/activate
