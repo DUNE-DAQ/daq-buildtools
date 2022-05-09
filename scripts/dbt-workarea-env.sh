@@ -83,18 +83,18 @@ if [[ -z "${DBT_PACKAGE_SETUP_DONE}" ]]; then
 	spack_load_target_package $DBT_PKG_SET
     fi
 
+    retval=$?
+    if [[ "$retval" != "0" ]]; then
+      error "Failed to load spack target package. Returning..."
+      return $retval
+    fi
+
     # Note: temporary solution - DPF May-19-2022
     # if trace is loaded, source "trace_functions.sh"
     #if spack find --loaded trace; then
     #    source `which trace_functions.sh`
     #fi
     [[ $(type -P "trace_functions.sh") ]] && source `which trace_functions.sh`
-
-    retval=$?
-    if [[ "$retval" != "0" ]]; then
-      error "Failed to load spack target package. Returning..."
-      return $retval
-    fi
 
     # Assumption is you've already spack loaded python, etc...
 
