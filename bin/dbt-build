@@ -62,7 +62,11 @@ if not os.path.exists(BASEDIR):
 BUILDDIR=f"{BASEDIR}/build"
 LOGDIR=f"{BASEDIR}/log"
 SRCDIR=f"{BASEDIR}/sourcecode"
-INSTALLDIR=os.environ['DBT_INSTALL_DIR']
+
+if "DBT_INSTALL_DIR" in os.environ and os.path.exists(os.environ["DBT_INSTALL_DIR"]):
+    INSTALLDIR=os.environ["DBT_INSTALL_DIR"]
+else:
+    error("Either $DBT_INSTALL_DIR isn't set, or it's set but doesn't refer to a real directory. Exiting...")
 
 parser = argparse.ArgumentParser(usage=usage_blurb)
 parser.add_argument("-c", "--clean", action="store_true", dest="clean_build", help=argparse.SUPPRESS)
@@ -218,12 +222,24 @@ else:
 
     rich.print(f"This script believes you have {nprocs} processors available on this system, and will use as many of them as it can")
 
+if not re.search(r"^/?$", INSTALLDIR):
+    for filename in os.listdir(INSTALLDIR):
+        file_path = os.path.join(INSTALLDIR, filename)
+        if os.path.isfile(file_path) or os.path.islink(file_path):
+            os.unlink(file_path)
+        elif os.path.isdir(file_path):
+            rmtree(file_path)
+else:
+    error(f"Installation directory is defined as \"{INSTALLDIR}\", which would result in the deletion of the entire contents of this system if it weren't for this check!!!")
+
+
 starttime_build_d=get_time("as_date")
 starttime_build_s=get_time("as_seconds_since_epoch")
 
-build_options=""
+build_options=" --target install"
+
 if args.cpp_verbose:
-    build_options=" --verbose"
+    build_options=f"{build_options} --verbose"
 
 if not args.cmake_trace:
     build_options=f"{build_options} {nprocs_argument}"
@@ -245,7 +261,7 @@ This script ran into a problem running
 {fullcmd}
 
 from {BUILDDIR} (i.e.,
-CMake's build stage). Scroll up for details or look at the build log via
+CMake's build+install stages). Scroll up for details or look at the build log via
 
 less -R {build_log}
 
@@ -263,29 +279,7 @@ except sh.ErrorReturnCode_1:
 
 rich.print("")
 
-
-if "DBT_INSTALL_DIR" in os.environ and not re.search(r"^/?$", os.environ["DBT_INSTALL_DIR"]):
-    for filename in os.listdir(os.environ["DBT_INSTALL_DIR"]):
-        file_path = os.path.join(os.environ["DBT_INSTALL_DIR"], filename)
-        if os.path.isfile(file_path) or os.path.islink(file_path):
-            os.unlink(file_path)
-        elif os.path.isdir(file_path):
-            rmtree(file_path)
-else:
-    error("$DBT_INSTALL_DIR is not properly defined, which would result in the deletion of the entire contents of this system if it weren't for this check!!!")
-
-
 os.chdir(BUILDDIR)
-
-fullcmd=f"cmake --build . --target install -- {nprocs_argument}"
-
-retval = pytee.run(fullcmd.split()[0], fullcmd.split()[1:], None)
-if retval == 0:
-    rich.print(f"""
-Installation in {INSTALLDIR} complete.
-""")
-else:
-    error(f"Installation failed. There was a problem running \"{fullcmd}\". Exiting...")
 
 summary_build_info = {}
 for pkg in get_package_list(BUILDDIR):
@@ -403,7 +397,7 @@ else:
     rich.print(f"CMake's build file config+generate stages were skipped as the needed build files already existed")
 
 rich.print("")
-rich.print(f"CMake's build stage took {buildtime} seconds")
+rich.print(f"CMake's build+install stages took {buildtime} seconds")
 rich.print(f"Start time: {starttime_build_d}")
 rich.print(f"End time:   {endtime_build_d}")
 
