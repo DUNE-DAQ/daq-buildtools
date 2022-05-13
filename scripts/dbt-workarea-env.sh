@@ -46,24 +46,46 @@ source ${HERE}/dbt-setup-tools.sh
 
 if [[ -e $PWD/dbt-workarea-constants.sh ]]; then
     . $PWD/dbt-workarea-constants.sh 
+
+    if [[ -z $SPACK_RELEASE || -z $SPACK_RELEASES_DIR || -z $DBT_AREA_ROOT || -z $DBT_ROOT_WHEN_CREATED ]]; then
+	error "$( cat<<EOF
+
+At least one of the following environment variables which should have been set up
+by $PWD/dbt-workarea-constants.sh is missing:
+
+SPACK_RELEASE, SPACK_RELEASES_DIR, DBT_AREA_ROOT, DBT_ROOT_WHEN_CREATED
+
+Exiting...
+
+EOF
+)"
+    return 5
+    fi
+
 else
-    error "Unable to find dbt-workarea-constants.sh file; you need to be in the base of a work area to run this"
+    error "Unable to find dbt-workarea-constants.sh file; you need to be in the base of a work area to run this. Exiting..."
     return 3
 fi
+
 
 SOURCE_DIR="${DBT_AREA_ROOT}/sourcecode"
 BUILD_DIR="${DBT_AREA_ROOT}/build"
 if [ ! -d "$BUILD_DIR" ]; then
     
-    error "$( cat <<EOF 
-
-There doesn't appear to be a "build" subdirectory in ${DBT_AREA_ROOT}.
-Please run a copy of this script from the base directory of a development area installed with dbt-create
-Returning...
+    echo -e "$( cat <<EOF
+${COL_YELLOW}
+WARNING: Expected build directory "$BUILD_DIR" not found. 
+This suggests there may be a problem. 
+Creating "$BUILD_DIR"
+${COL_RESET}
 EOF
 )"
-    return 1
-
+    mkdir -p $BUILD_DIR
+    
+    if ! [[ -e $BUILD_DIR ]]; then
+	error "Unable to create $BUILD_DIR; exiting..."
+	return 4
+    fi
 fi
 
 
@@ -78,10 +100,12 @@ if [[ -z "${DBT_PACKAGE_SETUP_DONE}" ]]; then
     echo -e "${COL_GREEN}This script hasn't yet been sourced (successfully) in this shell; setting up the build environment${COL_RESET}\n"
     
     if [[ "$DBT_PKG_SET" =~ "daqpackages" ]]; then
-	spack_load_target_package dunedaq
+	target_package=dunedaq
     else
-	spack_load_target_package $DBT_PKG_SET
+	target_package=$DBT_PKG_SET
     fi
+
+    spack_load_target_package $target_package
 
     retval=$?
     if [[ "$retval" != "0" ]]; then
@@ -98,11 +122,28 @@ if [[ -z "${DBT_PACKAGE_SETUP_DONE}" ]]; then
 
     # Assumption is you've already spack loaded python, etc...
 
+    if [[ "$VIRTUAL_ENV" != "" ]]; then
+	the_activated_env=$( pip -V  | sed -r 's!\pip [0-9\.]+ from (.*)/lib/python[0-9\.]+/site-packages/pip .*!\1!' )
+	if [[ $the_activated_env != "${DBT_AREA_ROOT}/${DBT_VENV}" ]]; then
+	    error "$( cat<<EOF
+
+A python environment outside this work area has already been activated: 
+${the_activated_env}
+If you understand why this is the case and wish to deactivate it, you can
+do so by running "deactivate", then try this script again. Exiting...
+EOF
+)"
+	    spack unload $target_package
+	    return 7
+	fi
+    fi
+
     source ${DBT_AREA_ROOT}/${DBT_VENV}/bin/activate
 
     if [[ "$VIRTUAL_ENV" == "" ]]
     then
 	error "You are already in a virtual env. Please deactivate first. Returning..." 
+	spack unload $target_package
 	return 11
     fi
      
