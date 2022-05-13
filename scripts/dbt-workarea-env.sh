@@ -139,13 +139,6 @@ EOF
     fi
 
     source ${DBT_AREA_ROOT}/${DBT_VENV}/bin/activate
-
-    if [[ "$VIRTUAL_ENV" == "" ]]
-    then
-	error "You are already in a virtual env. Please deactivate first. Returning..." 
-	spack unload $target_package
-	return 11
-    fi
      
     export DBT_PACKAGE_SETUP_DONE=1
 

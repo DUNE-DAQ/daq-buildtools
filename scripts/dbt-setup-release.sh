@@ -149,13 +149,6 @@ fi
 
 source ${RELEASE_PATH}/${DBT_VENV}/bin/activate
 
-if [[ "$VIRTUAL_ENV" == "" ]]
-then
-    error "You are already in a virtual env. Please deactivate first. Returning..." 
-    spack unload $target_package
-    return 13
-fi
-
 export PYTHONPYCACHEPREFIX=`mktemp -d -t ${SPACK_RELEASE}-XXXX`
 
 export DBT_PACKAGE_SETUP_DONE=1
