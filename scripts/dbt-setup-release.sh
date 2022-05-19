@@ -62,10 +62,15 @@ else
     export SPACK_RELEASES_DIR="${NIGHTLY_BASEPATH}"
 fi
 
-
 ARGS=("$@")
 
 source ${HERE}/dbt-setup-tools.sh
+
+if [[ ! -e $SPACK_RELEASES_DIR ]]; then
+    error "Directory \"$SPACK_RELEASES_DIR\" does not appear to exist; exiting..."
+    return 10
+fi
+
 
 if [[ "${SHOW_RELEASE_LIST}" == true ]]; then
     list_releases $SPACK_RELEASES_DIR
@@ -92,7 +97,7 @@ if [[ -n ${DBT_WORKAREA_ENV_SCRIPT_SOURCED:-} ]]; then
     error "$( cat<<EOF
 
 It appears you're trying to run this script from an environment
-where another development area's been set up.  You'll want to run this
+where a work area's been set up.  You'll want to run this
 from a clean shell. Exiting...     
 
 EOF
@@ -103,9 +108,8 @@ fi
 if [[ -n ${DBT_SETUP_RELEASE_SCRIPT_SOURCED:-} ]]; then
     error "$( cat<<EOF
 
-It appears you're trying to run this script from an environment
-where another running environment been set up.  You'll want to run this
-from a clean shell. Exiting...     
+It appears a release environment was set up prior to you running this script ($RELEASE_TAG).  
+You'll want to run this from a clean shell. Exiting...     
 
 EOF
 )"
@@ -126,13 +130,24 @@ if [[ "$retval" != "0" ]]; then
     return $retval
 fi
 
-source ${RELEASE_PATH}/${DBT_VENV}/bin/activate
+if [[ "$VIRTUAL_ENV" != "" ]]; then
+    the_activated_env=$( pip -V  | sed -r 's!\pip [0-9\.]+ from (.*)/lib/python[0-9\.]+/site-packages/pip .*!\1!' )
+    if [[ $the_activated_env != "${DBT_AREA_ROOT}/${DBT_VENV}" ]]; then
+	error "$( cat<<EOF
 
-if [[ "$VIRTUAL_ENV" == "" ]]
-then
-    error "You are already in a virtual env. Please deactivate first. Returning..." 
-    return 13
+A python environment outside this work area has already been activated: 
+${the_activated_env}
+If you understand why this is the case and wish to deactivate it, you can
+do so by running "deactivate", then try this script again. Exiting...
+EOF
+)"
+	spack unload $target_package
+	return 7
+    fi
 fi
+
+
+source ${RELEASE_PATH}/${DBT_VENV}/bin/activate
 
 export PYTHONPYCACHEPREFIX=`mktemp -d -t ${SPACK_RELEASE}-XXXX`
 

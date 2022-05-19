@@ -1,18 +1,25 @@
 #!/usr/bin/env python3
 
 import os
-DBT_ROOT=os.environ["DBT_ROOT"]
+import sys
+
+if "DBT_ROOT" in os.environ:
+   DBT_ROOT=os.environ["DBT_ROOT"]
+else:
+    print("Environment variable DBT_ROOT isn't set, which suggests you haven't yet set up the daq-buildtools environment. Exiting...")
+    sys.exit(1)
+
 exec(open(f'{DBT_ROOT}/scripts/dbt_setup_constants.py').read())
 
-import sys
 if sys.prefix == sys.base_prefix:
-    sys.stderr.write("\nYou need your Python virtualenv to be set up for this script to work; have you run dbt-workarea-env yet?")
-    sys.stderr.write("\nSee https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools/ for details. Exiting...\n\n")
+    sys.stderr.write("\n\033[1;31mYou need your Python virtualenv to be set up for this script to work; have you run \"dbt-workarea-env\" yet?")
+    sys.stderr.write("\nSee https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools/ for details. Exiting...\n\033[1;0m\n")
     sys.exit(1)
 
 import argparse
 import io
 import multiprocessing
+import pathlib
 import re
 import sh
 import shutil
@@ -25,7 +32,6 @@ sys.path.append(f'{DBT_ROOT}/scripts')
 
 from dbt_setup_tools import error, find_work_area, get_time
 import pytee
-
 
 def get_package_list( build_dir ) :
     return sh.find(r"-L . -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles  -printf %f\n".split()).split()
@@ -57,7 +63,7 @@ Usage
 
 BASEDIR=find_work_area()
 if not os.path.exists(BASEDIR):
-    error("daq-buildtools work area directory not found. Exiting...")
+    error(f"Work area directory \"{BASEDIR}\" not found. Exiting...")
 
 BUILDDIR=f"{BASEDIR}/build"
 LOGDIR=f"{BASEDIR}/log"
@@ -75,7 +81,6 @@ parser.add_argument("-v", "--cpp-verbose", action="store_true", dest='cpp_verbos
 parser.add_argument("-j", "--jobs", action='store', type=int, dest='n_jobs', help=argparse.SUPPRESS)
 parser.add_argument("--unittest", nargs="?", const="all", help=argparse.SUPPRESS)
 parser.add_argument("--lint", nargs="?", const="all", help=argparse.SUPPRESS)
-parser.add_argument("-i", "--install", action="store_true", help=argparse.SUPPRESS)
 parser.add_argument("--cmake-msg-lvl", dest="cmake_msg_lvl", help=argparse.SUPPRESS)
 parser.add_argument("--cmake-trace", action="store_true", dest="cmake_trace", help=argparse.SUPPRESS)
 parser.add_argument("--cmake-graphviz", action="store_true", dest="cmake_graphviz", help=argparse.SUPPRESS)
@@ -95,9 +100,6 @@ if args.lint:
     if args.lint != "all":
         package_to_lint = args.lint
 
-if args.install:
-    error("Use of -i/--install is deprecated as installation always occurs now; run with \" --help\" to see valid options. Exiting...")
-
 force_clean = False
 if args.yes_to_all:
     force_clean = True
@@ -109,7 +111,12 @@ running this script. Exiting...
     """)
 
 if not os.path.exists(BUILDDIR):
-    error(f"Expected build directory \"{BUILDDIR}\" not found. Exiting...")
+    rich.print(f"[yellow]WARNING: expected build directory \"{BUILDDIR}\" not found. This suggests there may be a problem. Creating \"{BUILDDIR}\"[/yellow]")
+    try:
+        pathlib.Path(BUILDDIR).mkdir(parents=True)
+    except PermissionError:
+        error(f"You don't have permission to create {BUILDDIR} from this directory. Exiting...")
+
 os.chdir(BUILDDIR)
 
 if args.clean_build:
@@ -132,7 +139,7 @@ if args.clean_build:
     else:
         error(f"""
 You requested a clean build, but this script thinks that {os.getcwd()} isn't
-the build directory. Please contact John Freeman at jcfree@fnal.gov and notify him of this message.
+a build directory. Please contact John Freeman at jcfree@fnal.gov and notify him of this message.
         """)
 
 
@@ -158,14 +165,20 @@ cfggentime=None
 if not os.path.exists("CMakeCache.txt"):
     running_config_and_generate = True
 
+    found_cvmfs_ninja = False
     try:
-        re.search(r"^/cvmfs", sh.which("ninja"))
+        res = re.search(r"^/cvmfs", sh.which("ninja"))
+        if res is not None:
+           found_cvmfs_ninja = True
     except:
+        pass
+
+    if not found_cvmfs_ninja:
         error("Ninja seems to be missing. The \"which ninja\" command did not yield an executable in the /cvmfs area. Exiting...")
 
     stringio_obj3 = io.StringIO()
     the_which_cmd = sh.Command("which")  # Needed because of a complex alias, at least on mu2edaq
-    the_which_cmd("moo", _out=stringio_obj3)
+    the_which_cmd("moo", _out=stringio_obj3)  # Will raise helpful exception if moo not found
     moo_path=stringio_obj3.getvalue().strip().split()[-1]
 
     starttime_cfggen_d=get_time("as_date")
@@ -201,7 +214,7 @@ This script ran into a problem running
 from {BUILDDIR} (i.e., CMake's build file config+generate stages).
 Scroll up for details or look at the build log via
 
-less -R {BUILDDIR}
+less -R {build_log}
 
 Exiting...
 
@@ -217,10 +230,15 @@ if args.cmake_graphviz:
 if args.n_jobs:
     nprocs_argument = f"-j {args.n_jobs}"
 else:
-    nprocs = multiprocessing.cpu_count()
-    nprocs_argument = f"-j {nprocs}"
+    nprocs = -999
+    try:
+        nprocs = multiprocessing.cpu_count()
+    except NotImplementedError:
+        error("Unable to determine the number of processors on this system; please supply the \"--jobs <num_processors>\" argument to this script explicitly. Exiting...")
 
     rich.print(f"This script believes you have {nprocs} processors available on this system, and will use as many of them as it can")
+
+    nprocs_argument = f"-j {nprocs}"
 
 if not re.search(r"^/?$", INSTALLDIR):
     for filename in os.listdir(INSTALLDIR):
@@ -231,7 +249,6 @@ if not re.search(r"^/?$", INSTALLDIR):
             rmtree(file_path)
 else:
     error(f"Installation directory is defined as \"{INSTALLDIR}\", which would result in the deletion of the entire contents of this system if it weren't for this check!!!")
-
 
 starttime_build_d=get_time("as_date")
 starttime_build_s=get_time("as_seconds_since_epoch")
@@ -270,12 +287,15 @@ Exiting...
 
 stringio_obj4 = io.StringIO()
 
-num_estimated_warnings = 0
 try:
     sh.wc(sh.grep("warning: ", build_log), "-l", _out=stringio_obj4)
-    num_estimated_warnings=int(stringio_obj4.getvalue().strip())
 except sh.ErrorReturnCode_1:
-    pass
+    num_estimated_warnings = -1
+else:
+   if stringio_obj4.getvalue() is not None:
+      num_estimated_warnings=int(stringio_obj4.getvalue().strip())
+   else:
+      num_estimated_warnings = 0
 
 rich.print("")
 
@@ -290,6 +310,7 @@ for pkg in get_package_list(BUILDDIR):
             filter_f = fs.translate(mp)
             summary_build_info[pkg] = json.loads(filter_f)
     except FileNotFoundError:
+        rich.print(f"[yellow]WARNING: unable to find build info summary file \"{INSTALLDIR}/{pkg}/{pkg}_build_info.json\"[/yellow]")
         summary_build_info[pkg] = "Build info not available"
 
 with open(f"{INSTALLDIR}/build_summary_info.json", 'w') as sbi_f:
@@ -341,7 +362,7 @@ RUNNING UNIT TESTS IN {unittestdir}
                 unittest_relpath = os.path.relpath(unittest_path, BASEDIR)
                 if which(unittest_path, mode=os.X_OK) is not None:
                     pytee.run("echo", "-e Start of unit test suite {}".format(unittest).split(), test_log)
-                    pytee.run(unittest_path, "", test_log)
+                    retval = pytee.run(unittest_path, "", test_log)
                     ## Generate test_log_summary now
                     f_test_log = open(test_log, 'r')
                     test_result = re.findall(r'\*\*\* (No errors detected)', f_test_log.read())
@@ -386,7 +407,9 @@ if args.lint:
         rich.print(f"Package to lint is {pkgname}")
         fullcmd = f"./styleguide/cpplint/dune-cpp-style-check.sh build sourcecode/{pkgname}"
         lint_log = f"{lint_log_dir}/{pkgname}_linting.log"
-        pytee.run(fullcmd.split()[0], fullcmd.split()[1:], lint_log)
+        retval = pytee.run(fullcmd.split()[0], fullcmd.split()[1:], lint_log)
+        if retval != 0:
+           error(f"There was a problem linting package \"{pkgname}\". Exiting...")
 
 rich.print("")
 if cfggentime is not None:
@@ -401,17 +424,21 @@ rich.print(f"CMake's build+install stages took {buildtime} seconds")
 rich.print(f"Start time: {starttime_build_d}")
 rich.print(f"End time:   {endtime_build_d}")
 
-if num_estimated_warnings > 0:
+if num_estimated_warnings == 0:
+    pass   # Avoiding screen clutter more important than making developers feel good
+elif num_estimated_warnings > 0:
     rich.print("")
     rich.print(f"The build found an estimated {num_estimated_warnings} warnings")
     rich.print("")
+else:
+    rich.print(f"[yellow]WARNING: unable to estimate the number of warnings from the logfile \"{build_log}\"; manual inspection may help.[/yellow]")
 
 testinfo = ""
 if run_tests:
     testinfo=f"""
 Unit test summary can be found in {test_log_summary}.
 Detailed unit test results are saved in the following directory:
-{test_log_dir}.
+{test_log_dir}
 """
 
 lintinfo = ""

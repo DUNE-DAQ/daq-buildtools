@@ -14,8 +14,6 @@ sys.path.append(f'{DBT_ROOT}/scripts')
 
 from dbt_setup_tools import error, get_time, list_releases
 
-EMPTY_DIR_CHECK=True
-
 PY_PKGLIST="pyvenv_requirements.txt"
 DAQ_BUILDORDER_PKGLIST="dbt-build-order.cmake"
 
@@ -66,17 +64,23 @@ if args._list:
     list_releases(RELEASE_BASEPATH)
     sys.exit(0)
 elif not args.release_tag or not args.workarea_dir:
-    error("Wrong number of arguments. Run '{} -h' for more information.".format(os.path.basename(__file__)))
+    error("Need to supply a release tag and a new work area directory. Run '{} -h' for more information.".format(os.path.basename(__file__)))
 
 RELEASE_PATH=os.path.realpath(f"{RELEASE_BASEPATH}/{args.release_tag}")
 RELEASE=RELEASE_PATH.rstrip("/").split("/")[-1]
 if RELEASE != args.release_tag:
     print(f"Release \"{args.release_tag}\" requested; interpreting this as release \"{RELEASE}\"")
 
-TARGETDIR=args.workarea_dir
-
 if not os.path.exists(RELEASE_PATH):
-    error(f"Release path '{RELEASE_PATH}' does not exist. Note that you need to pass \"-n\" for a nightly build. Exiting...")
+    error(f"""
+Release path 
+\"{RELEASE_PATH}\" 
+does not exist. Note that you need to pass \"-n\" for a nightly build. Exiting...""")
+
+TARGETDIR=args.workarea_dir
+if os.path.exists(TARGETDIR):
+    error(f"""Desired work area directory 
+\"{TARGETDIR}\" already exists; exiting...""")
 
 if "DBT_WORKAREA_ENV_SCRIPT_SOURCED" in os.environ:
     error("""
@@ -89,8 +93,10 @@ from a clean shell. Exiting...
 starttime_d=get_time("as_date")
 starttime_s=get_time("as_seconds_since_epoch")
 
-if not os.path.exists(TARGETDIR):
-    pathlib.Path(TARGETDIR).mkdir(parents=True, exist_ok=True)
+try:
+    pathlib.Path(TARGETDIR).mkdir(parents=True)
+except PermissionError:
+    error(f"You don't have permission to create {TARGETDIR} from {os.getcwd()}. Exiting...")
 
 os.chdir(TARGETDIR)
 TARGETDIR=os.getcwd() # Get full path
@@ -98,19 +104,6 @@ TARGETDIR=os.getcwd() # Get full path
 BUILDDIR=f"{TARGETDIR}/build"
 LOGDIR=f"{TARGETDIR}/log"
 SRCDIR=f"{TARGETDIR}/sourcecode"
-
-if EMPTY_DIR_CHECK and os.listdir("."):
-    error(f"""
-There appear to be files in {TARGETDIR} besides this script
-(run "ls -a1 {TARGETDIR}" to see this); this script should only be run in a clean directory. Exiting...  
-""")
-elif not EMPTY_DIR_CHECK:
-    print("""
-WARNING: The check for whether any files besides this script exist in                                       
-its directory has been switched off. This may mean assumptions the                                          
-script makes are violated, resulting in undesired behavior.    
-    """, file=sys.stderr)
-    sleep(5)
 
 for workareadir in [BUILDDIR, LOGDIR, SRCDIR]:
     os.mkdir(workareadir)
