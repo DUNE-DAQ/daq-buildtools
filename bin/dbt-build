@@ -290,6 +290,8 @@ stringio_obj4 = io.StringIO()
 try:
     sh.wc(sh.grep("warning: ", build_log), "-l", _out=stringio_obj4)
 except sh.ErrorReturnCode_1:
+   num_estimated_warnings = 0  # sh.grep("warning: "...) didn't give sh.wc anything
+except Exception:
     num_estimated_warnings = -1
 else:
    if stringio_obj4.getvalue() is not None:
