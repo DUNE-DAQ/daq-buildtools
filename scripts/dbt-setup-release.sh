@@ -8,10 +8,12 @@ source ${HERE}/dbt-setup-constants.sh
 CUSTOM_BASEPATH=""
 SHOW_RELEASE_LIST=false
 NIGHTLY=false
+BASETYPE='frozen'
 DEFAULT_BUILD_TYPE=RelWithDebInfo
 
-options=$(getopt -o 'hnlr:' -l ',help,nightly,list,release-path:' -- "$@") || return 10
+options=$(getopt -o 'hnlr:b:' -l ',help,nightly,list,release-path:,base-release:' -- "$@") || return 10
 eval "set -- $options"
+
 
 while true; do
     case $1 in
@@ -25,6 +27,9 @@ while true; do
         (-r|--release-path)
             CUSTOM_BASEPATH=$2
             shift 2;;
+        (-b|--base-release)
+            BASETYPE=$2
+            shift 2;;
         (-h|--help)
             cat << EOU
 Usage
@@ -32,16 +37,17 @@ Usage
 
 To setup a new running environment for a DAQ release:
       
-    ${scriptname} [-r/--release-path <path to release area>] [-n/--nightly] <dunedaq-release>
+    ${scriptname} [-r/--release-path <path to release area>] [-n/--nightly] [-b/--base-release <frozen, nightly, candidate>] <dunedaq-release>
 
 To list the available DUNE DAQ releases:
 
-    ${scriptname} -l/--list [-n/--nightly] [-r/--release-path <path to release area>]
+    ${scriptname} -l/--list [-n/--nightly] [-b/--base-release <frozen, nightly, candidate>] [-r/--release-path <path to release area>]
 
 Arguments and options:
 
     dunedaq-release: is the name of the release the running environment will be based on (e.g. dunedaq-v2.0.0)
-    -n/--nightly: switch to nightly releases
+    -n/--nightly: switch to nightly releases, shortcut for "-b/--base-release nightly"
+    -b/--base-release: base release type, choosing from ['frozen', 'nighlty', 'candidate'], default is 'frozen'.
     -l/--list: show the list of available releases
     -r/--release-path: is the path to the release archive (defaults to either $PROD_BASEPATH (frozen) or $NIGHTLY_BASEPATH (nightly))
 
@@ -54,12 +60,22 @@ EOU
     esac
 done
 
+
 if [[ ! -z "${CUSTOM_BASEPATH}" ]]; then
     export SPACK_RELEASES_DIR="${CUSTOM_BASEPATH}"
-elif [ "${NIGHTLY}" = false ]; then
-    export SPACK_RELEASES_DIR="${PROD_BASEPATH}"
 else
-    export SPACK_RELEASES_DIR="${NIGHTLY_BASEPATH}"
+    if [ "${NIGHTLY}" = true ]; then
+        BASETYPE='nightly'
+    fi
+    if [ "${BASETYPE}" == 'frozen' ]; then
+        export SPACK_RELEASES_DIR="${PROD_BASEPATH}"
+    elif [ "${BASETYPE}" = 'nightly' ]; then
+        export SPACK_RELEASES_DIR="${NIGHTLY_BASEPATH}"
+    elif [ "${BASETYPE}" = 'candidate' ]; then
+        export SPACK_RELEASES_DIR="${CANDIDATE_RELEASE_BASEPATH}"
+    else
+        error "Wrong option for -b/--base-release, please choose from [frozen, nightly, candidate]."
+    fi
 fi
 
 ARGS=("$@")

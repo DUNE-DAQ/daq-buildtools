@@ -62,7 +62,14 @@ Find a directory in which you want your work area to be a subdirectory (home dir
 dbt-create [-c/--clone-pyvenv] -n <nightly release> <name of work area subdirectory> # E.g., N22-04-18 or last_successful
 cd <name of work area subdirectory>
 ```
-To see all available nightly releases, run `dbt-create -l -n`. Less common but also possible is to build your repos not against a nightly release but against a frozen release; the commands you pass to `dbt-create` are the same, but with the `-n` dropped. 
+
+If you want to build against a candidate release (which is built and deployed during the beta testing period of a release cycle), run:
+```sh
+dbt-create [-c/--clone-pyvenv] -b candidate <candidate release> <name of work area subdirectory> # E.g., rc-dunedaq-v3.0.0-1 as of May-23-2022.
+cd <name of work area subdirectory>
+```
+
+To see all available nightly releases, run `dbt-create -l -n` or `dbt-create -l -b nightly`. To see all available candidate releases, run `dbt-create -l -b candidate`. Less common but also possible is to build your repos not against a nightly release but against a frozen release; the commands you pass to `dbt-create` are the same, but with the `-n` or `-b <option>` dropped. 
 
 The option `-c/--clone-pyvenv` for `dbt-create` is optional. If used, the python virtual environment created in the work area will be a clone of an existing one from the release directory. This avoids the compilation/installation of python modules using the `pyvenv_requirements.txt` in the release directory, and speeds up the work-area creation significantly. The first time running `dbt-create` with this option on a node may take a longer time since cvmfs needs to fetch these files into local cache first.
 
