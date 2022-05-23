@@ -23,7 +23,7 @@ Usage
 -----
 
 To create a new DUNE DAQ development area:
-      
+
     {os.path.basename(__file__)} [-n/--nightly] [-c/--clone-pyvenv] [-r/--release-path <path to release area>] <dunedaq-release> <target directory>
 
 To list the available DUNE DAQ releases:
@@ -33,18 +33,20 @@ To list the available DUNE DAQ releases:
 Arguments and options:
 
     dunedaq-release: is the name of the release the new work area will be based on (e.g. dunedaq-v2.8.0)
-    -n/--nightly: switch from frozen to nightly releases
+    -n/--nightly: switch from frozen to nightly releases, shortcut for \"-b nightly\"
+    -b/--base-release: base release type, can be one of [frozen, nightly, candidate]
     -l/--list: show the list of available releases
-    -c/--clone-pyvenv: cloning the dbt-pyvenv from cvmfs instead of installing from scratch    
+    -c/--clone-pyvenv: cloning the dbt-pyvenv from cvmfs instead of installing from scratch
     -r/--release-path: is the path to the release archive (defaults to either {PROD_BASEPATH} (frozen) or {NIGHTLY_BASEPATH} (nightly))
 
 See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools for more
 
-""" 
+"""
 
 
 parser = argparse.ArgumentParser(usage=usage_blurb)
 parser.add_argument("-n", "--nightly", action="store_true", help=argparse.SUPPRESS)
+parser.add_argument("-b", "--base-release", choices=['frozen', 'nightly', 'candidate'], default='frozen', help=argparse.SUPPRESS)
 parser.add_argument("-c", "--clone-pyvenv", action="store_true", dest="clone_pyvenv", help=argparse.SUPPRESS)
 parser.add_argument("-r", "--release-path", action='store', dest='release_path', help=argparse.SUPPRESS)
 parser.add_argument("-l", "--list", action="store_true", dest='_list', help=argparse.SUPPRESS)
@@ -55,10 +57,15 @@ args = parser.parse_args()
 
 if args.release_path:
     RELEASE_BASEPATH=args.release_path
-elif not args.nightly:
-    RELEASE_BASEPATH=PROD_BASEPATH
 else:
-    RELEASE_BASEPATH=NIGHTLY_BASEPATH
+    if args.nightly:
+        args.base_release = 'nightly'
+    if args.base_release == 'frozen':
+        RELEASE_BASEPATH=PROD_BASEPATH
+    if args.base_release == 'nightly':
+        RELEASE_BASEPATH=NIGHTLY_BASEPATH
+    if args.base_release == 'candidate':
+        RELEASE_BASEPATH=CANDIDATE_RELEASE_BASEPATH
 
 if args._list:
     list_releases(RELEASE_BASEPATH)
@@ -73,23 +80,24 @@ if RELEASE != args.release_tag:
 
 if not os.path.exists(RELEASE_PATH):
     error(f"""
-Release path 
-\"{RELEASE_PATH}\" 
-does not exist. Note that you need to pass \"-n\" for a nightly build. Exiting...""")
+Release path
+\"{RELEASE_PATH}\"
+does not exist. Note that you need to pass \"-n\" for a nightly build or \"-cr\"
+for a candidate release build. Exiting...""")
 
 TARGETDIR=args.workarea_dir
 if os.path.exists(TARGETDIR):
-    error(f"""Desired work area directory 
+    error(f"""Desired work area directory
 \"{TARGETDIR}\" already exists; exiting...""")
 
 if "DBT_WORKAREA_ENV_SCRIPT_SOURCED" in os.environ:
     error("""
-It appears you're trying to run this script from an environment                                             
-where another development area's been set up.  You'll want to run this                                      
-from a clean shell. Exiting... 
+It appears you're trying to run this script from an environment
+where another development area's been set up.  You'll want to run this
+from a clean shell. Exiting...
 """
 )
-    
+
 starttime_d=get_time("as_date")
 starttime_s=get_time("as_seconds_since_epoch")
 
@@ -133,7 +141,7 @@ export DBT_ROOT_WHEN_CREATED="{os.environ["DBT_ROOT"]}"
 with open(f'{os.environ["DBT_AREA_ROOT"]}/dbt-workarea-constants.sh', "w") as outf:
     outf.write(workarea_constants_file_contents)
 
-print("Setting up the Python subsystem.") 
+print("Setting up the Python subsystem.")
 if args.clone_pyvenv:
     cmd = f"{DBT_ROOT}/scripts/dbt-clone-pyvenv.sh {RELEASE_PATH}/{DBT_VENV} 2>&1"
 else:
