@@ -69,7 +69,7 @@ dbt-create [-c/--clone-pyvenv] -b candidate <candidate release> <name of work ar
 cd <name of work area subdirectory>
 ```
 
-To see all available nightly releases, run `dbt-create -l -n` or `dbt-create -l -b nightlt`. To see all available candidate releases, run `dbt-create -l -b caidate`. Less common but also possible is to build your repos not against a nightly release but against a frozen release; the commands you pass to `dbt-create` are the same, but with the `-n` or `-b <option>` dropped. 
+To see all available nightly releases, run `dbt-create -l -n` or `dbt-create -l -b nightly`. To see all available candidate releases, run `dbt-create -l -b candidate`. Less common but also possible is to build your repos not against a nightly release but against a frozen release; the commands you pass to `dbt-create` are the same, but with the `-n` or `-b <option>` dropped. 
 
 The option `-c/--clone-pyvenv` for `dbt-create` is optional. If used, the python virtual environment created in the work area will be a clone of an existing one from the release directory. This avoids the compilation/installation of python modules using the `pyvenv_requirements.txt` in the release directory, and speeds up the work-area creation significantly. The first time running `dbt-create` with this option on a node may take a longer time since cvmfs needs to fetch these files into local cache first.
 
