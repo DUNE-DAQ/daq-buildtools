@@ -11,7 +11,7 @@ NIGHTLY=false
 BASETYPE='frozen'
 DEFAULT_BUILD_TYPE=RelWithDebInfo
 
-options=$(getopt -o 'hnlr:' -l ',help,nightly,list,release-path:' -- "$@") || return 10
+options=$(getopt -o 'hnlr:b:' -l ',help,nightly,list,release-path:,base-release:' -- "$@") || return 10
 eval "set -- $options"
 
 
@@ -67,14 +67,14 @@ else
     if [ "${NIGHTLY}" = true ]; then
         BASETYPE='nightly'
     fi
-    if [ "${BASETYPE}" = 'frozen' ]; then
+    if [ "${BASETYPE}" == 'frozen' ]; then
         export SPACK_RELEASES_DIR="${PROD_BASEPATH}"
-    fi
-    if [ "${BASETYPE}" = 'nightly' ]; then
+    elif [ "${BASETYPE}" = 'nightly' ]; then
         export SPACK_RELEASES_DIR="${NIGHTLY_BASEPATH}"
-    fi
-    if [ "${BASETYPE}" = 'candidate' ]; then
-        export SPACK_RELEASES_DIR="${CANDIDATE_BASEPATH}"
+    elif [ "${BASETYPE}" = 'candidate' ]; then
+        export SPACK_RELEASES_DIR="${CANDIDATE_RELEASE_BASEPATH}"
+    else
+        error "Wrong option for -b/--base-release, please choose from [frozen, nightly, candidate]."
     fi
 fi
 
