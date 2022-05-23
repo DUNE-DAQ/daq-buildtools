@@ -24,7 +24,7 @@ Usage
 
 To create a new DUNE DAQ development area:
 
-    {os.path.basename(__file__)} [-n/--nightly] [-c/--clone-pyvenv] [-r/--release-path <path to release area>] <dunedaq-release> <target directory>
+    {os.path.basename(__file__)} [-c/--clone-pyvenv] [-n/--nightly] [-b/--base-release <base release type>]  [-r/--release-path <path to release area>] <dunedaq-release> <target directory>
 
 To list the available DUNE DAQ releases:
 
