@@ -193,13 +193,11 @@ As such, it's important to know the assumptions a work area makes when you use i
 ```
 export SPACK_RELEASE="N22-04-09"
 export SPACK_RELEASES_DIR="/cvmfs/dunedaq-development.opensciencegrid.org/spack-nightly"
-export DBT_AREA_ROOT="/home/jcfree/daqbuild_N22-04-09_spack"
 export DBT_ROOT_WHEN_CREATED="/home/jcfree/daq-buildtools"
 ```
 This file is sourced whenever you run `dbt-workarea-env`, and it tells both the build system and the developer where they can find crucial information about the work areas' builds. Specifically, these environment variables mean the following:
 * `$SPACK_RELEASE`: this is the release of the DUNE DAQ software stack against which repos will build (e.g. `dunedaq-v2.10.2`, `N22-04-09`, etc.)
 * `$SPACK_RELEASES_DIR`: The base of the directory containing the DUNE DAQ software installations. The directory `$SPACK_RELEASES_DIR/$SPACK_RELEASE` contains the installation of the packages for your release
-* `DBT_AREA_ROOT`: The directory which is the base of the work area
 * `DBT_ROOT_WHEN_CREATED`: The directory containing the `env.sh` file which was sourced before this work area was first created
 
 There are also useful Spack commands which can be executed to learn about the versions of the individual packages you're working with. An [excellent Spack tutorial](https://spack-tutorial.readthedocs.io/en/latest/tutorial_basics.html) inside the official Spack documentation is worth a look, but a few Spack commands can be used right away to learn about a work area:

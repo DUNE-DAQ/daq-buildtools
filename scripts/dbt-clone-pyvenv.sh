@@ -23,8 +23,9 @@ then
   error "You are already in a virtual env. Please deactivate first. Exiting..."
 fi
 
-if [[ -z $DBT_AREA_ROOT ]]; then
-    error "Environment variable DBT_AREA_ROOT needs to be set for this script to work. Exiting..."
+DBT_AREA_ROOT=$(find_work_area)
+if [[ -z ${DBT_AREA_ROOT} ]]; then
+    error "Expected work area directory not found via call to find_work_area. Exiting..."
 fi
 
 if [[ -z $SPACK_RELEASE ]]; then

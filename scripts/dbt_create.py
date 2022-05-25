@@ -129,16 +129,14 @@ os.symlink(f"{DBT_ROOT}/env.sh", f"{TARGETDIR}/dbt-env.sh")
 # Set these so the dbt-clone-pyvenv.sh and dbt-create-pyvenv.sh scripts get info they need
 os.environ["SPACK_RELEASE"] = f"{RELEASE}"
 os.environ["SPACK_RELEASES_DIR"] = f"{RELEASE_BASEPATH}"
-os.environ["DBT_AREA_ROOT"] = f"{TARGETDIR}"
 
 workarea_constants_file_contents = \
     f"""export SPACK_RELEASE="{os.environ["SPACK_RELEASE"]}"
 export SPACK_RELEASES_DIR="{os.environ["SPACK_RELEASES_DIR"]}"
-export DBT_AREA_ROOT="{os.environ["DBT_AREA_ROOT"]}"
 export DBT_ROOT_WHEN_CREATED="{os.environ["DBT_ROOT"]}"
 """
 
-with open(f'{os.environ["DBT_AREA_ROOT"]}/dbt-workarea-constants.sh', "w") as outf:
+with open(f'{TARGETDIR}/dbt-workarea-constants.sh', "w") as outf:
     outf.write(workarea_constants_file_contents)
 
 print("Setting up the Python subsystem.")

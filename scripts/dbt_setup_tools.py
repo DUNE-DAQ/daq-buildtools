@@ -19,7 +19,15 @@ def error(errmsg):
     sys.exit(1)
 
 def find_work_area():
-    return os.environ["DBT_AREA_ROOT"]
+    currdir=os.getcwd()
+
+    while True:
+        if os.path.exists("{}/{}".format(currdir, DBT_AREA_FILE)):
+            return currdir
+        elif currdir != "":
+            currdir="/".join(currdir.split("/")[:-1])
+        else:
+            return ""
 
 def list_releases(release_basepath):
 
