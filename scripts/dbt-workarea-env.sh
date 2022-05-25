@@ -44,16 +44,25 @@ done
 
 source ${HERE}/dbt-setup-tools.sh
 
-if [[ -e $PWD/dbt-workarea-constants.sh ]]; then
-    . $PWD/dbt-workarea-constants.sh 
+export DBT_AREA_ROOT=$(find_work_area)
 
-    if [[ -z $SPACK_RELEASE || -z $SPACK_RELEASES_DIR || -z $DBT_AREA_ROOT || -z $DBT_ROOT_WHEN_CREATED ]]; then
+if [[ -z $DBT_AREA_ROOT ]]; then
+    error "Expected work area directory not found via call to find_work_area. Returning..."
+    return 1
+else
+  echo -e "${COL_BLUE}Work area: '${DBT_AREA_ROOT}'${COL_RESET}\n"
+fi
+
+if [[ -e $DBT_AREA_ROOT/dbt-workarea-constants.sh ]]; then
+    . $DBT_AREA_ROOT/dbt-workarea-constants.sh 
+
+    if [[ -z $SPACK_RELEASE || -z $SPACK_RELEASES_DIR || -z $DBT_ROOT_WHEN_CREATED ]]; then
 	error "$( cat<<EOF
 
 At least one of the following environment variables which should have been set up
-by $PWD/dbt-workarea-constants.sh is missing:
+by $DBT_AREA_ROOT/dbt-workarea-constants.sh is missing:
 
-SPACK_RELEASE, SPACK_RELEASES_DIR, DBT_AREA_ROOT, DBT_ROOT_WHEN_CREATED
+SPACK_RELEASE, SPACK_RELEASES_DIR, DBT_ROOT_WHEN_CREATED
 
 Exiting...
 
@@ -63,7 +72,7 @@ EOF
     fi
 
 else
-    error "Unable to find dbt-workarea-constants.sh file; you need to be in the base of a work area to run this. Exiting..."
+    error "Unable to find a \"$DBT_AREA_ROOT/dbt-workarea-constants.sh\" file. Exiting..."
     return 3
 fi
 

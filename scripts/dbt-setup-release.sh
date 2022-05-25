@@ -109,6 +109,8 @@ if [[ ! -d ${RELEASE_PATH} ]]; then
     return 11
 fi
 
+export DBT_AREA_ROOT=$RELEASE_PATH
+
 if [[ -n ${DBT_WORKAREA_ENV_SCRIPT_SOURCED:-} ]]; then
     error "$( cat<<EOF
 

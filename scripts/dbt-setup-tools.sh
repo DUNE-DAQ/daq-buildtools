@@ -121,6 +121,30 @@ function backtrace () {
 }
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------                            
+function find_work_area() {
+  SLASHES=${PWD//[^\/]/}
+
+  SEARCH_PATH=${PWD}
+  WA_PATH=""
+  for(( i=${#SLASHES}-1; i>0; i--)); do
+    WA_SEARCH_PATH="${SEARCH_PATH}/${DBT_AREA_FILE}"
+    # echo "Looking for $WA_SEARCH_PATH"                                                                   
+    if [ -f "${WA_SEARCH_PATH}" ]; then
+      WA_PATH="${WA_SEARCH_PATH}"
+      break
+    fi
+    SEARCH_PATH=$(dirname ${SEARCH_PATH})
+  done
+
+  if [[ -z ${WA_PATH} ]]; then
+    return
+  fi
+  echo $(dirname ${WA_PATH})
+}
+#------------------------------------------------------------------------------                            
+
+
 #------------------------------------------------------------------------------
 function error_preface() {
 
