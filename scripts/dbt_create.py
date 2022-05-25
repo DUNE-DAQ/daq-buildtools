@@ -82,7 +82,7 @@ if not os.path.exists(RELEASE_PATH):
     error(f"""
 Release path
 \"{RELEASE_PATH}\"
-does not exist. Note that you need to pass \"-n\" for a nightly build or \"-cr\"
+does not exist. Note that you need to pass \"-n\" for a nightly build or \"-b candidate\"
 for a candidate release build. Exiting...""")
 
 TARGETDIR=args.workarea_dir
