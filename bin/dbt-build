@@ -33,6 +33,8 @@ sys.path.append(f'{DBT_ROOT}/scripts')
 from dbt_setup_tools import error, find_work_area, get_time
 import pytee
 
+orig_working_dir=os.getcwd()
+
 def get_package_list( build_dir ) :
     return sh.find(r"-L . -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles  -printf %f\n".split()).split()
 
@@ -417,6 +419,8 @@ if args.lint:
            if retval != 0:
               error(f"There was a problem linting package \"{pkgname}\". Exiting...")
     else:
+       if not code_to_lint[0] == "/":  # Not an absolute path, a relative path
+           code_to_lint=orig_working_dir + "/" + code_to_lint
        if not os.path.exists(code_to_lint):
            error(f"Unable to find file \"{code_to_lint}\" to lint; exiting...")     
        rich.print(f"File to lint is {code_to_lint}")
