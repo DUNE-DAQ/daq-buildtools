@@ -98,7 +98,7 @@ lint = False
 if args.lint:
     lint=True
     if args.lint != "all":
-        package_to_lint = args.lint
+        code_to_lint = args.lint
 
 force_clean = False
 if args.yes_to_all:
@@ -387,9 +387,6 @@ if args.lint:
     sh.date(_out=stringio_obj8)
     datestring=re.sub("[: ]+", "_", stringio_obj8.getvalue().strip())
 
-    lint_log_dir=f"{LOGDIR}/linting_{datestring}"
-    os.mkdir(lint_log_dir)
-
     if not os.path.exists("styleguide"):
         rich.print(f"Cloning styleguide into {os.getcwd()} so linting can be applied")
         sh.git("clone", "https://github.com/DUNE-DAQ/styleguide.git")
@@ -397,21 +394,36 @@ if args.lint:
         if not os.path.exists("styleguide"):
             error("There was a problem cloning the styleguide repo needed for linting into {}".format(os.getcwd()))
 
+    code_to_lint_is_a_file = False
+
     if args.lint == "all":
         stringio_obj9 = io.StringIO()
         sh.find("-L build -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles".split(), _out = stringio_obj9)
         package_list = stringio_obj9.getvalue().split()
+    elif not re.search(r"\.", code_to_lint):  # No dot means we imagine it's a repo, not a filename
+        package_list = [ code_to_lint ]
     else:
-        package_list = [ package_to_lint ]
+        code_to_lint_is_a_file = True
 
-    for pkgdir in package_list:
-        pkgname=os.path.basename(pkgdir)
-        rich.print(f"Package to lint is {pkgname}")
-        fullcmd = f"./styleguide/cpplint/dune-cpp-style-check.sh build sourcecode/{pkgname}"
-        lint_log = f"{lint_log_dir}/{pkgname}_linting.log"
-        retval = pytee.run(fullcmd.split()[0], fullcmd.split()[1:], lint_log)
-        if retval != 0:
-           error(f"There was a problem linting package \"{pkgname}\". Exiting...")
+    if not code_to_lint_is_a_file:    
+       lint_log_dir=f"{LOGDIR}/linting_{datestring}"
+       os.mkdir(lint_log_dir)
+       for pkgdir in package_list:
+           pkgname=os.path.basename(pkgdir)
+           rich.print(f"Package to lint is {pkgname}")
+           fullcmd = f"./styleguide/cpplint/dune-cpp-style-check.sh build sourcecode/{pkgname}"
+           lint_log = f"{lint_log_dir}/{pkgname}_linting.log"
+           retval = pytee.run(fullcmd.split()[0], fullcmd.split()[1:], lint_log)
+           if retval != 0:
+              error(f"There was a problem linting package \"{pkgname}\". Exiting...")
+    else:
+       if not os.path.exists(code_to_lint):
+           error(f"Unable to find file \"{code_to_lint}\" to lint; exiting...")     
+       rich.print(f"File to lint is {code_to_lint}")
+       fullcmd = f"./styleguide/cpplint/dune-cpp-style-check.sh build {code_to_lint}"       
+       retval = pytee.run(fullcmd.split()[0], fullcmd.split()[1:], None)
+       if retval != 0:
+          error(f"There was a problem linting the file \"{code_to_lint}\". Exiting...")
 
 rich.print("")
 if cfggentime is not None:
@@ -444,7 +456,7 @@ Detailed unit test results are saved in the following directory:
 """
 
 lintinfo = ""
-if args.lint:
+if args.lint and not code_to_lint_is_a_file:    
     lintinfo=f"""
 Automated code linting results can be found in the following directory:
 {lint_log_dir}.
