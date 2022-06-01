@@ -33,6 +33,8 @@ sys.path.append(f'{DBT_ROOT}/scripts')
 from dbt_setup_tools import error, find_work_area, get_time
 import pytee
 
+orig_working_dir=os.getcwd()
+
 def get_package_list( build_dir ) :
     return sh.find(r"-L . -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles  -printf %f\n".split()).split()
 
@@ -42,13 +44,13 @@ usage_blurb=f"""
 Usage
 -----
 
-      {os.path.basename(__file__)} [-c/--clean] [-d/--debug] [-j<n>/--jobs <number parallel build jobs>] [--unittest (<optional package name>)] [--lint (<optional package name)>] [-v/--cpp-verbose] [-h/--help]
+      {os.path.basename(__file__)} [-c/--clean] [-d/--debug] [-j<n>/--jobs <number parallel build jobs>] [--unittest (<optional package name>)] [--lint (<optional package name|optional file name>)] [-v/--cpp-verbose] [-h/--help]
 
         -c/--clean means the contents of ./build are deleted and CMake's config+generate+build stages are run
         -d/--debug means you want to build your software with optimizations off and debugging info on
         -j/--jobs means you want to specify the number of jobs used by cmake to build the project
         --unittest means that unit test executables found in ./build/<optional package name>/unittest are run, or all unit tests in ./build/*/unittest are run if no package name is provided
-        --lint means you check for deviations in ./sourcecode/<optional package name> from the DUNE style guide, https://dune-daq-sw.readthedocs.io/en/latest/packages/styleguide/, or deviations in all local repos if no package name is provided
+        --lint means you check for deviations in ./sourcecode/<optional package name> from the DUNE style guide, https://dune-daq-sw.readthedocs.io/en/latest/packages/styleguide/, or deviations in all local repos if no package name is provided. You can also pass the name of an individual file. 
         -v/--cpp-verbose means that you want verbose output from the compiler
         --cmake-msg-lvl setting "CMAKE_MESSAGE_LOG_LEVEL", default is "NOTICE", choices are ERROR|WARNING|NOTICE|STATUS|VERBOSE|DEBUG|TRACE.
         --cmake-trace enable cmake tracing
@@ -98,7 +100,7 @@ lint = False
 if args.lint:
     lint=True
     if args.lint != "all":
-        package_to_lint = args.lint
+        code_to_lint = args.lint
 
 force_clean = False
 if args.yes_to_all:
@@ -387,9 +389,6 @@ if args.lint:
     sh.date(_out=stringio_obj8)
     datestring=re.sub("[: ]+", "_", stringio_obj8.getvalue().strip())
 
-    lint_log_dir=f"{LOGDIR}/linting_{datestring}"
-    os.mkdir(lint_log_dir)
-
     if not os.path.exists("styleguide"):
         rich.print(f"Cloning styleguide into {os.getcwd()} so linting can be applied")
         sh.git("clone", "https://github.com/DUNE-DAQ/styleguide.git")
@@ -397,21 +396,38 @@ if args.lint:
         if not os.path.exists("styleguide"):
             error("There was a problem cloning the styleguide repo needed for linting into {}".format(os.getcwd()))
 
+    code_to_lint_is_a_file = False
+
     if args.lint == "all":
         stringio_obj9 = io.StringIO()
         sh.find("-L build -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles".split(), _out = stringio_obj9)
         package_list = stringio_obj9.getvalue().split()
+    elif not re.search(r"\.", code_to_lint):  # No dot means we imagine it's a repo, not a filename
+        package_list = [ code_to_lint ]
     else:
-        package_list = [ package_to_lint ]
+        code_to_lint_is_a_file = True
 
-    for pkgdir in package_list:
-        pkgname=os.path.basename(pkgdir)
-        rich.print(f"Package to lint is {pkgname}")
-        fullcmd = f"./styleguide/cpplint/dune-cpp-style-check.sh build sourcecode/{pkgname}"
-        lint_log = f"{lint_log_dir}/{pkgname}_linting.log"
-        retval = pytee.run(fullcmd.split()[0], fullcmd.split()[1:], lint_log)
-        if retval != 0:
-           error(f"There was a problem linting package \"{pkgname}\". Exiting...")
+    if not code_to_lint_is_a_file:    
+       lint_log_dir=f"{LOGDIR}/linting_{datestring}"
+       os.mkdir(lint_log_dir)
+       for pkgdir in package_list:
+           pkgname=os.path.basename(pkgdir)
+           rich.print(f"Package to lint is {pkgname}")
+           fullcmd = f"./styleguide/cpplint/dune-cpp-style-check.sh build sourcecode/{pkgname}"
+           lint_log = f"{lint_log_dir}/{pkgname}_linting.log"
+           retval = pytee.run(fullcmd.split()[0], fullcmd.split()[1:], lint_log)
+           if retval != 0:
+              error(f"There was a problem linting package \"{pkgname}\". Exiting...")
+    else:
+       if not code_to_lint[0] == "/":  # Not an absolute path, a relative path
+           code_to_lint=orig_working_dir + "/" + code_to_lint
+       if not os.path.exists(code_to_lint):
+           error(f"Unable to find file \"{code_to_lint}\" to lint; exiting...")     
+       rich.print(f"File to lint is {code_to_lint}")
+       fullcmd = f"./styleguide/cpplint/dune-cpp-style-check.sh build {code_to_lint}"       
+       retval = pytee.run(fullcmd.split()[0], fullcmd.split()[1:], None)
+       if retval != 0:
+          error(f"There was a problem linting the file \"{code_to_lint}\". Exiting...")
 
 rich.print("")
 if cfggentime is not None:
@@ -444,7 +460,7 @@ Detailed unit test results are saved in the following directory:
 """
 
 lintinfo = ""
-if args.lint:
+if args.lint and not code_to_lint_is_a_file:    
     lintinfo=f"""
 Automated code linting results can be found in the following directory:
 {lint_log_dir}.
