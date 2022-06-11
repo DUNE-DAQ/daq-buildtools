@@ -1,5 +1,5 @@
 
-_n.b. While not recommended, if you want to build your repo area against UPS packages rather than Spack packages, please read [these instructions](https://dune-daq-sw.readthedocs.io/en/v2.11.1/packages/daq-buildtools/)_
+_n.b. While not recommended, if you want to build your repo area against UPS packages rather than Spack packages, instructions are at [the bottom of this document](#ups_instructions)_
 
 # DUNE DAQ Buildtools
 
@@ -46,7 +46,7 @@ Each time that you want to work with a DUNE DAQ work area in a fresh Linux shell
 Running a release from cvmfs without creating a work area can be done if you simply run the following:
 
 ```sh
-dbt-setup-release dunedaq-v2.11.1
+dbt-setup-release dunedaq-v3.0.0
 ```
 
 It will set up both the external packages and DAQ packages, as well as activate the python virtual environment. Note that the python virtual environment activated here is read-only. You'd want to run `dbt-setup-release` only if you weren't developing DUNE DAQ software, the topic covered for the remainder of this document. However, if you don't want a frozen set of versioned packages - which you wouldn't, if you were developing code - please continue reading.
@@ -114,7 +114,7 @@ dbt-build
 
 ### Working with more repos
 
-To work with more repos, add them to the `./sourcecode` subdirectory as we did with listrev. Be aware, though: if you're developing a new repo which itself depends on another new repo, daq-buildtools may not already know about this dependency. "New" in this context means "not listed in `/cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v2.11.1-c7/dbt-build-order.cmake`". If this is the case, you have one of two options:
+To work with more repos, add them to the `./sourcecode` subdirectory as we did with listrev. Be aware, though: if you're developing a new repo which itself depends on another new repo, daq-buildtools may not already know about this dependency. "New" in this context means "not listed in `/cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v3.0.0-c7/dbt-build-order.cmake`". If this is the case, you have one of two options:
 
 * (Recommended) Add the names of your new packages to the `build_order` list found in `./sourcecode/dbt-build-order.cmake`, placing them in the list in the relative order in which you want them to be built. 
 * First clone and build your new base repo, and THEN clone and build your other new repo which depends on your new base repo. 
@@ -207,3 +207,8 @@ There are also useful Spack commands which can be executed to learn about the ve
 ## Next Step
 
 * You can learn how to create a new package by taking a look at the [daq-cmake documentation](https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-cmake/)
+
+<a name="ups_instructions"></a>
+In order to create a work area which builds against UPS-installed packages rather than Spack-installed packages, you can follow the old [2.11.1 instructions](https://dune-daq-sw.readthedocs.io/en/v2.11.1/packages/daq-buildtools/). On top of those instructions however, you should be aware of two things:
+1. Instead of using the `dunedaq-v2.11.1-cs8` and `dunedaq-v2.11.1-c7` releases, you also have `dunedaq-v3.0.0-cs8` and `dunedaq-v3.0.0-c7` releases available.
+2. Easier to remember than the `v4.1.7` version label for daq-buildtools described in those instructions is its alias, `legacy-ups`.
