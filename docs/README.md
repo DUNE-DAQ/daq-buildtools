@@ -209,6 +209,8 @@ There are also useful Spack commands which can be executed to learn about the ve
 * You can learn how to create a new package by taking a look at the [daq-cmake documentation](https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-cmake/)
 
 <a name="ups_instructions"></a>
+## UPS Instructions
+
 In order to create a work area which builds against UPS-installed packages rather than Spack-installed packages, you can follow the old [2.11.1 instructions](https://dune-daq-sw.readthedocs.io/en/v2.11.1/packages/daq-buildtools/). On top of those instructions however, you should be aware of two things:
 1. Instead of using the `dunedaq-v2.11.1-cs8` and `dunedaq-v2.11.1-c7` releases, you also have `dunedaq-v3.0.0-cs8` and `dunedaq-v3.0.0-c7` releases available.
 2. Easier to remember than the `v4.1.7` version label for daq-buildtools described in those instructions is its alias, `legacy-ups`.
