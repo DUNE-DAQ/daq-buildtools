@@ -1,0 +1,47 @@
+#!/bin/bash
+
+if (( $# != 1 )); then
+  echo "Usage: "$( basename $0 )" <name of DUNE DAQ package>" >&2
+  exit 1
+fi
+
+pkg=$1
+
+tmpdir=$( mktemp -d )
+pushd $tmpdir > /dev/null
+
+cmd="git clone https://github.com/DUNE-DAQ/$pkg"
+
+$cmd > /dev/null 2>&1
+
+if [[ "$?" != "0" ]]; then
+   echo "There was a problem running \"$cmd\"; exiting..." >&2
+   exit 2
+fi 
+
+echo
+echo "Direct dependencies:"
+cat $pkg/CMakeLists.txt | sed -r -n 's/^\s*find_package\s*\(\s*([^ )]+).*/\1/p' | sort -n
+
+echo
+echo
+echo -n "Transitive dependencies: "
+dependency_file=$pkg/cmake/${pkg}Config.cmake.in
+
+if [[ -e $dependency_file ]]; then
+    echo
+    cat $dependency_file | sed -r -n 's/^\s*find_dependency\s*\(\s*([^ )]+).*/\1/p' | sort -n
+else
+    echo " none"
+fi
+echo
+
+pushd $tmpdir/$pkg > /dev/null
+echo "Most recent commit on the develop branch:"
+git log origin/develop -1
+echo
+
+if [[ -d $tmpdir ]]; then
+    rm -rf $tmpdir/$pkg
+    rmdir $tmpdir
+fi
