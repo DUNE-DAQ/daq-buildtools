@@ -169,7 +169,7 @@ if not os.path.exists("CMakeCache.txt"):
 
     found_cvmfs_ninja = False
     try:
-        res = re.search(r"^/cvmfs", sh.which("ninja"))
+        res = re.search(r"/opt/spack/", sh.which("ninja"))
         if res is not None:
            found_cvmfs_ninja = True
     except:
