@@ -27,7 +27,7 @@ In a directory which doesn't contain a daq-buildtools repository, simply do:
 
 ```
 source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt latest-spack
+setup_dbt v5.0.9
 ```
 
 Then you'll see something like:
