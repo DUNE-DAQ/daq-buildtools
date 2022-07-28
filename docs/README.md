@@ -27,7 +27,7 @@ In a directory which doesn't contain a daq-buildtools repository, simply do:
 
 ```
 source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt v5.0.9
+setup_dbt dunedaq-v3.1.0   # dunedaq-v3.1.0 is identical to dunedaq-v3.0.0
 ```
 
 Then you'll see something like:
