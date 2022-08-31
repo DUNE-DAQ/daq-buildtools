@@ -187,7 +187,7 @@ function spack_setup_env() {
 	return 2
     fi
     
-    local spack_setup_script=`realpath $SPACK_RELEASES_DIR/$SPACK_RELEASE/deafult/spack-installation/share/spack/setup-env.sh`
+    local spack_setup_script=`realpath $SPACK_RELEASES_DIR/$SPACK_RELEASE/default/spack-installation/share/spack/setup-env.sh`
     if [[ ! -e $spack_setup_script ]]; then
 	error "Unable to find Spack setup script \"$spack_setup_script\""
 	return 3
