@@ -10,7 +10,7 @@ import shutil
 import subprocess
 import sys
 import itertools
-import distutils.dir_util
+import shutil
 import fnmatch
 
 
@@ -75,7 +75,7 @@ def clone_virtualenv(src_dir, dst_dir):
     #sys_path = _virtualenv_syspath(src_dir)
     logger.info('cloning virtualenv \'%s\' => \'%s\'...' %
             (src_dir, dst_dir))
-    distutils.dir_util.copy_tree(src_dir, dst_dir, preserve_symlinks=1)
+    shutil.copytree(src_dir, dst_dir, symlinks=True)
     for rootDir, subdirs, filenames in os.walk(dst_dir):
         for filename in fnmatch.filter(filenames, '*.pyc'):
             try:
