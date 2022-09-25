@@ -1,3 +1,4 @@
+_n.b. JCF, Sep-25-2022: If you're involved in testing the candidate release for dunedaq-v3.2.0, then if you wish to work with gcc 12.1.0 use "latest-gcc12" as the argument to "setup_dbt" and "rc-v3.2.0-1" as the argument to "-b candidate". To work with the traditional gcc 8.2.0, use "dunedaq-v3.1.1" as the argument to "setup_dbt" and "rc-dunedaq-v3.2.0-1" as the argument to "-b candidate"._
 
 # DUNE DAQ Buildtools
 
@@ -24,9 +25,9 @@ spack load python@3.8.3%gcc@8.2.0
 Simply do:
 ```
 source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt latest-gcc12 
+setup_dbt dunedaq-v3.1.1
 ```
-...if you want to work with `gcc 12.1.0`, which we're moving to as of Sep-23-2022. If you wish to work with the "traditional" `gcc 8.3.0`, then replace
+...if you want to work with `gcc 12.1.0`, which we're moving to as of Sep-23-2022. If you wish to work with the "traditional" `gcc 8.2.0`, then replace
 `latest-gcc12` with `dunedaq-v3.1.1`. 
 
 After running these two commands, then you'll see something like:
