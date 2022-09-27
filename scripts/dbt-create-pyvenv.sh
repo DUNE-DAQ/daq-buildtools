@@ -59,6 +59,7 @@ then
   error "Failed to load the virtual env. Exiting..." 
 fi
 
+spack unload openssl  # JCF, Sep-27-2022: Spack's openssl is preventing the install command below from working
 python -m pip install -r ${PYENV_REQS}
 test $? -eq 0 || error "Installing required modules from ${PYENV_REQS} failed. Exiting..." 
 
