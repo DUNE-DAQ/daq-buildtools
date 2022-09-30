@@ -24,20 +24,26 @@ Usage
 
 To create a new DUNE DAQ development area:
 
-    {os.path.basename(__file__)} [-c/--clone-pyvenv] [-n/--nightly] [-b/--base-release <base release type>]  [-r/--release-path <path to release area>] <dunedaq-release> <target directory>
+    {os.path.basename(__file__)} [-n/--nightly] [-b/--base-release <base release type>]  [-r/--release-path <path to release area>] [-i/--install-pyvenv] <dunedaq-release> <target directory>
 
 To list the available DUNE DAQ releases:
 
-    {os.path.basename(__file__)} [-n/--nightly] -l/--list [-r/--release-path <path to release area>]
+    {os.path.basename(__file__)} [-n/--nightly] [-b/--base-release <base release type>] [-r/--release-path <path to release area>] -l/--list 
 
 Arguments and options:
 
-    dunedaq-release: is the name of the release the new work area will be based on (e.g. dunedaq-v2.8.0)
+    dunedaq release: the release the new work area will be based on (e.g. dunedaq-v2.8.0, N22-09-29, etc.)
+    target directory: the name of the work area dbt-create will set up for you  
+    -b/--base-release: base release type, can be one of [frozen, nightly, candidate]. Default is frozen.
     -n/--nightly: switch from frozen to nightly releases, shortcut for \"-b nightly\"
-    -b/--base-release: base release type, can be one of [frozen, nightly, candidate]
-    -l/--list: show the list of available releases
-    -c/--clone-pyvenv: cloning the dbt-pyvenv from cvmfs instead of installing from scratch
-    -r/--release-path: is the path to the release archive (defaults to either {PROD_BASEPATH} (frozen) or {NIGHTLY_BASEPATH} (nightly))
+    -l/--list: show the list of available releases 
+    -r/--release-path: is the path to the release archive (defaults to 
+                       {PROD_BASEPATH} (frozen)
+                       {NIGHTLY_BASEPATH} (nightly)
+                       {CANDIDATE_RELEASE_BASEPATH} (candidate))
+    -i/--install-pyvenv: rather than cloning the python virtual environment, 
+                         pip install it off of the pyvenv_requirements.txt 
+                         file in the release's directory on cvmfs
 
 See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools for more
 
@@ -47,13 +53,20 @@ See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools for mor
 parser = argparse.ArgumentParser(usage=usage_blurb)
 parser.add_argument("-n", "--nightly", action="store_true", help=argparse.SUPPRESS)
 parser.add_argument("-b", "--base-release", choices=['frozen', 'nightly', 'candidate'], default='frozen', help=argparse.SUPPRESS)
-parser.add_argument("-c", "--clone-pyvenv", action="store_true", dest="clone_pyvenv", help=argparse.SUPPRESS)
 parser.add_argument("-r", "--release-path", action='store', dest='release_path', help=argparse.SUPPRESS)
 parser.add_argument("-l", "--list", action="store_true", dest='_list', help=argparse.SUPPRESS)
+parser.add_argument("-i", "--install-pyvenv", action="store_true", dest='install_pyvenv', help=argparse.SUPPRESS)
+parser.add_argument("-p", "--pyvenv-requirements", action='store', dest='pyvenv_requirements', help=argparse.SUPPRESS)
 parser.add_argument("release_tag", nargs='?', help=argparse.SUPPRESS)
 parser.add_argument("workarea_dir", nargs='?', help=argparse.SUPPRESS)
 
 args = parser.parse_args()
+
+if args.pyvenv_requirements and not args.install_pyvenv:
+    error("""
+You supplied the name of a Python requirements file but therefore also need
+to add --install-pyvenv as an argument
+""")
 
 if args.release_path:
     RELEASE_BASEPATH=args.release_path
@@ -140,11 +153,19 @@ with open(f'{TARGETDIR}/dbt-workarea-constants.sh', "w") as outf:
     outf.write(workarea_constants_file_contents)
 
 print("Setting up the Python subsystem.")
-if args.clone_pyvenv:
+if not args.install_pyvenv:
     cmd = f"{DBT_ROOT}/scripts/dbt-clone-pyvenv.sh {RELEASE_PATH}/{DBT_VENV} 2>&1"
 else:
     print("Please be patient, this should take O(1 minute)...")
-    cmd = f"{DBT_ROOT}/scripts/dbt-create-pyvenv.sh {RELEASE_PATH}/{PY_PKGLIST} 2>&1"
+    if not args.pyvenv_requirements:
+        cmd = f"{DBT_ROOT}/scripts/dbt-create-pyvenv.sh {RELEASE_PATH}/{PY_PKGLIST} 2>&1"
+    else:
+        if not os.path.exists(args.pyvenv_requirements):
+            error(f"""
+Requested Python requirements file \"{args.pyvenv_requirements}\" not found. 
+Please note you need to provide its absolute path. Exiting...
+""")
+        cmd = f"{DBT_ROOT}/scripts/dbt-create-pyvenv.sh {args.pyvenv_requirements} 2>&1"
 
 res = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE)

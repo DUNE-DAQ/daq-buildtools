@@ -40,13 +40,17 @@ spack_setup_env
 spack_load_target_package systems  # Error checking occurs inside function
 
 ###
-# Check existance/create the default virtual_env
+# Check existence/create the default virtual_env
 ###
+echo
 if [ -f "${DBT_AREA_ROOT}/${DBT_VENV}/pyvenv.cfg" ]; then
     echo -e "INFO [`eval $timenow`]: virtual_env ${DBT_VENV} already exists."
     cat "${DBT_AREA_ROOT}/${DBT_VENV}/pyvenv.cfg"
 else
-    echo -e "INFO [`eval $timenow`]: creating virtual_env ${DBT_VENV} by cloning ${PARENT_VENV}. "
+    echo -e "INFO [`eval $timenow`]: creating virtual_env ${DBT_VENV} by cloning"
+    echo -e "${PARENT_VENV}. "
+    echo -e "Depending on a variety of factors this can take from several seconds to several minutes..."
+
     ${HERE}/../bin/clonevirtualenv.py ${PARENT_VENV} ${DBT_AREA_ROOT}/${DBT_VENV}
 
     test $? -eq 0 || error "Problem creating virtual_env ${DBT_VENV}. Exiting..." 
