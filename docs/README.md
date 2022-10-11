@@ -1,4 +1,3 @@
-_n.b. JCF, Sep-25-2022: If you're involved in testing the candidate release for dunedaq-v3.2.0, then if you wish to work with gcc 12.1.0 use "latest-gcc12" as the argument to "setup_dbt" and "rc-v3.2.0-1" as the argument to "-b candidate". To work with the traditional gcc 8.2.0, use "dunedaq-v3.1.1" as the argument to "setup_dbt" and "rc-dunedaq-v3.2.0-1" as the argument to "-b candidate"._
 
 # DUNE DAQ Buildtools
 
@@ -25,14 +24,13 @@ spack load python@3.8.3%gcc@8.2.0
 Simply do:
 ```
 source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt dunedaq-v3.1.1
+setup_dbt dunedaq-v3.2.0
 ```
-(Though if you want to work with `gcc 12.1.0` for `dunedaq-v3.2.0` candidate testing, see the message at the top of this document)
 
 After running these two commands, then you'll see something like:
 ```
-Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v6.0.2/bin -> PATH
-Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v6.0.2/scripts -> PATH
+Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v6.0.3/bin -> PATH
+Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v6.0.3/scripts -> PATH
 DBT setuptools loaded
 ```
 If you type `dbt-` followed by the `<tab>` key you'll see a listing of available commands, which include `dbt-create`, `dbt-build`, `dbt-setup-release` and `dbt-workarea-env`. These are all described in the following sections. 
@@ -45,11 +43,11 @@ Each time that you want to work with a DUNE DAQ work area in a fresh Linux shell
 Running a release from cvmfs without creating a work area can be done if you simply run the following:
 
 ```sh
-dbt-setup-release <release> # dunedaq-v3.1.1 is the latest frozen release as of Aug-04-2022
+dbt-setup-release <release> # dunedaq-v3.2.0 is the latest frozen release as of Oct-11-2022
 ```
 Instead of a frozen release you can also set up nightly releases and candidate releases using the same arguments as are described later for `dbt-create`; e.g. if you want to set up a candidate release you can do:
 ```
-dbt-setup-release -b candidate <candidate release> # rc-dunedaq-v3.2.0-1 is the latest candidate release as of Sep-23-2022
+dbt-setup-release -b candidate <candidate release> # e.g., rc-dunedaq-v3.2.0-1
 ```
 
 `dbt-setup-release` will set up both the external packages and DAQ packages, as well as activate the python virtual environment. Note that the python virtual environment activated here is read-only. You'd want to run `dbt-setup-release` only if you weren't developing DUNE DAQ software, the topic covered for the remainder of this document. However, if you don't want a frozen set of versioned packages - which you wouldn't, if you were developing code - please continue reading.
@@ -118,7 +116,7 @@ dbt-build
 
 ### Working with more repos
 
-To work with more repos, add them to the `./sourcecode` subdirectory as we did with listrev. Be aware, though: if you're developing a new repo which itself depends on another new repo, daq-buildtools may not already know about this dependency. "New" in this context means "not listed in `/cvmfs/dunedaq.opensciencegrid.org/releases/dunedaq-v3.0.0-c7/dbt-build-order.cmake`". If this is the case, add the names of your new package(s) to the `build_order` list found in `./sourcecode/dbt-build-order.cmake`, placing them in the list in the relative order in which you want them to be built. 
+To work with more repos, add them to the `./sourcecode` subdirectory as we did with listrev. Be aware, though: if you're developing a new repo which itself depends on another new repo, daq-buildtools may not already know about this dependency. "New" in this context means "not listed in `/cvmfs/dunedaq.opensciencegrid.org/spack-releases/dunedaq-v3.2.0/dbt-build-order.cmake`". If this is the case, add the names of your new package(s) to the `build_order` list found in `./sourcecode/dbt-build-order.cmake`, placing them in the list in the relative order in which you want them to be built. 
 
 As a reminder, once you've added your repos and built them, you'll want to run `dbt-workarea-env` so the environment picks up their applications, libraries, etc. 
 
