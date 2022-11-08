@@ -137,7 +137,14 @@ for dbtfile in [f"{DBT_ROOT}/configs/CMakeLists.txt", \
                 ]:
     copy(dbtfile, SRCDIR)
 
-os.symlink(f"{DBT_ROOT}/env.sh", f"{TARGETDIR}/dbt-env.sh")
+# os.symlink(f"{DBT_ROOT}/env.sh", f"{TARGETDIR}/dbt-env.sh")
+env_script_content = f'''
+source {DBT_ROOT}/env.sh
+dbt-workarea-env
+'''
+
+with open(f'{TARGETDIR}/env.sh', "w") as outf:
+    outf.write(env_script_content)
 
 # Set these so the dbt-clone-pyvenv.sh and dbt-create-pyvenv.sh scripts get info they need
 os.environ["SPACK_RELEASE"] = f"{RELEASE}"
