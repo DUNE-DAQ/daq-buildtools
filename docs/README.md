@@ -1,6 +1,6 @@
 
 
-_JCF, Apr-18-2022: These instructions are for early testers of Spack installations of the DUNE DAQ packages. For the regular daq-buildtools instructions, please go [here](https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools/)._
+_JCF, Nov-11-2022: These instructions are for *developers* of daq-buildtools, not *users*. Most likely you want to go to the official daq-buildtools instructions [here](https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools/)._
 
 
 # DUNE DAQ Buildtools
