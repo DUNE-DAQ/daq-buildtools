@@ -148,6 +148,7 @@ EOF
     fi
 
     source ${DBT_AREA_ROOT}/${DBT_VENV}/bin/activate
+    export PYTHONPATH=$(python -c "import sysconfig; print(sysconfig.get_path('platlib'))"):$PYTHONPATH
      
     export DBT_PACKAGE_SETUP_DONE=1
 
