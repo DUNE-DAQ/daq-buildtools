@@ -47,7 +47,7 @@ if [ -f "${DBT_AREA_ROOT}/${DBT_VENV}/pyvenv.cfg" ]; then
     cat "${DBT_AREA_ROOT}/${DBT_VENV}/pyvenv.cfg"
 else
     echo -e "INFO [`eval $timenow`]: creating virtual_env ${DBT_VENV}. "
-    python -m venv ${DBT_AREA_ROOT}/${DBT_VENV}
+    python -m venv --prompt ${DBT_VENV_PROMPT} ${DBT_AREA_ROOT}/${DBT_VENV}
 
     test $? -eq 0 || error "Problem creating virtual_env ${DBT_VENV}. Exiting..." 
 fi
@@ -59,6 +59,7 @@ then
   error "Failed to load the virtual env. Exiting..." 
 fi
 
+spack unload openssl  # JCF, Sep-27-2022: Spack's openssl is preventing the install command below from working
 python -m pip install -r ${PYENV_REQS}
 test $? -eq 0 || error "Installing required modules from ${PYENV_REQS} failed. Exiting..." 
 

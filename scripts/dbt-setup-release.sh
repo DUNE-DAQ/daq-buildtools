@@ -166,6 +166,7 @@ fi
 
 
 source ${RELEASE_PATH}/${DBT_VENV}/bin/activate
+export PYTHONPATH=$(python -c "import sysconfig; print(sysconfig.get_path('platlib'))"):$PYTHONPATH
 
 export PYTHONPYCACHEPREFIX=`mktemp -d -t ${SPACK_RELEASE}-XXXX`
 

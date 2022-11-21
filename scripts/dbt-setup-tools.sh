@@ -187,7 +187,7 @@ function spack_setup_env() {
 	return 2
     fi
     
-    local spack_setup_script=`realpath $SPACK_RELEASES_DIR/$SPACK_RELEASE/spack-installation/share/spack/setup-env.sh`
+    local spack_setup_script=`realpath $SPACK_RELEASES_DIR/$SPACK_RELEASE/default/spack-installation/share/spack/setup-env.sh`
     if [[ ! -e $spack_setup_script ]]; then
 	error "Unable to find Spack setup script \"$spack_setup_script\""
 	return 3
@@ -197,13 +197,6 @@ function spack_setup_env() {
     retval=$?
     if [[ "$retval" != "0" ]]; then
 	error "There was a problem source-ing Spack setup script \"$spack_setup_script\""
-	return $retval
-    fi
-
-    spack env activate ${SPACK_RELEASE//./-}
-    retval=$?
-    if [[ "$retval" != "0" ]]; then
-	error "There was a problem running \"spack env activate $SPACK_RELEASE\""
 	return $retval
     fi
 
