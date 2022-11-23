@@ -37,17 +37,17 @@ Usage
 
 To setup a new running environment for a DAQ release:
       
-    ${scriptname} [-r/--release-path <path to release area>] [-n/--nightly] [-b/--base-release <frozen, nightly, candidate>] <dunedaq-release>
+    ${scriptname} [-r/--release-path <path to release area>] [-n/--nightly] [-b/--base-release <frozen, nightly, candidate, test>] <dunedaq-release>
 
 To list the available DUNE DAQ releases:
 
-    ${scriptname} -l/--list [-n/--nightly] [-b/--base-release <frozen, nightly, candidate>] [-r/--release-path <path to release area>]
+    ${scriptname} -l/--list [-n/--nightly] [-b/--base-release <frozen, nightly, candidate, test>] [-r/--release-path <path to release area>]
 
 Arguments and options:
 
     dunedaq-release: is the name of the release the running environment will be based on (e.g. dunedaq-v2.0.0)
     -n/--nightly: switch to nightly releases, shortcut for "-b/--base-release nightly"
-    -b/--base-release: base release type, choosing from ['frozen', 'nighlty', 'candidate'], default is 'frozen'.
+    -b/--base-release: base release type, choosing from ['frozen', 'nighlty', 'candidate', 'test'], default is 'frozen'.
     -l/--list: show the list of available releases
     -r/--release-path: is the path to the release archive (defaults to either $PROD_BASEPATH (frozen) or $NIGHTLY_BASEPATH (nightly))
 
@@ -73,8 +73,10 @@ else
         export SPACK_RELEASES_DIR="${NIGHTLY_BASEPATH}"
     elif [ "${BASETYPE}" = 'candidate' ]; then
         export SPACK_RELEASES_DIR="${CANDIDATE_RELEASE_BASEPATH}"
+    elif [ "${BASETYPE}" = 'test' ]; then
+        export SPACK_RELEASES_DIR="${TEST_RELEASE_BASEPATH}"
     else
-        error "Wrong option for -b/--base-release, please choose from [frozen, nightly, candidate]."
+        error "Wrong option for -b/--base-release, please choose from [frozen, nightly, candidate, test]."
     fi
 fi
 
