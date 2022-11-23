@@ -1,4 +1,4 @@
-DBT_VENV="dbt-pyvenv"
+DBT_VENV=".venv"
 DBT_AREA_FILE="dbt-workarea-constants.sh"
 
 PROD_BASEPATH="/cvmfs/dunedaq.opensciencegrid.org/spack/releases"
