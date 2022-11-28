@@ -1,5 +1,5 @@
 
-_Nov-27-2022: these instructions describe the new daq-buildtools v6.0.5. Note that as of this writing v6.0.5 will only work with nightlies from `N22-11-24` onward or the `rc-v3.2.1-2` candidate release. This is because v6.0.5 assumes that the releases you work with have the new `.env` directory for Python modules, rather than the traditional `dbt-pyvenv`_
+_Nov-28-2022: these instructions describe the new daq-buildtools v6.0.5. Note that as of this writing v6.0.5 will only work with nightlies from `N22-11-24` onward or the `rc-v3.2.1-2` candidate release. This is because v6.0.5 assumes that the releases you work with have the new `.env` directory for Python modules, rather than the traditional `dbt-pyvenv`. If you wish to work with other releases, please go to these [instructions for a previous daq-buildtools version](https://dune-daq-sw.readthedocs.io/en/v3.2.0/packages/daq-buildtools/)_.
 
 # DUNE DAQ Buildtools
 
@@ -65,7 +65,7 @@ Each work area is based on a DUNE DAQ software release, which defines what exter
 * **Nightly Releases**: packages in nightly releases are built each night using the heads of their `develop` branches. Generally labeled as `N<YY>-<MM>-<DD>`, e.g. `N22-11-27`.
 * **Frozen Releases**: a frozen release typically comes out every couple of months, and only after extensive testing supervised by a Release Coordinator. Generally labeled as `dunedaq-vX.Y.X`, e.g. `dunedaq-v3.2.1`
 * **Candidate Releases**: a type of release meant specifically for frozen release testing. Generally labeled as `rc-vX.Y.Z-<candidate iteration>`, e.g. `rc-v3.2.1-1`
-* ** Test Releases**: a type of release which broadly speaking covers a set of packages which developers wish to build against but which don't fall into any of the first three categories. E.g., a release which contains builds of several feature branches, or a special version of an external package. As of Nov-27-2022, there's not yet really a standard labeling scheme for them. 
+* **Test Releases**: a type of release which broadly speaking covers a set of packages which developers wish to build against but which don't fall into any of the first three categories. E.g., a release which contains builds of several feature branches, or a special version of an external package. As of Nov-27-2022, there's not yet really a standard labeling scheme for them. 
 
 The majority of work areas are set up to build against the most recent nightly release. To do so, run:
 ```sh
