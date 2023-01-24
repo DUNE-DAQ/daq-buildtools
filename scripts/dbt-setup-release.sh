@@ -158,16 +158,33 @@ if [[ "$VIRTUAL_ENV" != "" ]]; then
 A python environment outside this work area has already been activated: 
 ${the_activated_env}
 If you understand why this is the case and wish to deactivate it, you can
-do so by running "deactivate", then try this script again. Exiting...
+do so by running "deactivate", then try this script again. 
+Calling spack unload dunedaq and returning...
 EOF
 )"
-	spack unload $target_package
+	spack unload dunedaq
 	return 7
     fi
 fi
 
 
 source ${RELEASE_PATH}/${DBT_VENV}/bin/activate
+retval=$?
+
+if [[ "$retval" != "0" ]]; then
+	error "$( cat<<EOF
+
+The source of
+${RELEASE_PATH}/${DBT_VENV}/bin/activate
+failed. This may be because the requested ${RELEASE_TAG} release is incompatible
+with this version of daq-buildtools. Your environment will not be correctly set up.
+Calling spack unload dunedaq and returning...
+EOF
+)"
+    spack unload dunedaq
+    return $retval
+fi
+
 export PYTHONPATH=$(python -c "import sysconfig; print(sysconfig.get_path('platlib'))"):$PYTHONPATH
 
 export PYTHONPYCACHEPREFIX=`mktemp -d -t ${SPACK_RELEASE}-XXXX`
