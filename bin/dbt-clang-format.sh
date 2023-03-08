@@ -59,7 +59,7 @@ retval=$?
 if [[ "$retval" != "0" ]]; then
     if [[ -n $SPACK_ROOT ]]; then
     
-        clang_spack_dir="/cvmfs/dunedaq.opensciencegrid.org/spack-externals"
+        clang_spack_dir="/cvmfs/dunedaq.opensciencegrid.org/spack/externals"
         llvmdir=$( spack find -p llvm | sed -r -n 's!.*('$clang_spack_dir'.*)$!\1!p' )
     
         if [[ -z $llvmdir ]]; then
