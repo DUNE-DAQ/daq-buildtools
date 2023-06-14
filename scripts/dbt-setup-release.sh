@@ -143,7 +143,11 @@ if [[ "$retval" != "0" ]]; then
     return $retval
 fi
 
-spack_load_target_package dunedaq
+target_package=dunedaq
+[[ "$SPACK_RELEASE" =~ "ND|nd" ]] && target_package=nddaq
+[[ "$SPACK_RELEASE" =~ "FD|fd" ]] && target_package=fddaq
+
+spack_load_target_package $target_package
 retval=$?
 if [[ "$retval" != "0" ]]; then
     error "Failed to load spack target package. Returning..." 
@@ -162,7 +166,7 @@ do so by running "deactivate", then try this script again.
 Calling spack unload dunedaq and returning...
 EOF
 )"
-	spack unload dunedaq
+	spack unload $target_package
 	return 7
     fi
 fi
@@ -181,7 +185,7 @@ with this version of daq-buildtools. Your environment will not be correctly set 
 Calling spack unload dunedaq and returning...
 EOF
 )"
-    spack unload dunedaq
+    spack unload $target_package
     return $retval
 fi
 
