@@ -210,7 +210,7 @@ function spack_load_target_package() {
     local spack_pkgname=$1
     local spack_pkg
 
-    if [[ $spack_pkgname =~ [nd|fd|dune]daq ]]; then
+    if [[ $spack_pkgname =~ (nd|fd|dune)daq ]]; then
         spack_pkg=$spack_pkgname@${SPACK_RELEASE}
     else
 	local base_release=`spack find --format "{version}" dunedaq`

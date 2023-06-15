@@ -110,8 +110,8 @@ if [[ -z "${DBT_PACKAGE_SETUP_DONE}" ]]; then
     
     if [[ "$DBT_PKG_SET" =~ "daqpackages" ]]; then
         target_package=dunedaq
-        [[ "$SPACK_RELEASE" =~ [ND|nd] ]] && target_package=nddaq
-        [[ "$SPACK_RELEASE" =~ [FD|fd] ]] && target_package=fddaq
+	[[ "$SPACK_RELEASE" =~ (ND|nd) ]] && target_package=nddaq
+	[[ "$SPACK_RELEASE" =~ (FD|fd) ]] && target_package=fddaq
     else
 	target_package=$DBT_PKG_SET
     fi
