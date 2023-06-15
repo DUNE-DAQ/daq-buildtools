@@ -144,8 +144,8 @@ if [[ "$retval" != "0" ]]; then
 fi
 
 target_package=dunedaq
-[[ "$SPACK_RELEASE" =~ "ND|nd" ]] && target_package=nddaq
-[[ "$SPACK_RELEASE" =~ "FD|fd" ]] && target_package=fddaq
+[[ "$SPACK_RELEASE" =~ (ND|nd) ]] && target_package=nddaq
+[[ "$SPACK_RELEASE" =~ (FD|fd) ]] && target_package=fddaq
 
 spack_load_target_package $target_package
 retval=$?
