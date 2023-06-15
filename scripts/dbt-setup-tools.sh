@@ -208,15 +208,28 @@ function spack_setup_env() {
 function spack_load_target_package() {
 
     local spack_pkgname=$1
-    pkg_loaded_status=$(spack find --loaded -l $spack_pkgname@${SPACK_RELEASE} | sed -r -n '/^\w{7} '$spack_pkgname'/p' )
+    local spack_pkg
+
+    if [[ $spack_pkgname =~ [nd|fd|dune]daq ]]; then
+        spack_pkg=$spack_pkgname@${SPACK_RELEASE}
+    else
+	local base_release=`spack find --format "{version}" dunedaq`
+	if [ -z "$base_release" ]; then
+	    spack_pkg=$spack_pkgname
+        else
+	    spack_pkg=$spack_pkgname@${base_release}
+	fi
+    fi
+
+    pkg_loaded_status=$(spack find --loaded -l $spack_pkg | sed -r -n '/^\w{7} '$spack_pkgname'/p' )
     
     if [[ -z $pkg_loaded_status || $pkg_loaded_status =~ "0 loaded packages" || $pkg_loaded_status =~ "No package matches the query: $spack_pkgname" ]]; then
 
 	local cmd=""
 	if [[ -n $SPACK_VERBOSE ]] && $SPACK_VERBOSE ; then
-	    cmd="spack --debug load $spack_pkgname@${SPACK_RELEASE}"
+	    cmd="spack --debug load $spack_pkg"
 	else
-	    cmd="spack load $spack_pkgname@${SPACK_RELEASE}"
+	    cmd="spack load $spack_pkg"
 	fi
 
 
