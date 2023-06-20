@@ -45,6 +45,11 @@ Arguments and options:
     -i/--install-pyvenv: rather than cloning the python virtual environment,
                          pip install it off of the pyvenv_requirements.txt
                          file in the release's directory on cvmfs
+    -p/--pyvenv-requirements: path to the python venv requirements file, used
+                         together with the '-i' option
+    -c/--clone-pyvenv: cloning the python virutal environment from the default
+                         venv in the release's directory on cvmfs
+    -s/--spack: install a local spack instance in the workarea
 
 See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools for more
 
@@ -58,6 +63,8 @@ parser.add_argument("-r", "--release-path", action='store', dest='release_path',
 parser.add_argument("-l", "--list", action="store_true", dest='_list', help=argparse.SUPPRESS)
 parser.add_argument("-i", "--install-pyvenv", action="store_true", dest='install_pyvenv', help=argparse.SUPPRESS)
 parser.add_argument("-p", "--pyvenv-requirements", action='store', dest='pyvenv_requirements', help=argparse.SUPPRESS)
+parser.add_argument("-c", "--clone-pyvenv", action="store_true", dest='clone_pyvenv', help=argparse.SUPPRESS)
+parser.add_argument("-s", "--spack", action="store_true", dest='install_spack', help=argparse.SUPPRESS)
 parser.add_argument("release_tag", nargs='?', help=argparse.SUPPRESS)
 parser.add_argument("workarea_dir", nargs='?', help=argparse.SUPPRESS)
 
@@ -162,10 +169,8 @@ export DBT_ROOT_WHEN_CREATED="{os.environ["DBT_ROOT"]}"
 with open(f'{TARGETDIR}/dbt-workarea-constants.sh', "w") as outf:
     outf.write(workarea_constants_file_contents)
 
-print("Setting up the Python subsystem.")
-if not args.install_pyvenv:
-    cmd = f"{DBT_ROOT}/scripts/dbt-clone-pyvenv.sh {RELEASE_PATH}/{DBT_VENV} 2>&1"
-else:
+if args.install_pyvenv:
+    print("Setting up the Python subsystem.")
     print("Please be patient, this should take O(1 minute)...")
     if not args.pyvenv_requirements:
         cmd = f"{DBT_ROOT}/scripts/dbt-create-pyvenv.sh {RELEASE_PATH}/{PY_PKGLIST} 2>&1"
@@ -176,6 +181,13 @@ Requested Python requirements file \"{args.pyvenv_requirements}\" not found.
 Please note you need to provide its absolute path. Exiting...
 """)
         cmd = f"{DBT_ROOT}/scripts/dbt-create-pyvenv.sh {args.pyvenv_requirements} 2>&1"
+elif args.clone_pyvenv:
+    print("Setting up the Python subsystem.")
+    cmd = f"{DBT_ROOT}/scripts/dbt-clone-pyvenv.sh {RELEASE_PATH}/{DBT_VENV} 2>&1"
+else:
+    cmd = "echo "
+    print("Skipping the creation of python vitual environment in the workarea.")
+    print(f"Default python venv under {RELEASE_PATH}/.venv will be used.")
 
 res = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE)

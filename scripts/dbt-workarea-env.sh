@@ -132,10 +132,22 @@ if [[ -z "${DBT_PACKAGE_SETUP_DONE}" ]]; then
     [[ $(type -P "trace_functions.sh") ]] && source `which trace_functions.sh`
 
     # Assumption is you've already spack loaded python, etc...
+    local_venv_dir=${DBT_AREA_ROOT}/${DBT_VENV}
+    release_venv_dir=`realpath ${SPACK_RELEASES_DIR}/$SPACK_RELEASE/${DBT_VENV}`
+    venv_path=""
+    if [ -d $local_venv_dir ]; then
+	echo
+	echo "Found venv in the current workarea, activating it now... "
+	venv_path=$local_venv_dir
+    else
+	echo
+	echo "No local venv found, activating venv from the release directory on cvmfs..."
+	venv_path=$release_venv_dir
+    fi
 
     if [[ "$VIRTUAL_ENV" != "" ]]; then
 	the_activated_env=$( pip -V  | sed -r 's!\pip [0-9\.]+ from (.*)/lib/python[0-9\.]+/site-packages/pip .*!\1!' )
-	if [[ $the_activated_env != "${DBT_AREA_ROOT}/${DBT_VENV}" ]]; then
+	if [[ $the_activated_env != "$venv_path" ]]; then
 	    error "$( cat<<EOF
 
 A python environment outside this work area has already been activated: 
@@ -149,7 +161,7 @@ EOF
 	fi
     fi
 
-    source ${DBT_AREA_ROOT}/${DBT_VENV}/bin/activate
+    source ${venv_path}/bin/activate
     export PYTHONPATH=$(python -c "import sysconfig; print(sysconfig.get_path('platlib'))"):$PYTHONPATH
      
     export DBT_PACKAGE_SETUP_DONE=1
@@ -199,6 +211,3 @@ export DBT_WORKAREA_ENV_SCRIPT_SOURCED=1
 
 echo -e "${COL_GREEN}This script has been sourced successfully${COL_RESET}"
 echo
-
-
-
