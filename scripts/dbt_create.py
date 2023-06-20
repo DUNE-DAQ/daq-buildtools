@@ -166,8 +166,28 @@ export SPACK_RELEASES_DIR="{os.environ["SPACK_RELEASES_DIR"]}"
 export DBT_ROOT_WHEN_CREATED="{os.environ["DBT_ROOT"]}"
 """
 
+if args.install_spack:
+    os.environ["LOCAL_SPACK_DIR"] = f"{TARGETDIR}/.spack"
+    workarea_constants_file_contents += f"""export LOCAL_SPACK_DIR="{os.environ["LOCAL_SPACK_DIR"]}"
+"""
+
 with open(f'{TARGETDIR}/dbt-workarea-constants.sh', "w") as outf:
     outf.write(workarea_constants_file_contents)
+
+if args.install_spack:
+    # create local spack instance here.
+    cmd = f"{DBT_ROOT}/scripts/dbt-create-spack.sh 2>&1"
+    res = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
+    while True:
+        output = res.stdout.readline()
+        if res.poll() is not None:
+            break
+        if output:
+            print(output.rstrip().decode("utf-8"))
+        res.poll()
+    if res.returncode != 0:
+        error(f"There was a problem running \"{cmd}\" (return value {res.returncode}); exiting...")
 
 if args.install_pyvenv:
     print("Setting up the Python subsystem.")
