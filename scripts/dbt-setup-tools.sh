@@ -186,8 +186,15 @@ function spack_setup_env() {
 	error "Environment variable SPACK_RELEASES_DIR needs to be set for this script to work. Exiting..."
 	return 2
     fi
+
+    local spack_setup_script=""
+    if [[ -z $LOCAL_SPACK_DIR ]]; then
+	spack_setup_script=`realpath $SPACK_RELEASES_DIR/$SPACK_RELEASE/default/spack-installation/share/spack/setup-env.sh`
+    else
+	echo -e "${COL_GREEN}Local spack directory is set, loading...${COL_RESET}\n"
+	spack_setup_script=`realpath $LOCAL_SPACK_DIR/share/spack/setup-env.sh`
+    fi
     
-    local spack_setup_script=`realpath $SPACK_RELEASES_DIR/$SPACK_RELEASE/default/spack-installation/share/spack/setup-env.sh`
     if [[ ! -e $spack_setup_script ]]; then
 	error "Unable to find Spack setup script \"$spack_setup_script\""
 	return 3
@@ -271,5 +278,26 @@ function list_releases() {
     ls | sort | xargs -i printf " - %s\n" {}
     echo
     popd >& /dev/null
+}
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+function stack_new_spack() {
+
+    local existing_spack_dir=$1
+    local new_spack_dir=$2
+
+    rsync -rlpt --exclude 'opt/spack/gcc*' --exclude 'spack-repo' $existing_spack_dir/* $new_spack_dir
+
+    mkdir -p $new_spack_dir/spack-repo/packages
+    echo "repo:" > $new_spack_dir/spack-repo/repo.yaml
+    echo "  namespace: 'LOCAL_SPACK'" >> $new_spack_dir/spack-repo/repo.yaml
+    
+    sed -i '2 i \  - '"$new_spack_dir"'/spack-repo' $new_spack_dir/etc/spack/defaults/repos.yaml
+    sed -i '2 i \  '"$SPACK_RELEASE"':' $new_spack_dir/etc/spack/defaults/upstreams.yaml
+    sed -i '3 i \    install_tree: '"$existing_spack_dir"'/opt/spack' $new_spack_dir/etc/spack/defaults/upstreams.yaml
+
+    source $new_spack_dir/share/spack/setup-env.sh
+    spack reindex
 }
 #------------------------------------------------------------------------------

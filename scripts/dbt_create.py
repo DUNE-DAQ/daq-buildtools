@@ -12,7 +12,7 @@ from time import sleep
 
 sys.path.append(f'{DBT_ROOT}/scripts')
 
-from dbt_setup_tools import error, get_time, list_releases
+from dbt_setup_tools import error, get_time, list_releases, run_command
 
 PY_PKGLIST="pyvenv_requirements.txt"
 DAQ_BUILDORDER_PKGLIST="dbt-build-order.cmake"
@@ -45,6 +45,11 @@ Arguments and options:
     -i/--install-pyvenv: rather than cloning the python virtual environment,
                          pip install it off of the pyvenv_requirements.txt
                          file in the release's directory on cvmfs
+    -p/--pyvenv-requirements: path to the python venv requirements file, used
+                         together with the '-i' option
+    -c/--clone-pyvenv: cloning the python virutal environment from the default
+                         venv in the release's directory on cvmfs
+    -s/--spack: install a local spack instance in the workarea
 
 See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools for more
 
@@ -58,6 +63,8 @@ parser.add_argument("-r", "--release-path", action='store', dest='release_path',
 parser.add_argument("-l", "--list", action="store_true", dest='_list', help=argparse.SUPPRESS)
 parser.add_argument("-i", "--install-pyvenv", action="store_true", dest='install_pyvenv', help=argparse.SUPPRESS)
 parser.add_argument("-p", "--pyvenv-requirements", action='store', dest='pyvenv_requirements', help=argparse.SUPPRESS)
+parser.add_argument("-c", "--clone-pyvenv", action="store_true", dest='clone_pyvenv', help=argparse.SUPPRESS)
+parser.add_argument("-s", "--spack", action="store_true", dest='install_spack', help=argparse.SUPPRESS)
 parser.add_argument("release_tag", nargs='?', help=argparse.SUPPRESS)
 parser.add_argument("workarea_dir", nargs='?', help=argparse.SUPPRESS)
 
@@ -159,13 +166,20 @@ export SPACK_RELEASES_DIR="{os.environ["SPACK_RELEASES_DIR"]}"
 export DBT_ROOT_WHEN_CREATED="{os.environ["DBT_ROOT"]}"
 """
 
+if args.install_spack:
+    os.environ["LOCAL_SPACK_DIR"] = f"{TARGETDIR}/.spack"
+    workarea_constants_file_contents += f"""export LOCAL_SPACK_DIR="{os.environ["LOCAL_SPACK_DIR"]}"
+"""
+
 with open(f'{TARGETDIR}/dbt-workarea-constants.sh', "w") as outf:
     outf.write(workarea_constants_file_contents)
 
-print("Setting up the Python subsystem.")
-if not args.install_pyvenv:
-    cmd = f"{DBT_ROOT}/scripts/dbt-clone-pyvenv.sh {RELEASE_PATH}/{DBT_VENV} 2>&1"
-else:
+if args.install_spack:
+    # create local spack instance here.
+    run_command(f"{DBT_ROOT}/scripts/dbt-create-spack.sh 2>&1")
+
+if args.install_pyvenv:
+    print("Setting up the Python subsystem.")
     print("Please be patient, this should take O(1 minute)...")
     if not args.pyvenv_requirements:
         cmd = f"{DBT_ROOT}/scripts/dbt-create-pyvenv.sh {RELEASE_PATH}/{PY_PKGLIST} 2>&1"
@@ -176,20 +190,15 @@ Requested Python requirements file \"{args.pyvenv_requirements}\" not found.
 Please note you need to provide its absolute path. Exiting...
 """)
         cmd = f"{DBT_ROOT}/scripts/dbt-create-pyvenv.sh {args.pyvenv_requirements} 2>&1"
+elif args.clone_pyvenv:
+    print("Setting up the Python subsystem.")
+    cmd = f"{DBT_ROOT}/scripts/dbt-clone-pyvenv.sh {RELEASE_PATH}/{DBT_VENV} 2>&1"
+else:
+    cmd = "echo "
+    print("Skipping the creation of python vitual environment in the workarea.")
+    print(f"Default python venv under {RELEASE_PATH}/.venv will be used.")
 
-res = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE)
-
-while True:
-    output = res.stdout.readline()
-    if res.poll() is not None:
-        break
-    if output:
-        print(output.rstrip().decode("utf-8"))
-    res.poll()
-
-if res.returncode != 0:
-    error(f"There was a problem running \"{cmd}\" (return value {res.returncode}); exiting...")
+run_command(cmd)
 
 endtime_d=get_time("as_date")
 endtime_s=get_time("as_seconds_since_epoch")
