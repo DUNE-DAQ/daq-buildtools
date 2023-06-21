@@ -54,3 +54,18 @@ def get_time(kind):
         assert False, "Unknown argument passed to get_time"
 
     return timenow
+
+def run_command(cmd):
+
+    res = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
+
+    while True:
+        output = res.stdout.readline()
+        if output:
+            print(output.rstrip().decode("utf-8"))
+        if res.poll() is not None:
+            break
+
+    if res.returncode != 0:
+        error(f"There was a problem running \"{cmd}\" (return value {res.returncode}); exiting...")

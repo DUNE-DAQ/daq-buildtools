@@ -12,7 +12,7 @@ from time import sleep
 
 sys.path.append(f'{DBT_ROOT}/scripts')
 
-from dbt_setup_tools import error, get_time, list_releases
+from dbt_setup_tools import error, get_time, list_releases, run_command
 
 PY_PKGLIST="pyvenv_requirements.txt"
 DAQ_BUILDORDER_PKGLIST="dbt-build-order.cmake"
@@ -176,18 +176,7 @@ with open(f'{TARGETDIR}/dbt-workarea-constants.sh', "w") as outf:
 
 if args.install_spack:
     # create local spack instance here.
-    cmd = f"{DBT_ROOT}/scripts/dbt-create-spack.sh 2>&1"
-    res = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE)
-    while True:
-        output = res.stdout.readline()
-        if res.poll() is not None:
-            break
-        if output:
-            print(output.rstrip().decode("utf-8"))
-        res.poll()
-    if res.returncode != 0:
-        error(f"There was a problem running \"{cmd}\" (return value {res.returncode}); exiting...")
+    run_command(f"{DBT_ROOT}/scripts/dbt-create-spack.sh 2>&1")
 
 if args.install_pyvenv:
     print("Setting up the Python subsystem.")
@@ -209,19 +198,7 @@ else:
     print("Skipping the creation of python vitual environment in the workarea.")
     print(f"Default python venv under {RELEASE_PATH}/.venv will be used.")
 
-res = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE)
-
-while True:
-    output = res.stdout.readline()
-    if res.poll() is not None:
-        break
-    if output:
-        print(output.rstrip().decode("utf-8"))
-    res.poll()
-
-if res.returncode != 0:
-    error(f"There was a problem running \"{cmd}\" (return value {res.returncode}); exiting...")
+run_command(cmd)
 
 endtime_d=get_time("as_date")
 endtime_s=get_time("as_seconds_since_epoch")
