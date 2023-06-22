@@ -80,16 +80,10 @@ dbt-create [-i/--install-pyvenv] -b candidate <candidate release> <name of work 
 ```
 ...where to see all available candidate releases, run `dbt-create -l -b candidate`.
 
-<<<<<<< HEAD
 And to build against a frozen release (not recommended, as the codebase changes fairly rapidly), you don't need the `-b <release type>` argument at all. You can simply do:
 ```
 dbt-create [-i/--install-pyvenv] <frozen release> <name of work area subdirectory> 
 ```
-
-The option `-i/--install-pyvenv` for `dbt-create` is optional. By default, the Python virtual environment created in the work area will be a clone of an existing one from the release directory. This avoids the compilation/installation of Python modules using the `pyvenv_requirements.txt` in the release directory, and speeds up the work-area creation significantly. However, the first time running `dbt-create` with cloning on a node may take several minutes since cvmfs needs to fetch these files into local cache first, and `-i` is an option to avoid this.   
-=======
-To see all available nightly releases, run `dbt-create -l -n` or `dbt-create -l -b nightly`. To see all available candidate releases, run `dbt-create -l -b candidate`. Less common but also possible is to build your repos not against a nightly release but against a frozen release; the commands you pass to `dbt-create` are the same, but with the `-n` or `-b <option>` dropped. 
->>>>>>> 9756d8a... JCF: Update README.md to reflect Pengfei's additions in daq-buildtools PR #239
 
 The structure of your work area will look like the following:
 ```txt
@@ -214,16 +208,10 @@ A couple of things need to be kept in mind when you're building code in a work a
 
 As such, it's important to know the assumptions a work area makes when you use it to build code. In the base of your work area is a file called `dbt-workarea-constants.sh`, which will look something like the following:
 ```
-<<<<<<< HEAD
-export SPACK_RELEASE="N22-09-23"
+export SPACK_RELEASE="NFD23-06-21"
 export SPACK_RELEASES_DIR="/cvmfs/dunedaq-development.opensciencegrid.org/nightly"
-export DBT_ROOT_WHEN_CREATED="/cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v6.0.2"
-=======
-export SPACK_RELEASE="NFD23-06-20"
-export SPACK_RELEASES_DIR="/cvmfs/dunedaq-development.opensciencegrid.org/nightly"
-export DBT_ROOT_WHEN_CREATED="/home/jcfree/daq-buildtools"
+export DBT_ROOT_WHEN_CREATED="/cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v7.1.0"
 export LOCAL_SPACK_DIR="/home/jcfree/daqbuild_test_mypackage/.spack"
->>>>>>> 9756d8a... JCF: Update README.md to reflect Pengfei's additions in daq-buildtools PR #239
 ```
 This file is sourced whenever you run `dbt-workarea-env`, and it tells both the build system and the developer where they can find crucial information about the work areas' builds. Specifically, these environment variables mean the following:
 * `$SPACK_RELEASE`: this is the release of the DUNE DAQ software stack against which repos will build (e.g. `dunedaq-v2.10.2`, `N22-04-09`, etc.)
