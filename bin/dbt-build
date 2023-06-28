@@ -303,6 +303,11 @@ else:
 
 rich.print("")
 
+# Create app rte script
+res = sh.bash("-c", "source dbt-workarea-env.sh > /dev/null; declare -x | egrep 'declare -x (PATH|.*_SHARE|CET_PLUGIN_PATH|DUNEDAQ_SHARE_PATH|LD_LIBRARY_PATH|LIBRARY_PATH|PYTHONPATH)='")
+with open(f"{INSTALLDIR}/daq_app_rte.sh", "w") as f:
+    f.write(str(res))
+
 os.chdir(BUILDDIR)
 
 summary_build_info = {}
