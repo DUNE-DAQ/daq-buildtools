@@ -26,7 +26,7 @@ spack load python@3.8.3%gcc@8.2.0
 Simply do:
 ```
 source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt latest  # v7.2.1 is the latest daq-buildtools version as of Jul-15-2023
+setup_dbt fddaq-v4.1.0  # an alias for v7.2.1, this is the latest daq-buildtools version as of Jul-15-2023
 ```
 
 After running these two commands, then you'll see something like:
