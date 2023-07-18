@@ -50,7 +50,7 @@ Usage
         -d/--debug means you want to build your software with optimizations off and debugging info on
         -j/--jobs means you want to specify the number of jobs used by cmake to build the project
         --unittest means that unit test executables found in ./build/<optional package name>/unittest are run, or all unit tests in ./build/*/unittest are run if no package name is provided
-        --lint means you check for deviations in ./sourcecode/<optional package name> from the DUNE style guide, https://dune-daq-sw.readthedocs.io/en/latest/packages/styleguide/, or deviations in all local repos if no package name is provided. You can also pass the name of an individual file. 
+        --lint means you check for deviations in ./sourcecode/<optional package name> from the DUNE style guide, https://dune-daq-sw.readthedocs.io/en/latest/packages/styleguide/, or deviations in all local repos if no package name is provided. You can also pass the name of an individual file.
         -v/--cpp-verbose means that you want verbose output from the compiler
         --cmake-msg-lvl setting "CMAKE_MESSAGE_LOG_LEVEL", default is "NOTICE", choices are ERROR|WARNING|NOTICE|STATUS|VERBOSE|DEBUG|TRACE.
         --cmake-trace enable cmake tracing
@@ -274,6 +274,8 @@ endtime_build_s=get_time("as_seconds_since_epoch")
 if retval == 0:
     buildtime=int(endtime_build_s) - int(starttime_build_s)
 else:
+    release_rte = os.path.join(os.getenv('SPACK_RELEASES_DIR'), os.getenv('SPACK_RELEASE'),'daq_app_rte.sh')
+    os.symlink(release_rte, f'{INSTALLDIR}/daq_app_rte.sh')
     error(f"""
 This script ran into a problem running
 
@@ -283,6 +285,8 @@ from {BUILDDIR} (i.e.,
 CMake's build+install stages). Scroll up for details or look at the build log via
 
 less -R {build_log}
+
+Run time environment will use {release_rte}
 
 Exiting...
 """)
@@ -412,7 +416,7 @@ if args.lint:
     else:
         code_to_lint_is_a_file = True
 
-    if not code_to_lint_is_a_file:    
+    if not code_to_lint_is_a_file:
        lint_log_dir=f"{LOGDIR}/linting_{datestring}"
        os.mkdir(lint_log_dir)
        for pkgdir in package_list:
@@ -427,9 +431,9 @@ if args.lint:
        if not code_to_lint[0] == "/":  # Not an absolute path, a relative path
            code_to_lint=orig_working_dir + "/" + code_to_lint
        if not os.path.exists(code_to_lint):
-           error(f"Unable to find file \"{code_to_lint}\" to lint; exiting...")     
+           error(f"Unable to find file \"{code_to_lint}\" to lint; exiting...")
        rich.print(f"File to lint is {code_to_lint}")
-       fullcmd = f"./styleguide/cpplint/dune-cpp-style-check.sh build {code_to_lint}"       
+       fullcmd = f"./styleguide/cpplint/dune-cpp-style-check.sh build {code_to_lint}"
        retval = pytee.run(fullcmd.split()[0], fullcmd.split()[1:], None)
        if retval != 0:
           error(f"There was a problem linting the file \"{code_to_lint}\". Exiting...")
@@ -465,7 +469,7 @@ Detailed unit test results are saved in the following directory:
 """
 
 lintinfo = ""
-if args.lint and not code_to_lint_is_a_file:    
+if args.lint and not code_to_lint_is_a_file:
     lintinfo=f"""
 Automated code linting results can be found in the following directory:
 {lint_log_dir}.
