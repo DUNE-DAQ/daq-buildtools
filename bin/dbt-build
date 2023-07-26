@@ -36,7 +36,7 @@ import pytee
 orig_working_dir=os.getcwd()
 
 def get_package_list( build_dir ) :
-    return sh.find(r"-L . -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles  -printf %f\n".split()).split()
+    return sh.find(rf"-L {build_dir} -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles  -printf %f\n".split()).split()
 
 
 usage_blurb=f"""
@@ -144,6 +144,30 @@ You requested a clean build, but this script thinks that {os.getcwd()} isn't
 a build directory. Please contact John Freeman at jcfree@fnal.gov and notify him of this message.
         """)
 
+def create_app_rte_script():
+    res = sh.bash("-c", "source dbt-workarea-env.sh > /dev/null; declare -x | egrep 'declare -x (PATH|.*_SHARE|CET_PLUGIN_PATH|DUNEDAQ_SHARE_PATH|LD_LIBRARY_PATH|LIBRARY_PATH|PYTHONPATH)='")
+    with open(f"{INSTALLDIR}/daq_app_rte.sh", "w") as f:
+        f.write(str(res))
+
+def erase_installdir_contents():
+   if not re.search(r"^/?$", INSTALLDIR):
+       for filename in os.listdir(INSTALLDIR):
+           file_path = os.path.join(INSTALLDIR, filename)
+           if os.path.isfile(file_path) or os.path.islink(file_path):
+               os.unlink(file_path)
+           elif os.path.isdir(file_path):
+               rmtree(file_path)
+   else:
+       error(f"Installation directory is defined as \"{INSTALLDIR}\", which would result in the deletion of the entire contents of this system if it weren't for this check!!!")
+
+
+if not get_package_list(SRCDIR):
+   print(f"""No package repos have been found in {SRCDIR}, 
+so no C++ build will take place. However, a script saving the environment will
+be put in {INSTALLDIR}""")
+   erase_installdir_contents()
+   create_app_rte_script()
+   sys.exit(0)
 
 stringio_obj2 = io.StringIO()
 sh.date(_out=stringio_obj2)
@@ -242,15 +266,7 @@ else:
 
     nprocs_argument = f"-j {nprocs}"
 
-if not re.search(r"^/?$", INSTALLDIR):
-    for filename in os.listdir(INSTALLDIR):
-        file_path = os.path.join(INSTALLDIR, filename)
-        if os.path.isfile(file_path) or os.path.islink(file_path):
-            os.unlink(file_path)
-        elif os.path.isdir(file_path):
-            rmtree(file_path)
-else:
-    error(f"Installation directory is defined as \"{INSTALLDIR}\", which would result in the deletion of the entire contents of this system if it weren't for this check!!!")
+erase_installdir_contents()
 
 starttime_build_d=get_time("as_date")
 starttime_build_s=get_time("as_seconds_since_epoch")
@@ -303,10 +319,7 @@ else:
 
 rich.print("")
 
-# Create app rte script
-res = sh.bash("-c", "source dbt-workarea-env.sh > /dev/null; declare -x | egrep 'declare -x (PATH|.*_SHARE|CET_PLUGIN_PATH|DUNEDAQ_SHARE_PATH|LD_LIBRARY_PATH|LIBRARY_PATH|PYTHONPATH)='")
-with open(f"{INSTALLDIR}/daq_app_rte.sh", "w") as f:
-    f.write(str(res))
+create_app_rte_script()
 
 os.chdir(BUILDDIR)
 
