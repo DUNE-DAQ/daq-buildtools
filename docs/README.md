@@ -206,10 +206,10 @@ This file is sourced whenever you run `dbt-workarea-env`, and it tells both the 
 * `DBT_ROOT_WHEN_CREATED`: The directory containing the `env.sh` file which was sourced before this work area was first created
 * `LOCAL_SPACK_DIR`: If the `-s/--spack` was passed to `dbt-create` when the work area was built, this points to where the local Spack area is located
 
-There are also useful Spack commands which can be executed to learn about the versions of the individual packages you're working with, once you've run `dbt-workarea-env` or `dbt-setup-release`. An [excellent Spack tutorial](https://spack-tutorial.readthedocs.io/en/latest/tutorial_basics.html) inside the official Spack documentation is worth a look, but a few Spack commands can be used right away to learn more about your environment:
-* `spack find --loaded -N | grep dunedaq-vX.Y.Z` will tell you all the DUNE DAQ packages common to both far- and near detector software which have been loaded by `dbt-workarea-env` or `dbt-setup-release`
-* `spack find --loaded -N | grep fddaq-vX.Y.Z` for far detector DUNE DAQ packages
-* `spack find --loaded -N | grep nddaq-vX.Y.Z` for near detector DUNE DAQ packages
+There are also useful Spack commands which can be executed to learn about the versions of the individual packages you're working with, once you've run `dbt-workarea-env` or `dbt-setup-release`. An [excellent Spack tutorial](https://spack-tutorial.readthedocs.io/en/latest/tutorial_basics.html) inside the official Spack documentation is worth a look, but a few Spack commands can be used right away to learn more about your environment. They're presented both for the case of you having set up a nightly release and a frozen release:
+* `spack find --loaded -N | grep dunedaq-vX.Y.Z` or `spack find --loaded -N | grep NB` will tell you all the DUNE DAQ packages shared by both far- and near detector software which have been loaded by `dbt-workarea-env` or `dbt-setup-release`
+* `spack find --loaded -N | grep fddaq-vX.Y.Z` or `spack find --loaded -N | grep FD` for far detector DUNE DAQ packages
+* `spack find --loaded -N | grep nddaq-vX.Y.Z` or `spack find --loaded -N | grep ND` for near detector DUNE DAQ packages
 * `spack find --loaded -N | grep dunedaq-externals` for external packages not developed by DUNE collaborators
 * `spack find --loaded -p <package name>` will tell you the path to the actual contents of a Spack-installed package
 
