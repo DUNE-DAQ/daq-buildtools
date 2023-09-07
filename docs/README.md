@@ -1,6 +1,6 @@
 # DUNE DAQ Buildtools
 
-_This document was last edited Aug-10-2023_
+_This document was last edited Sep-7-2023_
 
 `daq-buildtools` is the toolset to simplify the development of DUNE DAQ packages. It provides environment and building utilities for the DAQ Suite.
 
@@ -193,7 +193,17 @@ In the listrev instructions you'll be running a program called `nanorc` to run t
 
 A couple of things need to be kept in mind when you're building code in a work area. The first is that when you call `dbt-build`, it will build your repos against a specific release of the DUNE DAQ software stack - namely, the release you (or someone else) provided to `dbt-create` when the work area was first created. Another is that the layout and behavior of a work area is a function of the version of daq-buildtools which was used to create it. As a work area ages it becomes increasingly likely that a problem will occur when you try to build a repo in it; this is natural and unavoidable. 
 
-As such, it's important to know the assumptions a work area makes when you use it to build code. In the base of your work area is a file called `dbt-workarea-constants.sh`, which will look something like the following:
+As such, it's important to know the assumptions a work area makes when you use it to build code. This section covers ways to learn details about your work area and its contents.
+
+### Convenience scripts
+
+* `dbt-release-info`: will provide the release type the work area is based on (far detector vs. near detector), as well as the name of the full release and the base release 
+* `dbt-pkg-info <pkgname>`: will provide the version/branch of the package referred to by `<pkgname>`, as well as the corresponding git commit hash of its code, whether the package is built in the local work area or is on cvmfs
+* `dbt-src-status`: will tell you the branch each of the repos in your work area is on, as well as whether the code on the branch has been edited (indicated by an `*`) 
+
+### `dbt-workarea-constants.sh`
+
+In the base of your work area is a file called `dbt-workarea-constants.sh`, which will look something like the following:
 ```
 export SPACK_RELEASE="fddaq-v4.1.0"
 export SPACK_RELEASES_DIR="/cvmfs/dunedaq.opensciencegrid.org/spack/releases"
@@ -205,6 +215,8 @@ This file is sourced whenever you run `dbt-workarea-env`, and it tells both the 
 * `$SPACK_RELEASES_DIR`: The base of the directory containing the DUNE DAQ software installations. 
 * `DBT_ROOT_WHEN_CREATED`: The directory containing the `env.sh` file which was sourced before this work area was first created
 * `LOCAL_SPACK_DIR`: If the `-s/--spack` was passed to `dbt-create` when the work area was built, this points to where the local Spack area is located
+
+### Useful Spack commands
 
 There are also useful Spack commands which can be executed to learn about the versions of the individual packages you're working with, once you've run `dbt-workarea-env` or `dbt-setup-release`. An [excellent Spack tutorial](https://spack-tutorial.readthedocs.io/en/latest/tutorial_basics.html) inside the official Spack documentation is worth a look, but a few Spack commands can be used right away to learn more about your environment. They're presented both for the case of you having set up a nightly release and a frozen release:
 * `spack find --loaded -N | grep dunedaq-vX.Y.Z` or `spack find --loaded -N | grep NB` will tell you all the DUNE DAQ packages shared by both far- and near detector software which have been loaded by `dbt-workarea-env` or `dbt-setup-release`
