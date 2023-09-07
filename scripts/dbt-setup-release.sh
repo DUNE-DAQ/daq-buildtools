@@ -83,6 +83,7 @@ fi
 ARGS=("$@")
 
 source ${HERE}/dbt-setup-tools.sh
+export SPACK_DISABLE_LOCAL_CONFIG=${DISABLE_USER_SPACK_CONFIG}
 
 if [[ ! -e $SPACK_RELEASES_DIR ]]; then
     error "Directory \"$SPACK_RELEASES_DIR\" does not appear to exist; exiting..."

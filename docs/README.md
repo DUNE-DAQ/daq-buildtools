@@ -6,10 +6,7 @@ _This document was last edited Sep-7-2023_
 
 ## System requirements
 
-To get set up, you'll need access to the cvmfs areas `/cvmfs/dunedaq.opensciencegrid.org` and `/cvmfs/dunedaq-development.opensciencegrid.org`. This is the case, e.g., on the np04 cluster at CERN. If you've been doing your own Spack work on the
-system in question, you may also want to back up (rename) your
-existing `~/.spack` directory to give Spack a clean slate to start
-from in these instructions.
+To get set up, you'll need access to the cvmfs areas `/cvmfs/dunedaq.opensciencegrid.org` and `/cvmfs/dunedaq-development.opensciencegrid.org`. This is the case, e.g., on the np04 cluster at CERN. By default, the environment variable `SPACK_DISABLE_LOCAL_CONFIG` is set to `true`, which allows spack to skip user configurations found under `~/.spack`. In rare cases, if you want spack to pick up your local configurations, you can set this environment variable to `false`. However, the recommended way of using customized spack configrations is via the use of a workarea with a local spack instance. Customizations to spack configurations can be directly put into that local instance. More details about how to create a workarea with a spack instance can be found in the "[Advanced dbt-create options section](#Advanced dbt-create options)" on this page. 
 
 <a name="Setup_of_daq-buildtools"></a>
 ## Setup of `daq-buildtools`

@@ -45,6 +45,7 @@ done
 source ${HERE}/dbt-setup-tools.sh
 
 export DBT_AREA_ROOT=$(find_work_area)
+export SPACK_DISABLE_LOCAL_CONFIG=${DISABLE_USER_SPACK_CONFIG}
 
 if [[ -z $DBT_AREA_ROOT ]]; then
     error "Expected work area directory not found via call to find_work_area. Returning..."
