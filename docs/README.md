@@ -1,6 +1,6 @@
 # DUNE DAQ Buildtools
 
-_This document was last edited Sep-7-2023_
+_This document was last edited Sep-9-2023_
 
 `daq-buildtools` is the toolset to simplify the development of DUNE DAQ packages. It provides environment and building utilities for the DAQ Suite.
 
@@ -14,13 +14,13 @@ To get set up, you'll need access to the cvmfs areas `/cvmfs/dunedaq.openscience
 Simply do:
 ```
 source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt fddaq-v4.1.1  
+setup_dbt latest
 ```
-Here `fddaq-v4.1.1` is an alias for `v7.2.1`; this is the latest daq-buildtools version as of Aug-10-2023.
+Here v7.3.0 is the latest daq-buildtools version as of Sep-9-2023.
 After running these two commands, then you'll see something like:
 ```
-Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v7.2.1/bin -> PATH
-Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v7.2.1/scripts -> PATH
+Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v7.3.0/bin -> PATH
+Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v7.3.0/scripts -> PATH
 DBT setuptools loaded
 ```
 If you type `dbt-` followed by the `<tab>` key you'll see a listing of available commands, which include `dbt-create`, `dbt-build`, `dbt-setup-release` and `dbt-workarea-env`. These are all described in the following sections. 
