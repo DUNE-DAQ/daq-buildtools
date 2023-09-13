@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+
+import glob
+import os
+import subprocess
+import sys
+import yaml
+
+if "DBT_ROOT" in os.environ:
+   DBT_ROOT=os.environ["DBT_ROOT"]
+else:
+    print("Environment variable DBT_ROOT isn't set, which suggests you haven't yet set up the daq-buildtools environment. Exiting...")
+    sys.exit(1)
+
+
+sys.path.append(f'{DBT_ROOT}/scripts')
+from dbt_setup_tools import error
+
+this_script = os.path.basename(__file__)
+
+def env_check():
+    if not "SPACK_ROOT" in os.environ:
+        error("It doesn't appear Spack was set up; exiting...")
+
+def get_target_dir(package):
+   res = subprocess.Popen(f"realpath $(spack location -p {package})/../..", 
+                          shell=True, stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE)
+
+   errlines = res.stderr.readlines()
+   assert len(errlines) == 0, "".join( [l.rstrip().decode("utf-8") for l in errlines] )
+
+   return res.stdout.readlines()[0].rstrip().decode("utf-8")   
+
+def get_release_yaml(package):        
+   
+   target_dir = get_target_dir(package)
+    
+   yamlfiles = [filename for filename in glob.glob(f"{target_dir}/*.yaml") if os.path.basename(filename) != "repo.yaml"]
+    
+   assert len(yamlfiles) == 1, f"Unexpected yaml files found in {target_dir}"
+   return yamlfiles[0]
+
+def release_help():
+    print(f"\n{this_script} release  # No additional arguments")
+
+def release_info():
+
+    yamlfile = get_release_yaml("dunedaq")
+    releasedata = yaml.safe_load(open(yamlfile))
+
+    base_release = releasedata["release"]
+    target_dir = "Error"
+
+    if "FD" in os.environ["SPACK_RELEASE"] or "fd" in os.environ["SPACK_RELEASE"]:
+        yamlfile = get_release_yaml("fddaq")
+        target_dir = get_target_dir("fddaq")
+    elif "ND" in os.environ["SPACK_RELEASE"] or "nd" in os.environ["SPACK_RELEASE"]:
+        yamlfile = get_release_yaml("nddaq")
+        target_dir = get_target_dir("nddaq")
+    else:
+        assert False
+
+    releasedata = yaml.safe_load(open(yamlfile))
+    full_release = releasedata["release"]
+    full_release_type = releasedata["type"]
+    
+    pos = target_dir.find(full_release)
+    release_dir = target_dir[:pos + len(full_release)]
+
+    print(f"Release type: {full_release_type}")
+    print(f"Release name: {full_release}")
+    print(f"Base release name: {base_release}")
+    print(f"Release dir: {release_dir}")
+    
+                           
+
+def package_help():
+    print(f"\n{this_script} package <name of package>  # Use \"all\" instead of a package name for all packages")
+
+def package_info(args):
+   print("Package info still to be implemented")
+
+def full_help():
+    release_help()
+    package_help()
+
+env_check()
+
+if len(sys.argv) == 1:
+    full_help()
+    sys.exit(1)
+
+infotype = sys.argv[1]
+
+if infotype == "package":
+    package_info(sys.argv[2:])
+elif infotype == "release":
+    release_info()
+else:  # This encompasses when a user passes "-h" or "--help", but also "--smurf" or "--albania"
+    full_help()
+
+
