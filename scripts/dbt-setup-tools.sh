@@ -287,7 +287,7 @@ function stack_new_spack() {
     local existing_spack_dir=$1
     local new_spack_dir=$2
 
-    rsync -rlpt --exclude 'opt/spack/gcc*' --exclude 'spack-repo' $existing_spack_dir/* $new_spack_dir
+    rsync -rlpt --exclude 'opt/spack/gcc*' --exclude 'opt/spack/linux*' --exclude 'spack-repo' $existing_spack_dir/* $new_spack_dir
 
     mkdir -p $new_spack_dir/spack-repo/packages
     echo "repo:" > $new_spack_dir/spack-repo/repo.yaml
