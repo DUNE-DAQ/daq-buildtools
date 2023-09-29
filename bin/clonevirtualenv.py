@@ -12,7 +12,6 @@ import sys
 import itertools
 import shutil
 import fnmatch
-import tarfile
 
 
 __version__ = '0.5.7'
@@ -68,7 +67,7 @@ def _virtualenv_sys(venv_path):
     return lines[0], list(filter(bool, lines[1:]))
 
 
-def clone_virtualenv(src_dir, dst_dir, tarball):
+def clone_virtualenv(src_dir, dst_dir):
     if not os.path.exists(src_dir):
         raise UserError('src dir %r does not exist' % src_dir)
     if os.path.exists(dst_dir):
@@ -76,11 +75,7 @@ def clone_virtualenv(src_dir, dst_dir, tarball):
     #sys_path = _virtualenv_syspath(src_dir)
     logger.info('cloning virtualenv \'%s\' => \'%s\'...' %
             (src_dir, dst_dir))
-    if tarfile.is_tarfile(tarball):
-        with tarfile.open(tarball,"r:gz") as tarfile_obj:
-            tarfile_obj.extractfile(os.path.dirname(dst_dir))
-    else:
-        shutil.copytree(src_dir, dst_dir, symlinks=True)
+    shutil.copytree(src_dir, dst_dir, symlinks=True)
     for rootDir, subdirs, filenames in os.walk(dst_dir):
         for filename in fnmatch.filter(filenames, '*.pyc'):
             try:
@@ -309,12 +304,6 @@ def main():
             dest='verbose',
             default=False,
             help='verbosity')
-    parser.add_option('-t',
-            '--tarball',
-            dest='tarball',
-            metavar="TAR_FILE",
-            default=None,
-            help='path to tarball in tar.gz format')
     options, args = parser.parse_args()
     try:
         old_dir, new_dir = args
@@ -327,7 +316,7 @@ def main():
             options.verbose)]
     logging.basicConfig(level=loglevel, format='%(message)s')
     try:
-        clone_virtualenv(old_dir, new_dir, options.tarball)
+        clone_virtualenv(old_dir, new_dir)
     except UserError:
         e = sys.exc_info()[1]
         parser.error(str(e))

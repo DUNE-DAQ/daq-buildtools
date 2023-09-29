@@ -51,8 +51,7 @@ else
     echo -e "${PARENT_VENV}. "
     echo -e "Depending on a variety of factors this can take from several seconds to several minutes..."
 
-    TARFILE=$(dirname ${PARENT_VENV})/venv.tar.gz
-    ${HERE}/../bin/clonevirtualenv.py ${PARENT_VENV} ${DBT_AREA_ROOT}/${DBT_VENV} -t $TARFILE
+    ${HERE}/../bin/clonevirtualenv.py ${PARENT_VENV} ${DBT_AREA_ROOT}/${DBT_VENV}
 
     test $? -eq 0 || error "Problem creating virtual_env ${DBT_VENV}. Exiting..." 
 
