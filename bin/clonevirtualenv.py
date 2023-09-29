@@ -78,7 +78,7 @@ def clone_virtualenv(src_dir, dst_dir, tarball):
             (src_dir, dst_dir))
     if tarfile.is_tarfile(tarball):
         with tarfile.open(tarball,"r:gz") as tarfile_obj:
-            tarfile_obj.extractfile(os.path.dirname(dst_dir))
+            tarfile_obj.extractall(os.path.dirname(dst_dir))
     else:
         shutil.copytree(src_dir, dst_dir, symlinks=True)
     for rootDir, subdirs, filenames in os.walk(dst_dir):
