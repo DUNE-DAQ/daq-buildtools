@@ -76,7 +76,11 @@ def clone_virtualenv(src_dir, dst_dir, tarball):
     #sys_path = _virtualenv_syspath(src_dir)
     logger.info('cloning virtualenv \'%s\' => \'%s\'...' %
             (src_dir, dst_dir))
-    if tarfile.is_tarfile(tarball):
+    found_tarball = False
+    if os.path.isfile(tarball):
+        if tarfile.is_tarfile(tarball):
+            found_tarball = True
+    if found_tarball:
         with tarfile.open(tarball,"r:gz") as tarfile_obj:
             tarfile_obj.extractall(os.path.dirname(dst_dir))
     else:
