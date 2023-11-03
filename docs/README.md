@@ -14,15 +14,16 @@ To get set up, you'll need access to the cvmfs areas `/cvmfs/dunedaq.openscience
 Simply do:
 ```
 source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt latest
+setup_dbt fddaq-v4.2.0
 ```
-Here v7.4.0 is the latest daq-buildtools version as of Nov-3-2023.
 After running these two commands, then you'll see something like:
 ```
 Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v7.4.0/bin -> PATH
 Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v7.4.0/scripts -> PATH
 DBT setuptools loaded
 ```
+where `fddaq-v4.2.0` is aliased to daq-buildtools `v7.4.0`. 
+
 If you type `dbt-` followed by the `<tab>` key you'll see a listing of available commands, which include `dbt-create`, `dbt-build`, `dbt-setup-release` and `dbt-workarea-env`. These are all described in the following sections. 
 
 Each time that you log into a fresh Linux shell and want to either (1) set up an existing cvmfs-based DUNE DAQ software release or (2) develop code within a pre-existing DUNE DAQ work area, you'll need to set up daq-buildtools. These two cases are described in detail momentarily. For (1) you'd want to repeat the method above to set up daq-buildtools. For (2) it's easier instead to `cd` into the work area and source the file named `env.sh`. 
