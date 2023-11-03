@@ -44,16 +44,16 @@ if [ $lcov_found -ne 0 ]; then
   exit 1
 fi
 
-gccver=`gcc -v 2>&1|grep version|awk '{print $3}'|cut -d. -f1`
-if [ $gccver -lt 9 ]; then
-  echo "GCC v9 or greater required for proper stats collection! (You have `gcc -v 2>&1|grep version|awk '{print $3}'`)" >&2
+gccver=`gcc -v 2>&1|grep 'gcc version'|awk '{print $3}'|cut -d. -f1`
+if [ ${gccver:-0} -lt 9 ]; then
+  echo "GCC v9 or greater required for proper stats collection! (You have `gcc -v 2>&1|grep 'gcc version'|awk '{print $3}'`)" >&2
   echo
   print_usage
   exit 2
 fi
 
 echo "Performing clean build, please wait" |& tee -a $lcov_log
-dbt-build.py --clean >$lcov_log 2>&1 || error "dbt-build.py --clean returned nonzero; exiting..."
+dbt-build --clean >$lcov_log 2>&1 || error "dbt-build --clean returned nonzero; exiting..."
 echo "Clean build complete. Setting up LCOV counters" |& tee -a $lcov_log
 
 lcov -d $DBT_AREA_ROOT --zerocounters >>$lcov_log 2>&1 || error "lcov -d $DBT_AREA_ROOT --zerocounters returned nonzero; exiting..."
@@ -114,7 +114,7 @@ lcov -a dunedaq.base -a  $DBT_AREA_ROOT/dunedaq.info --output-file  $DBT_AREA_RO
 error "lcov -a dunedaq.base -a  $DBT_AREA_ROOT/dunedaq.info --output-file  $DBT_AREA_ROOT/dunedaq.total returned nonzero; exiting..."
 
 lcov --remove  $DBT_AREA_ROOT/dunedaq.total '*/products/*' '/usr/include/*' '/cvmfs/*' "$DBT_AREA_ROOT/build/*" "*/pybindsrc/*" --output-file  $DBT_AREA_ROOT/dunedaq.info.cleaned >>$lcov_log 2>&1 || \
-error "lcov --remove  $DBT_AREA_ROOT/dunedaq.total '*/products/*' '/usr/include/*' '/cvmfs/*' "$DBT_AREA_ROOT/build/*" --output-file  $DBT_AREA_ROOT/dunedaq.info.cleaned returned nonzero; exiting..."
+error "lcov --remove  $DBT_AREA_ROOT/dunedaq.total '*/products/*' '*/opt/spack/*' '/usr/include/*' '/cvmfs/*' "$DBT_AREA_ROOT/build/*" --output-file  $DBT_AREA_ROOT/dunedaq.info.cleaned returned nonzero; exiting..."
 
   echo "Creationg HTML output"  |& tee -a $lcov_log
 genhtml --demangle-cpp -o  $DBT_AREA_ROOT/coverage  $DBT_AREA_ROOT/dunedaq.info.cleaned >>$lcov_log 2>&1 || \

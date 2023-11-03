@@ -1,16 +1,16 @@
 
 import glob
 from inspect import currentframe, getframeinfo
-import io
 import os
 import subprocess
 import sys
+import datetime
+import time
 
 exec(open(f'{os.environ["DBT_ROOT"]}/scripts/dbt_setup_constants.py').read())
-UPS_PKGLIST="{}.sh".format(DBT_AREA_FILE)
 
 def error(errmsg):
-    timenow = subprocess.run(["date"], capture_output=True).stdout.decode("utf-8").strip()
+    timenow = get_time("as_date")
     frameinfo = getframeinfo(currentframe().f_back)
 
     REDIFY="\033[91m"
@@ -31,16 +31,41 @@ def find_work_area():
 
 def list_releases(release_basepath):
 
-    for filename in sorted(glob.glob(f"{release_basepath}/*")):
-        if os.path.exists(f"{os.path.realpath(filename)}/{UPS_PKGLIST}"):
-            print(f" - {os.path.basename(filename)}")
+    versions = []
+
+    origdir=os.getcwd()
+    os.chdir(f"{release_basepath}")
+    for dirname in glob.glob(f"*"):
+        if os.path.isfile(dirname):
+            continue
+        versions.append(dirname)
+
+    for version in sorted(versions):
+        print(f" - {version}")
+
+    os.chdir(origdir)
 
 def get_time(kind):
     if kind == "as_date":
-        dateargs=["date"]
+        timenow = datetime.datetime.now().astimezone().strftime("%a %b %-d %H:%M:%S %Z %Y")
     elif kind == "as_seconds_since_epoch":
-        dateargs=["date", "+%s"]
+        timenow = int(time.time())
     else:
         assert False, "Unknown argument passed to get_time"
 
-    return subprocess.run(dateargs, capture_output=True).stdout.decode("utf-8").strip()
+    return timenow
+
+def run_command(cmd):
+
+    res = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
+
+    while True:
+        output = res.stdout.readline()
+        if output:
+            print(output.rstrip().decode("utf-8"))
+        if res.poll() is not None:
+            break
+
+    if res.returncode != 0:
+        error(f"There was a problem running \"{cmd}\" (return value {res.returncode}); exiting...")

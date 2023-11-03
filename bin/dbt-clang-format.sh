@@ -57,34 +57,42 @@ which clang-format > /dev/null 2>&1
 retval=$?
 
 if [[ "$retval" != "0" ]]; then
-    clang_version=$( ups list -aK+ clang | sort -n | tail -1 | sed -r 's/^\s*\S+\s+"([^"]+)".*/\1/' )
+    if [[ -n $SPACK_ROOT ]]; then
     
-    if [[ -n $clang_version ]]; then
+        clang_spack_dir="/cvmfs/dunedaq.opensciencegrid.org/spack/externals"
+        llvmdir=$( spack find -p llvm | sed -r -n 's!.*('$clang_spack_dir'.*)$!\1!p' )
+    
+        if [[ -z $llvmdir ]]; then
+            echo "Spack appears to be set up (SPACK_ROOT == $SPACK_ROOT) but unable to find directory for package llvm. Exiting..." >&2
+            exit 101
+        fi
 
-	# JCF, May-21-2021
+        cmd="spack load llvm"
+        $cmd
 
-	# Surely this explicit setup of ups products directories can
-	# be avoided if this script is called after a work area
-	# environment's already been set up...
+        if [[ "$?" != "0" ]]; then
+            echo "Unable to successfully call \"$cmd\"; exiting..." >&2
+            exit 11
+        fi
 
-	for proddir in $( echo $PRODUCTS | tr ":" " " ) ; do
-	    . $proddir/setup
-	done
+    else
+        clang_version=$( ups list -aK+ clang | sort -n | tail -1 | sed -r 's/^\s*\S+\s+"([^"]+)".*/\1/' )
+    
+        if [[ -n $clang_version ]]; then
+    	    setup clang $clang_version
+	    retval="$?"
 
-	setup clang $clang_version
-	retval="$?"
-
-	if [[ "$retval" == "0" ]]; then
-	    echo "Set up clang $clang_version"
-	else
-	    error "
+            if [[ "$retval" == "0" ]]; then
+	        echo "Set up clang $clang_version"
+            else
+                error "
 Error: there was a problem executing \"setup clang $clang_version\"
 (return value was $retval). Please check the products directories
 you've got set up. Exiting..."
-	fi
+            fi
+        fi
     fi
 fi
-
 
 clang_format_link="https://raw.githubusercontent.com/DUNE-DAQ/daq-buildtools/develop/configs/.clang-format"
 

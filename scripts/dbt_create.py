@@ -3,7 +3,6 @@ DBT_ROOT=os.environ["DBT_ROOT"]
 exec(open(f'{DBT_ROOT}/scripts/dbt_setup_constants.py').read())
 
 import argparse
-import io
 import pathlib
 from shutil import copy
 import subprocess
@@ -13,9 +12,7 @@ from time import sleep
 
 sys.path.append(f'{DBT_ROOT}/scripts')
 
-from dbt_setup_tools import error, get_time, list_releases
-
-EMPTY_DIR_CHECK=True
+from dbt_setup_tools import error, get_time, list_releases, run_command
 
 PY_PKGLIST="pyvenv_requirements.txt"
 DAQ_BUILDORDER_PKGLIST="dbt-build-order.cmake"
@@ -26,70 +23,111 @@ Usage
 -----
 
 To create a new DUNE DAQ development area:
-      
-    {os.path.basename(__file__)} [-n/--nightly] [-c/--clone-pyvenv] [-r/--release-path <path to release area>] <dunedaq-release> <target directory>
+
+    {os.path.basename(__file__)} [-n/--nightly] [-b/--base-release <base release type>]  [-r/--release-path <path to release area>] [-i/--install-pyvenv] <dunedaq-release> <target directory>
 
 To list the available DUNE DAQ releases:
 
-    {os.path.basename(__file__)} [-n/--nightly] -l/--list [-r/--release-path <path to release area>]
+    {os.path.basename(__file__)} [-n/--nightly] [-b/--base-release <base release type>] [-r/--release-path <path to release area>] -l/--list
 
 Arguments and options:
 
-    dunedaq-release: is the name of the release the new work area will be based on (e.g. dunedaq-v2.8.0)
-    -n/--nightly: switch from frozen to nightly releases
+    dunedaq release: the release the new work area will be based on (e.g. dunedaq-v2.8.0, N22-09-29, etc.)
+    target directory: the name of the work area dbt-create will set up for you
+    -b/--base-release: base release type, can be one of [frozen, nightly, candidate]. Default is frozen.
+    -n/--nightly: switch from frozen to nightly releases, shortcut for \"-b nightly\"
     -l/--list: show the list of available releases
-    -c/--clone-pyvenv: cloning the dbt-pyvenv from cvmfs instead of installing from scratch    
-    -r/--release-path: is the path to the release archive (defaults to either {PROD_BASEPATH} (frozen) or {NIGHTLY_BASEPATH} (nightly))
+    -r/--release-path: is the path to the release archive (defaults to
+                       {PROD_BASEPATH} (frozen)
+                       {NIGHTLY_BASEPATH} (nightly)
+                       {CANDIDATE_RELEASE_BASEPATH} (candidate)
+                       {TEST_RELEASE_BASEPATH} (test))
+    -i/--install-pyvenv: rather than cloning the python virtual environment,
+                         pip install it off of the pyvenv_requirements.txt
+                         file in the release's directory on cvmfs
+    -p/--pyvenv-requirements: path to the python venv requirements file, used
+                         together with the '-i' option
+    -c/--clone-pyvenv: cloning the python virutal environment from the default
+                         venv in the release's directory on cvmfs
+    -s/--spack: install a local spack instance in the workarea
 
 See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools for more
 
-""" 
+"""
 
 
 parser = argparse.ArgumentParser(usage=usage_blurb)
 parser.add_argument("-n", "--nightly", action="store_true", help=argparse.SUPPRESS)
-parser.add_argument("-c", "--clone-pyvenv", action="store_true", dest="clone_pyvenv", help=argparse.SUPPRESS)
+parser.add_argument("-b", "--base-release", choices=['frozen', 'nightly', 'candidate', 'test'], default='frozen', help=argparse.SUPPRESS)
 parser.add_argument("-r", "--release-path", action='store', dest='release_path', help=argparse.SUPPRESS)
 parser.add_argument("-l", "--list", action="store_true", dest='_list', help=argparse.SUPPRESS)
+parser.add_argument("-i", "--install-pyvenv", action="store_true", dest='install_pyvenv', help=argparse.SUPPRESS)
+parser.add_argument("-p", "--pyvenv-requirements", action='store', dest='pyvenv_requirements', help=argparse.SUPPRESS)
+parser.add_argument("-c", "--clone-pyvenv", action="store_true", dest='clone_pyvenv', help=argparse.SUPPRESS)
+parser.add_argument("-s", "--spack", action="store_true", dest='install_spack', help=argparse.SUPPRESS)
 parser.add_argument("release_tag", nargs='?', help=argparse.SUPPRESS)
 parser.add_argument("workarea_dir", nargs='?', help=argparse.SUPPRESS)
 
 args = parser.parse_args()
 
+if args.pyvenv_requirements and not args.install_pyvenv:
+    error("""
+You supplied the name of a Python requirements file but therefore also need
+to add --install-pyvenv as an argument
+""")
+
 if args.release_path:
     RELEASE_BASEPATH=args.release_path
-elif not args.nightly:
-    RELEASE_BASEPATH=PROD_BASEPATH
 else:
-    RELEASE_BASEPATH=NIGHTLY_BASEPATH
+    if args.nightly:
+        args.base_release = 'nightly'
+    if args.base_release == 'frozen':
+        RELEASE_BASEPATH=PROD_BASEPATH
+    if args.base_release == 'nightly':
+        RELEASE_BASEPATH=NIGHTLY_BASEPATH
+    if args.base_release == 'candidate':
+        RELEASE_BASEPATH=CANDIDATE_RELEASE_BASEPATH
+    if args.base_release == 'test':
+        RELEASE_BASEPATH=TEST_RELEASE_BASEPATH
 
 if args._list:
     list_releases(RELEASE_BASEPATH)
     sys.exit(0)
 elif not args.release_tag or not args.workarea_dir:
-    error("Wrong number of arguments. Run '{} -h' for more information.".format(os.path.basename(__file__)))
+    error("Need to supply a release tag and a new work area directory. Run '{} -h' for more information.".format(os.path.basename(__file__)))
 
-RELEASE=args.release_tag
-RELEASE_PATH=os.path.realpath(f"{RELEASE_BASEPATH}/{RELEASE}")
-
-TARGETDIR=args.workarea_dir
+RELEASE_PATH=os.path.realpath(f"{RELEASE_BASEPATH}/{args.release_tag}")
+RELEASE=RELEASE_PATH.rstrip("/").split("/")[-1]
+if RELEASE != args.release_tag:
+    print(f"Release \"{args.release_tag}\" requested; interpreting this as release \"{RELEASE}\"")
 
 if not os.path.exists(RELEASE_PATH):
-    error(f"Release path '{RELEASE_PATH}' does not exist. Note that you need to pass \"-n\" for a nightly build. Exiting...")
+    error(f"""
+Release path
+\"{RELEASE_PATH}\"
+does not exist. Note that you need to pass \"-n\" for a nightly build or \"-b candidate\"
+for a candidate release build. Exiting...""")
+
+TARGETDIR=args.workarea_dir
+if os.path.exists(TARGETDIR):
+    error(f"""Desired work area directory
+\"{TARGETDIR}\" already exists; exiting...""")
 
 if "DBT_WORKAREA_ENV_SCRIPT_SOURCED" in os.environ:
     error("""
-It appears you're trying to run this script from an environment                                             
-where another development area's been set up.  You'll want to run this                                      
-from a clean shell. Exiting... 
+It appears you're trying to run this script from an environment
+where another development area's been set up.  You'll want to run this
+from a clean shell. Exiting...
 """
 )
-    
+
 starttime_d=get_time("as_date")
 starttime_s=get_time("as_seconds_since_epoch")
 
-if not os.path.exists(TARGETDIR):
-    pathlib.Path(TARGETDIR).mkdir(parents=True, exist_ok=True)
+try:
+    pathlib.Path(TARGETDIR).mkdir(parents=True)
+except PermissionError:
+    error(f"You don't have permission to create {TARGETDIR} from {os.getcwd()}. Exiting...")
 
 os.chdir(TARGETDIR)
 TARGETDIR=os.getcwd() # Get full path
@@ -97,19 +135,6 @@ TARGETDIR=os.getcwd() # Get full path
 BUILDDIR=f"{TARGETDIR}/build"
 LOGDIR=f"{TARGETDIR}/log"
 SRCDIR=f"{TARGETDIR}/sourcecode"
-
-if EMPTY_DIR_CHECK and os.listdir("."):
-    error(f"""
-There appear to be files in {TARGETDIR} besides this script                                                  
-(run "ls -a1 {TARGETDIR}" to see this); this script should only be run in a clean                                  directory. Exiting...  
-""")
-elif not EMPTY_DIR_CHECK:
-    print("""
-WARNING: The check for whether any files besides this script exist in                                       
-its directory has been switched off. This may mean assumptions the                                          
-script makes are violated, resulting in undesired behavior.    
-    """, file=sys.stderr)
-    sleep(5)
 
 for workareadir in [BUILDDIR, LOGDIR, SRCDIR]:
     os.mkdir(workareadir)
@@ -122,25 +147,58 @@ for dbtfile in [f"{DBT_ROOT}/configs/CMakeLists.txt", \
                 ]:
     copy(dbtfile, SRCDIR)
 
-copy(f"{RELEASE_PATH}/{UPS_PKGLIST}", f"{TARGETDIR}/{DBT_AREA_FILE}")
+# os.symlink(f"{DBT_ROOT}/env.sh", f"{TARGETDIR}/dbt-env.sh")
+env_script_content = f'''
+source {DBT_ROOT}/env.sh
+dbt-workarea-env
+'''
 
-os.symlink(f"{DBT_ROOT}/env.sh", f"{TARGETDIR}/dbt-env.sh")
+with open(f'{TARGETDIR}/env.sh', "w") as outf:
+    outf.write(env_script_content)
 
-print("Setting up the Python subsystem.") 
+# Set these so the dbt-clone-pyvenv.sh and dbt-create-pyvenv.sh scripts get info they need
+os.environ["SPACK_RELEASE"] = f"{RELEASE}"
+os.environ["SPACK_RELEASES_DIR"] = f"{RELEASE_BASEPATH}"
 
-if args.clone_pyvenv:
-    cmd = f"{DBT_ROOT}/scripts/dbt-clone-pyvenv.sh {RELEASE_PATH}/{DBT_VENV}"
-else:
+workarea_constants_file_contents = \
+    f"""export SPACK_RELEASE="{os.environ["SPACK_RELEASE"]}"
+export SPACK_RELEASES_DIR="{os.environ["SPACK_RELEASES_DIR"]}"
+export DBT_ROOT_WHEN_CREATED="{os.environ["DBT_ROOT"]}"
+"""
+
+if args.install_spack:
+    os.environ["LOCAL_SPACK_DIR"] = f"{TARGETDIR}/.spack"
+    workarea_constants_file_contents += f"""export LOCAL_SPACK_DIR="{os.environ["LOCAL_SPACK_DIR"]}"
+"""
+
+with open(f'{TARGETDIR}/dbt-workarea-constants.sh', "w") as outf:
+    outf.write(workarea_constants_file_contents)
+
+if args.install_spack:
+    # create local spack instance here.
+    run_command(f"{DBT_ROOT}/scripts/dbt-create-spack.sh 2>&1")
+
+if args.install_pyvenv:
+    print("Setting up the Python subsystem.")
     print("Please be patient, this should take O(1 minute)...")
-    cmd = f"{DBT_ROOT}/scripts/dbt-create-pyvenv.sh {RELEASE_PATH}/{PY_PKGLIST}"
+    if not args.pyvenv_requirements:
+        cmd = f"{DBT_ROOT}/scripts/dbt-create-pyvenv.sh {RELEASE_PATH}/{PY_PKGLIST} 2>&1"
+    else:
+        if not os.path.exists(args.pyvenv_requirements):
+            error(f"""
+Requested Python requirements file \"{args.pyvenv_requirements}\" not found.
+Please note you need to provide its absolute path. Exiting...
+""")
+        cmd = f"{DBT_ROOT}/scripts/dbt-create-pyvenv.sh {args.pyvenv_requirements} 2>&1"
+elif args.clone_pyvenv:
+    print("Setting up the Python subsystem.")
+    cmd = f"{DBT_ROOT}/scripts/dbt-clone-pyvenv.sh {RELEASE_PATH}/{DBT_VENV} 2>&1"
+else:
+    cmd = "echo "
+    print("Skipping the creation of python vitual environment in the workarea.")
+    print(f"Default python venv under {RELEASE_PATH}/.venv will be used.")
 
-res = subprocess.run( cmd.split(), capture_output=True, text=True )
-if res.returncode != 0:
-    print(f"stdout from {cmd}:")
-    print(res.stdout)
-    print(f"stderr from {cmd}:")
-    print(res.stderr)
-    error(f"There was a problem running \"{cmd}\" (return value {res.returncode}); exiting...")
+run_command(cmd)
 
 endtime_d=get_time("as_date")
 endtime_s=get_time("as_seconds_since_epoch")
