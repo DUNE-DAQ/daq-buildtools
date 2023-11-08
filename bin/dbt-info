@@ -14,7 +14,7 @@ else:
 
 
 sys.path.append(f'{DBT_ROOT}/scripts')
-from dbt_setup_tools import error
+from dbt_setup_tools import error, run_command
 
 this_script = os.path.basename(__file__)
 
@@ -32,36 +32,34 @@ def get_target_dir(package):
 
    return res.stdout.readlines()[0].rstrip().decode("utf-8")   
 
-def get_release_yaml(package):        
+def get_release_data(package):        
    
    target_dir = get_target_dir(package)
     
    yamlfiles = [filename for filename in glob.glob(f"{target_dir}/*.yaml") if os.path.basename(filename) != "repo.yaml"]
     
-   assert len(yamlfiles) == 1, f"Unexpected yaml files found in {target_dir}"
-   return yamlfiles[0]
+   assert len(yamlfiles) == 1, f"Unable to find expected yaml file in {target_dir}"
+   return yaml.safe_load(open(yamlfiles[0]))
 
 def release_help():
     print(f"\n{this_script} release  # No additional arguments")
 
 def release_info():
 
-    yamlfile = get_release_yaml("dunedaq")
-    releasedata = yaml.safe_load(open(yamlfile))
+    releasedata = get_release_data("dunedaq")
 
     base_release = releasedata["release"]
     target_dir = "Error"
 
     if "FD" in os.environ["SPACK_RELEASE"] or "fd" in os.environ["SPACK_RELEASE"]:
-        yamlfile = get_release_yaml("fddaq")
+        releasedata = get_release_data("fddaq")
         target_dir = get_target_dir("fddaq")
     elif "ND" in os.environ["SPACK_RELEASE"] or "nd" in os.environ["SPACK_RELEASE"]:
-        yamlfile = get_release_yaml("nddaq")
+        releasedata = get_release_data("nddaq")
         target_dir = get_target_dir("nddaq")
     else:
         assert False
 
-    releasedata = yaml.safe_load(open(yamlfile))
     full_release = releasedata["release"]
     full_release_type = releasedata["type"]
     
@@ -76,14 +74,65 @@ def release_info():
                            
 
 def package_help():
-    print(f"\n{this_script} package <name of package>  # Use \"all\" instead of a package name for all packages")
+    print(f"\n{this_script} package <name of package>  # Use \"all\" instead of a package name for all DUNE DAQ packages")
+
+def package_print(pkg):
+   print()  
+   run_command("spack find -p -l --loaded %s" % (pkg["name"]))
+   for vartype in pkg.keys():
+      print(f"{vartype}: {pkg[vartype]}")
 
 def package_info(args):
-   print("Package info still to be implemented")
+   requested_pkg=args[0]
+
+   base_data = get_release_data("dunedaq")
+
+   if "FD" in os.environ["SPACK_RELEASE"] or "fd" in os.environ["SPACK_RELEASE"]:
+      is_fd = True 
+   elif "ND" in os.environ["SPACK_RELEASE"] or "nd" in os.environ["SPACK_RELEASE"]: 
+      is_fd = False               
+   else:
+      error("Unable to determine if this release is for the far detector or the near detector; exiting...")
+
+   if is_fd:
+      fd_or_nd_data = get_release_data("fddaq")
+   else:
+      fd_or_nd_data = get_release_data("nddaq")
+
+   for pkg in base_data["dunedaq"]:
+      if pkg["name"] == requested_pkg or requested_pkg == "all":
+         package_print(pkg)
+         if requested_pkg != "all":
+             return
+
+   if is_fd:
+      datakey = "fddaq"
+   else:
+      datakey = "nddaq"
+
+   for pkg in fd_or_nd_data[ datakey ]:
+      if pkg["name"] == requested_pkg or requested_pkg == "all":
+         package_print(pkg)
+         if requested_pkg != "all":
+            return
+ 
+def externals_help():
+    print(f"\n{this_script} external <name of package>  # Use \"all\" instead of a package name for all external packages") 
+
+def externals_info(args): 
+   requested_pkg=args[0]
+   externals_data = get_release_data("externals")  # Honestly, any externals package name would work here
+   
+   for pkg in externals_data["externals"]:
+      if pkg["name"] == requested_pkg or requested_pkg == "all":
+         package_print(pkg)
+         if requested_pkg != "all":
+            return
 
 def full_help():
     release_help()
     package_help()
+    externals_help()
 
 env_check()
 
@@ -95,6 +144,8 @@ infotype = sys.argv[1]
 
 if infotype == "package":
     package_info(sys.argv[2:])
+elif infotype == "external":
+    externals_info(sys.argv[2:])
 elif infotype == "release":
     release_info()
 else:  # This encompasses when a user passes "-h" or "--help", but also "--smurf" or "--albania"
