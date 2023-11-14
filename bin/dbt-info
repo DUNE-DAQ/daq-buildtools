@@ -2,6 +2,7 @@
 
 import glob
 import os
+import re
 import subprocess
 import sys
 import yaml
@@ -71,19 +72,54 @@ def release_info():
     print(f"Base release name: {base_release}")
     print(f"Release dir: {release_dir}")
     
-                           
+def release_size_help():
+   print(f"\n{this_script} release_size  # No additional arguments")
+
+def release_size_info():
+
+   process = subprocess.Popen('spack repo list', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+   stdout, stderr = process.communicate()
+  
+   if process and process.returncode == 0:
+      repopaths = []
+      for line in stdout.decode("utf-8").split("\n"):
+         res = re.search(r"(/cvmfs.*spack-[0-9\.]+-[^/]+).*", line)
+         if res:
+            repopath = res.group(1)
+
+            if repopath not in repopaths:
+               repopaths.append(repopath)
+
+      print()      
+      for repopath in repopaths:
+         run_command(f"du {repopath} -s")
+         print("# of loaded packages: ", end = "") 
+         run_command(f"spack find -p --loaded | grep {repopath} | wc -l")
+         print()
+   else:
+      error("Something went wrong trying to find the Spack repos used in this release")
 
 def package_help():
-    print(f"\n{this_script} package <name of package>  # Use \"all\" instead of a package name for all DUNE DAQ packages")
+   print(f"\n{this_script} package <name of package>  # Use \"all\" instead of a package name for all DUNE DAQ packages")
 
 def package_print(pkg):
    print()  
-   run_command("spack find -p -l --loaded %s" % (pkg["name"]))
    for vartype in pkg.keys():
       print(f"{vartype}: {pkg[vartype]}")
+   print()
+
+   source_path = "%s/sourcecode/%s" % (os.environ["DBT_AREA_ROOT"], pkg["name"])
+   if os.path.exists(source_path):
+      print(f"""Information about package for this release may not be accurate since it's being 
+developed in your work area ({source_path})""")
+   else:
+      run_command("spack find -p -l --loaded %s" % (pkg["name"]))
+   print()
 
 def package_info(args):
    requested_pkg=args[0]
+   was_found = False
 
    base_data = get_release_data("dunedaq")
 
@@ -101,6 +137,7 @@ def package_info(args):
 
    for pkg in base_data["dunedaq"]:
       if pkg["name"] == requested_pkg or requested_pkg == "all":
+         was_found = True
          package_print(pkg)
          if requested_pkg != "all":
              return
@@ -112,27 +149,57 @@ def package_info(args):
 
    for pkg in fd_or_nd_data[ datakey ]:
       if pkg["name"] == requested_pkg or requested_pkg == "all":
+         was_found = True
          package_print(pkg)
          if requested_pkg != "all":
             return
+   
+   if not was_found:
+      print(f"Unable to find \"{requested_pkg}\"")
+
  
 def externals_help():
     print(f"\n{this_script} external <name of package>  # Use \"all\" instead of a package name for all external packages") 
 
 def externals_info(args): 
    requested_pkg=args[0]
-   externals_data = get_release_data("externals")  # Honestly, any externals package name would work here
+   was_found = False
+   externals_data = get_release_data("externals")  
    
    for pkg in externals_data["externals"]:
       if pkg["name"] == requested_pkg or requested_pkg == "all":
+         was_found = True
          package_print(pkg)
          if requested_pkg != "all":
             return
+
+   if not was_found:
+      print(f"Unable to find \"{requested_pkg}\"")
+
+
+def sourcecode_help():
+    print(f"\n{this_script} sourcecode  # No additional arguments")
+
+def sourcecode_info():
+   codepath = "%s/%s" % (os.environ["DBT_AREA_ROOT"], "sourcecode")
+   if not os.path.exists( codepath ):
+      error(f"Are you sure you have a work area set up? Unable to find expected path {codepath}; exiting...")
+   
+   repos = [os.path.join(codepath, d) for d in os.listdir(codepath) if os.path.isdir(os.path.join(codepath, d))]
+
+   print()
+   for repo in repos:
+      os.chdir(repo)
+      print(f"%s: " % (repo.split("/")[-1]), end="")
+      run_command('echo -n \"$( git rev-parse --abbrev-ref HEAD )$( git diff --no-ext-diff --quiet --exit-code || echo \* ) \" ')
+   print()
 
 def full_help():
     release_help()
     package_help()
     externals_help()
+    sourcecode_help()
+    release_size_help()
 
 env_check()
 
@@ -148,6 +215,10 @@ elif infotype == "external":
     externals_info(sys.argv[2:])
 elif infotype == "release":
     release_info()
+elif infotype == "sourcecode":
+   sourcecode_info()
+elif infotype == "release_size":
+   release_size_info()
 else:  # This encompasses when a user passes "-h" or "--help", but also "--smurf" or "--albania"
     full_help()
 
