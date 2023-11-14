@@ -23,6 +23,16 @@ def env_check():
     if not "SPACK_ROOT" in os.environ:
         error("It doesn't appear Spack was set up; exiting...")
 
+def is_far_detector_release():
+   if "FD" in os.environ["SPACK_RELEASE"] or "fd" in os.environ["SPACK_RELEASE"]:
+      is_fd = True
+   elif "ND" in os.environ["SPACK_RELEASE"] or "nd" in os.environ["SPACK_RELEASE"]:
+      is_fd = False
+   else:
+      error("Unable to determine if this release is for the far detector or the near detector; exiting...")
+
+   return is_fd
+
 def get_target_dir(package):
    res = subprocess.Popen(f"realpath $(spack location -p {package})/../..", 
                           shell=True, stdout=subprocess.PIPE,
@@ -52,14 +62,12 @@ def release_info():
     base_release = releasedata["release"]
     target_dir = "Error"
 
-    if "FD" in os.environ["SPACK_RELEASE"] or "fd" in os.environ["SPACK_RELEASE"]:
+    if is_far_detector_release():
         releasedata = get_release_data("fddaq")
         target_dir = get_target_dir("fddaq")
-    elif "ND" in os.environ["SPACK_RELEASE"] or "nd" in os.environ["SPACK_RELEASE"]:
+    else:
         releasedata = get_release_data("nddaq")
         target_dir = get_target_dir("nddaq")
-    else:
-        assert False
 
     full_release = releasedata["release"]
     full_release_type = releasedata["type"]
@@ -103,7 +111,7 @@ def release_size_info():
 def package_help():
    print(f"\n{this_script} package <name of package>  # Use \"all\" instead of a package name for all DUNE DAQ packages")
 
-def package_print(pkg):
+def package_print(pkg, check_spack = True):
    print()  
    for vartype in pkg.keys():
       print(f"{vartype}: {pkg[vartype]}")
@@ -113,22 +121,17 @@ def package_print(pkg):
    if os.path.exists(source_path):
       print(f"""Information about package for this release may not be accurate since it's being 
 developed in your work area ({source_path})""")
-   else:
+   elif check_spack:
       run_command("spack find -p -l --loaded %s" % (pkg["name"]))
    print()
 
-def package_info(args):
-   requested_pkg=args[0]
+def package_info(requested_pkg, ok_to_miss = False):
+
    was_found = False
 
    base_data = get_release_data("dunedaq")
 
-   if "FD" in os.environ["SPACK_RELEASE"] or "fd" in os.environ["SPACK_RELEASE"]:
-      is_fd = True 
-   elif "ND" in os.environ["SPACK_RELEASE"] or "nd" in os.environ["SPACK_RELEASE"]: 
-      is_fd = False               
-   else:
-      error("Unable to determine if this release is for the far detector or the near detector; exiting...")
+   is_fd = is_far_detector_release()
 
    if is_fd:
       fd_or_nd_data = get_release_data("fddaq")
@@ -154,15 +157,15 @@ def package_info(args):
          if requested_pkg != "all":
             return
    
-   if not was_found:
+   if not was_found and not ok_to_miss:
       print(f"Unable to find \"{requested_pkg}\"")
 
  
 def externals_help():
     print(f"\n{this_script} external <name of package>  # Use \"all\" instead of a package name for all external packages") 
 
-def externals_info(args): 
-   requested_pkg=args[0]
+def externals_info(requested_pkg, ok_to_miss = False): 
+
    was_found = False
    externals_data = get_release_data("externals")  
    
@@ -173,12 +176,50 @@ def externals_info(args):
          if requested_pkg != "all":
             return
 
-   if not was_found:
+   if not was_found and not ok_to_miss:
       print(f"Unable to find \"{requested_pkg}\"")
 
+def pymodule_help():
+   print(f"\n{this_script} pymodule <name of python module>")
+
+def pymodule_info(requested_package):
+   package=requested_package
+
+   if package == "all":
+      error("The \"all\" option is not supported for Python modules")
+
+   possible_venv_dir = glob.glob( "%s/.venv/lib/python*/site-packages/%s" % (os.environ["DBT_AREA_ROOT"], package ))
+
+   if len(possible_venv_dir) == 0:
+
+      # Need to find the package in Spack
+      package_info(package, ok_to_miss = True)
+      externals_info(package, ok_to_miss = False)
+
+   elif len(possible_venv_dir) == 1:
+
+      # Local work area .venv installation takes priority over Spack
+      # installation, get version from YAML file from which the python
+      # packages are locally installed
+
+      is_fd = is_far_detector_release()
+
+      if is_fd:
+         data = get_release_data("fddaq")
+      else:
+         data = get_release_data("nddaq")
+
+      for pkg in data["pymodules"]:
+         if pkg["name"] == package:
+            was_found = True
+            package_print(pkg, check_spack = False)
+            return
+
+   else:
+      error("Flaw in the logic of this script; please contact John Freeman at jcfree@fnal.gov")
 
 def sourcecode_help():
-    print(f"\n{this_script} sourcecode  # No additional arguments")
+   print(f"\n{this_script} sourcecode  # No additional arguments")
 
 def sourcecode_info():
    codepath = "%s/%s" % (os.environ["DBT_AREA_ROOT"], "sourcecode")
@@ -198,6 +239,7 @@ def full_help():
     release_help()
     package_help()
     externals_help()
+    pymodule_help()
     sourcecode_help()
     release_size_help()
 
@@ -210,9 +252,11 @@ if len(sys.argv) == 1:
 infotype = sys.argv[1]
 
 if infotype == "package":
-    package_info(sys.argv[2:])
+    package_info(sys.argv[2])
 elif infotype == "external":
-    externals_info(sys.argv[2:])
+    externals_info(sys.argv[2])
+elif infotype == "pymodule":
+    pymodule_info(sys.argv[2])
 elif infotype == "release":
     release_info()
 elif infotype == "sourcecode":

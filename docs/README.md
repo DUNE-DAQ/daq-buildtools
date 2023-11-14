@@ -202,6 +202,8 @@ A useful script to call to get immediate information on your development environ
 
 * `dbt-info external <package name>`: `external` is same as the `package` option, except you use it when you want info not on a DUNE DAQ package but an external package (e.g., `boost`)
 
+* `dbt-info pymodule <python module>`: get the version of a Python module. Response will differ depending on whether you have a local Python environment in your work area. 
+
 * `dbt-info sourcecode`: will tell you the branch each of the repos in your work area is on, as well as whether the code on the branch has been edited (indicated by an `*`)
 
 * `dbt-info release_size`: tells you the # of packages and memory (in KB) used by each of the release, the base release, and the externals. 
