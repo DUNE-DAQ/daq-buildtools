@@ -16,7 +16,9 @@ Simply do:
 source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
 setup_dbt latest
 ```
-Here v7.4.0 is the latest daq-buildtools version as of Nov-14-2023.
+
+Here v7.4.0 is the latest daq-buildtools version as of Nov-3-2023.
+
 After running these two commands, then you'll see something like:
 ```
 Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v7.4.0/bin -> PATH
@@ -33,7 +35,7 @@ Each time that you log into a fresh Linux shell and want to either (1) set up an
 If you only want access to a DUNE DAQ software release (its executables, etc.) without actually developing DUNE DAQ software itself, you'll want to run a release from cvmfs. Please note that in general, frozen releases (especially patch frozen releases) are intended for this scenario, and _not_ for development. After setting up daq-buildtools, you can simply run the following command if you wish to use a frozen release:
 
 ```sh
-dbt-setup-release <release> # fddaq-v4.2.0 the latest frozen release as of Nov-14-2023
+dbt-setup-release <release> # fddaq-v4.2.0-a9 the latest frozen release as of Nov-3-2023
 ```
 As of July 2023, the DUNE DAQ software stack has been split into far detector and near detector-specific parts. Starting with the `v4.1.0` release of the stack, do _not_ use the traditional convention of `dunedaq-vX.Y.Z` as the frozen release label, but instead, `fddaq-vX.Y.Z` and `nddaq-vX.Y.Z`. Note that for `v4.1.0` and `v4.1.1` we only have a far detector-specific stack. 
 
@@ -90,7 +92,7 @@ Along with telling `dbt-create` what you want your work area to be named and wha
 
 * `-s/--spack`: Install a local Spack instance in the work area. This will allow you to install and load whatever Spack packages you wish into your work area. 
 
-* `-c/--clone-pyvenv`: By default, the Python virtual environment your work area uses is in the release area on cvmfs. However, if you choose this option, `dbt-create` will actually copy this virtual environment over to your work area, thereby giving you write permission.
+* `-c/--clone-pyvenv`: Use this if you wish to develop a Python package. By default, the Python virtual environment your work area uses is in the release area on cvmfs. However, if you choose this option, `dbt-create` will actually copy this virtual environment over to your work area, thereby giving you write permission.
   
 * `-i/--install-pyvenv`: With this option, there will be compilation/installation of python modules using the `pyvenv_requirements.txt` in the release directory. This is typically slower than cloning, but not always. You can take further control by combining it with the `-p <requirements file>` argument, though it's unlikely as a typical developer that you'd want a non-standard set of Python packages. 
 
