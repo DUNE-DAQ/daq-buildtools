@@ -1,0 +1,269 @@
+#!/usr/bin/env python3
+
+import glob
+import os
+import re
+import subprocess
+import sys
+import yaml
+
+if "DBT_ROOT" in os.environ:
+   DBT_ROOT=os.environ["DBT_ROOT"]
+else:
+    print("Environment variable DBT_ROOT isn't set, which suggests you haven't yet set up the daq-buildtools environment. Exiting...")
+    sys.exit(1)
+
+
+sys.path.append(f'{DBT_ROOT}/scripts')
+from dbt_setup_tools import error, run_command
+
+this_script = os.path.basename(__file__)
+
+def env_check():
+    if not "SPACK_ROOT" in os.environ:
+        error("It doesn't appear Spack was set up; exiting...")
+
+def is_far_detector_release():
+   if "FD" in os.environ["SPACK_RELEASE"] or "fd" in os.environ["SPACK_RELEASE"]:
+      is_fd = True
+   elif "ND" in os.environ["SPACK_RELEASE"] or "nd" in os.environ["SPACK_RELEASE"]:
+      is_fd = False
+   else:
+      error("Unable to determine if this release is for the far detector or the near detector; exiting...")
+
+   return is_fd
+
+def get_target_dir(package):
+   res = subprocess.Popen(f"realpath $(spack location -p {package})/../..", 
+                          shell=True, stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE)
+
+   errlines = res.stderr.readlines()
+   assert len(errlines) == 0, "".join( [l.rstrip().decode("utf-8") for l in errlines] )
+
+   return res.stdout.readlines()[0].rstrip().decode("utf-8")   
+
+def get_release_data(package):        
+   
+   target_dir = get_target_dir(package)
+    
+   yamlfiles = [filename for filename in glob.glob(f"{target_dir}/*.yaml") if os.path.basename(filename) != "repo.yaml"]
+    
+   assert len(yamlfiles) == 1, f"Unable to find expected yaml file in {target_dir}"
+   return yaml.safe_load(open(yamlfiles[0]))
+
+def release_help():
+    print(f"\n{this_script} release  # No additional arguments")
+
+def release_info():
+
+    releasedata = get_release_data("dunedaq")
+
+    base_release = releasedata["release"]
+    target_dir = "Error"
+
+    if is_far_detector_release():
+        releasedata = get_release_data("fddaq")
+        target_dir = get_target_dir("fddaq")
+    else:
+        releasedata = get_release_data("nddaq")
+        target_dir = get_target_dir("nddaq")
+
+    full_release = releasedata["release"]
+    full_release_type = releasedata["type"]
+    
+    pos = target_dir.find(full_release)
+    release_dir = target_dir[:pos + len(full_release)]
+
+    print(f"Release type: {full_release_type}")
+    print(f"Release name: {full_release}")
+    print(f"Base release name: {base_release}")
+    print(f"Release dir: {release_dir}")
+    
+def release_size_help():
+   print(f"\n{this_script} release_size  # No additional arguments")
+
+def release_size_info():
+
+   process = subprocess.Popen('spack repo list', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+   stdout, stderr = process.communicate()
+  
+   if process and process.returncode == 0:
+      repopaths = []
+      for line in stdout.decode("utf-8").split("\n"):
+         res = re.search(r"(/cvmfs.*spack-[0-9\.]+-[^/]+).*", line)
+         if res:
+            repopath = res.group(1)
+
+            if repopath not in repopaths:
+               repopaths.append(repopath)
+
+      print()      
+      for repopath in repopaths:
+         run_command(f"du {repopath} -s")
+         print("# of loaded packages: ", end = "") 
+         run_command(f"spack find -p --loaded | grep {repopath} | wc -l")
+         print()
+   else:
+      error("Something went wrong trying to find the Spack repos used in this release")
+
+def package_help():
+   print(f"\n{this_script} package <name of package>  # Use \"all\" instead of a package name for all DUNE DAQ packages")
+
+def package_print(pkg, check_spack = True):
+   print()  
+   for vartype in pkg.keys():
+      print(f"{vartype}: {pkg[vartype]}")
+   print()
+
+   source_path = "%s/sourcecode/%s" % (os.environ["DBT_AREA_ROOT"], pkg["name"])
+   if os.path.exists(source_path):
+      print(f"""Information about package for this release may not be accurate since it's being 
+developed in your work area ({source_path})""")
+   elif check_spack:
+      run_command("spack find -p -l --loaded %s" % (pkg["name"]))
+   print()
+
+def package_info(requested_pkg, ok_to_miss = False):
+
+   was_found = False
+
+   base_data = get_release_data("dunedaq")
+
+   is_fd = is_far_detector_release()
+
+   if is_fd:
+      fd_or_nd_data = get_release_data("fddaq")
+   else:
+      fd_or_nd_data = get_release_data("nddaq")
+
+   for pkg in base_data["dunedaq"]:
+      if pkg["name"] == requested_pkg or requested_pkg == "all":
+         was_found = True
+         package_print(pkg)
+         if requested_pkg != "all":
+             return
+
+   if is_fd:
+      datakey = "fddaq"
+   else:
+      datakey = "nddaq"
+
+   for pkg in fd_or_nd_data[ datakey ]:
+      if pkg["name"] == requested_pkg or requested_pkg == "all":
+         was_found = True
+         package_print(pkg)
+         if requested_pkg != "all":
+            return
+   
+   if not was_found and not ok_to_miss:
+      print(f"Unable to find \"{requested_pkg}\"")
+
+ 
+def externals_help():
+    print(f"\n{this_script} external <name of package>  # Use \"all\" instead of a package name for all external packages") 
+
+def externals_info(requested_pkg, ok_to_miss = False): 
+
+   was_found = False
+   externals_data = get_release_data("externals")  
+   
+   for pkg in externals_data["externals"]:
+      if pkg["name"] == requested_pkg or requested_pkg == "all":
+         was_found = True
+         package_print(pkg)
+         if requested_pkg != "all":
+            return
+
+   if not was_found and not ok_to_miss:
+      print(f"Unable to find \"{requested_pkg}\"")
+
+def pymodule_help():
+   print(f"\n{this_script} pymodule <name of python module>")
+
+def pymodule_info(requested_package):
+   package=requested_package
+
+   if package == "all":
+      error("The \"all\" option is not supported for Python modules")
+
+   possible_venv_dir = glob.glob( "%s/.venv/lib/python*/site-packages/%s" % (os.environ["DBT_AREA_ROOT"], package ))
+
+   if len(possible_venv_dir) == 0:
+
+      # Need to find the package in Spack
+      package_info(package, ok_to_miss = True)
+      externals_info(package, ok_to_miss = False)
+
+   elif len(possible_venv_dir) == 1:
+
+      # Local work area .venv installation takes priority over Spack
+      # installation, get version from YAML file from which the python
+      # packages are locally installed
+
+      is_fd = is_far_detector_release()
+
+      if is_fd:
+         data = get_release_data("fddaq")
+      else:
+         data = get_release_data("nddaq")
+
+      for pkg in data["pymodules"]:
+         if pkg["name"] == package:
+            was_found = True
+            package_print(pkg, check_spack = False)
+            return
+
+   else:
+      error("Flaw in the logic of this script; please contact John Freeman at jcfree@fnal.gov")
+
+def sourcecode_help():
+   print(f"\n{this_script} sourcecode  # No additional arguments")
+
+def sourcecode_info():
+   codepath = "%s/%s" % (os.environ["DBT_AREA_ROOT"], "sourcecode")
+   if not os.path.exists( codepath ):
+      error(f"Are you sure you have a work area set up? Unable to find expected path {codepath}; exiting...")
+   
+   repos = [os.path.join(codepath, d) for d in os.listdir(codepath) if os.path.isdir(os.path.join(codepath, d))]
+
+   print()
+   for repo in repos:
+      os.chdir(repo)
+      print(f"%s: " % (repo.split("/")[-1]), end="")
+      run_command('echo -n \"$( git rev-parse --abbrev-ref HEAD )$( git diff --no-ext-diff --quiet --exit-code || echo \* ) \" ')
+   print()
+
+def full_help():
+    release_help()
+    package_help()
+    externals_help()
+    pymodule_help()
+    sourcecode_help()
+    release_size_help()
+
+env_check()
+
+if len(sys.argv) == 1:
+    full_help()
+    sys.exit(1)
+
+infotype = sys.argv[1]
+
+if infotype == "package":
+    package_info(sys.argv[2])
+elif infotype == "external":
+    externals_info(sys.argv[2])
+elif infotype == "pymodule":
+    pymodule_info(sys.argv[2])
+elif infotype == "release":
+    release_info()
+elif infotype == "sourcecode":
+   sourcecode_info()
+elif infotype == "release_size":
+   release_size_info()
+else:  # This encompasses when a user passes "-h" or "--help", but also "--smurf" or "--albania"
+    full_help()
+
+

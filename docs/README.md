@@ -1,6 +1,6 @@
 # DUNE DAQ Buildtools
 
-_This document was last edited Nov-3-2023_
+_This document was last edited Nov-14-2023_
 
 `daq-buildtools` is the toolset to simplify the development of DUNE DAQ packages. It provides environment and building utilities for the DAQ Suite.
 
@@ -16,7 +16,9 @@ Simply do:
 source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
 setup_dbt latest
 ```
+
 Here v7.4.0 is the latest daq-buildtools version as of Nov-3-2023.
+
 After running these two commands, then you'll see something like:
 ```
 Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v7.4.0/bin -> PATH
@@ -192,11 +194,21 @@ A couple of things need to be kept in mind when you're building code in a work a
 
 As such, it's important to know the assumptions a work area makes when you use it to build code. This section covers ways to learn details about your work area and its contents.
 
-### Convenience scripts
+### `dbt-info`
 
-* `dbt-release-info`: will provide the release type the work area is based on (far detector vs. near detector), as well as the name of the full release and the base release 
-* `dbt-pkg-info <pkgname>`: will provide the version/branch of the package referred to by `<pkgname>`, as well as the corresponding git commit hash of its code, whether the package is built in the local work area or is on cvmfs
-* `dbt-src-status`: will tell you the branch each of the repos in your work area is on, as well as whether the code on the branch has been edited (indicated by an `*`) 
+A useful script to call to get immediate information on your development environment is `dbt-info`. For a full set of options you can simply run `dbt-info --help`, but for a quick summary, we have the following:
+
+* `dbt-info release`: tells you if it's a far detector or near detector release, what its name is (e.g. `FD23-11-06`), what the name of the base release is, and where the release is located in cvmfs.
+
+* `dbt-info package <package name>`: tells you info about the DUNE DAQ package whose name you provide it (git commit hash of its code, etc.). Passing "all" as the package name gives you info for all the DUNE DAQ packages. 
+
+* `dbt-info external <package name>`: `external` is same as the `package` option, except you use it when you want info not on a DUNE DAQ package but an external package (e.g., `boost`)
+
+* `dbt-info pymodule <python module>`: get the version of a Python module. Response will differ depending on whether you have a local Python environment in your work area. 
+
+* `dbt-info sourcecode`: will tell you the branch each of the repos in your work area is on, as well as whether the code on the branch has been edited (indicated by an `*`)
+
+* `dbt-info release_size`: tells you the # of packages and memory (in KB) used by each of the release, the base release, and the externals. 
 
 ### `dbt-workarea-constants.sh`
 
