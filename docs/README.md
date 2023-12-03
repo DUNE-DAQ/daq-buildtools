@@ -58,9 +58,9 @@ Each work area is based on a DUNE DAQ software release, which defines what exter
 
 The majority of work areas are set up to build against the most recent nightly release. To do so, run:
 ```sh
-dbt-create -n <nightly release> <name of work area subdirectory> # E.g., NFD23-07-15
+dbt-create -n last_fddaq <name of work area subdirectory> 
 ```
-To see all available nightly releases, run `dbt-create -l -n` or `dbt-create -l -b nightly`.
+if you're working on an Alma9 host. If you're working on an SL7 or Centos Stream 8 host, replace `last_fddaq` with `last_fddaq-c8`. This assumes you want to do far detector development; for near detector development just replace the `fddaq` with `nddaq` in your command. To see all available nightly releases, run `dbt-create -l -n` or `dbt-create -l -b nightly`. 
 
 If you want to build against a candidate release, run:
 ```sh
