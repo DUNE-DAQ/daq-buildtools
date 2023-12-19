@@ -14,9 +14,9 @@ To get set up, you'll need access to the cvmfs areas `/cvmfs/dunedaq.openscience
 Simply do:
 ```
 source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt latest
+setup_dbt nddaq-v4.3.0
 ```
-Here v7.5.0 is the latest daq-buildtools version as of Nov-30-2023.
+Where `nddaq-v4.3.0` links to daq-buildtools version `v7.5.0`, the latest as of Dec-19-2023.
 
 After running these two commands, then you'll see something like:
 ```
