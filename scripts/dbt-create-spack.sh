@@ -44,7 +44,7 @@ if [ -d "${LOCAL_SPACK_DIR}" ]; then
     error "Directory ${LOCAL_SPACK_DIR} already exists. Exiting..."
 else
     echo -e "INFO [`eval $timenow`]: creating a local spack instance under ${LOCAL_SPACK_DIR}. "
-    existing_spack_dir=`realpath $SPACK_RELEASES_DIR/$SPACK_RELEASE/default/spack-installation`
+    existing_spack_dir=`realpath $SPACK_RELEASES_DIR/$SPACK_RELEASE/spack-installation`
     stack_new_spack $existing_spack_dir $LOCAL_SPACK_DIR
 fi
 
