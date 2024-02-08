@@ -92,7 +92,7 @@ def release_size_info():
    if process and process.returncode == 0:
       repopaths = []
       for line in stdout.decode("utf-8").split("\n"):
-         res = re.search(r"(/cvmfs.*spack-[0-9\.]+-[^/]+).*", line)
+         res = re.search(r"(/cvmfs.*spack-[0-9\.]+).*", line)
          if res:
             repopath = res.group(1)
 
@@ -101,8 +101,11 @@ def release_size_info():
 
       print()      
       for repopath in repopaths:
-         run_command(f"du {repopath} -s")
-         print("# of loaded packages: ", end = "") 
+         label=repopath.split("/")[-2]
+         print(f"{label}:")
+         print(f"path: {repopath}")
+         run_command(f"du {repopath} -sk | sed -r -n 's/^([0-9]+).*/size: \\1 kB/p'")
+         print("number of packages: ", end = "") 
          run_command(f"spack find -p --loaded | grep {repopath} | wc -l")
          print()
    else:
