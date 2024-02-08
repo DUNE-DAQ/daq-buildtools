@@ -53,6 +53,7 @@ Usage
         --lint means you check for deviations in ./sourcecode/<optional package name> from the DUNE style guide, https://dune-daq-sw.readthedocs.io/en/latest/packages/styleguide/, or deviations in all local repos if no package name is provided. You can also pass the name of an individual file. 
         -v/--cpp-verbose means that you want verbose output from the compiler
         --cmake-msg-lvl setting "CMAKE_MESSAGE_LOG_LEVEL", default is "NOTICE", choices are ERROR|WARNING|NOTICE|STATUS|VERBOSE|DEBUG|TRACE.
+        --optimize-flag takes a gcc optimization flag as argument and passes it through to the build
         --cmake-trace enable cmake tracing
         --cmake-graphviz generates a target dependency graph
 
@@ -84,11 +85,24 @@ parser.add_argument("-j", "--jobs", action='store', type=int, dest='n_jobs', hel
 parser.add_argument("--unittest", nargs="?", const="all", help=argparse.SUPPRESS)
 parser.add_argument("--lint", nargs="?", const="all", help=argparse.SUPPRESS)
 parser.add_argument("--cmake-msg-lvl", dest="cmake_msg_lvl", help=argparse.SUPPRESS)
+parser.add_argument("--optimize-flag", dest="optimize_flag", help=argparse.SUPPRESS)
 parser.add_argument("--cmake-trace", action="store_true", dest="cmake_trace", help=argparse.SUPPRESS)
 parser.add_argument("--cmake-graphviz", action="store_true", dest="cmake_graphviz", help=argparse.SUPPRESS)
 parser.add_argument("-y", "--yes-to-all", action="store_true", dest="yes_to_all", help=argparse.SUPPRESS)
 
 args = parser.parse_args()
+
+if args.debug_build and args.optimize_flag:
+    error("""
+You've passed both a -d/--debug argument and an --optimize-flag argument to this
+script; this is not allowed as they both try to set the optimization level of
+a gcc build
+""")
+
+if args.optimize_flag:
+    allowed_flags = [ "O", "O0", "O1", "O2", "O3", "Os", "Ofast", "Og", "Oz" ]
+    if args.optimize_flag not in allowed_flags:
+        error("Allowed flags to pass to --optimize-flag are {}".format(" ".join(allowed_flags)))
 
 run_tests = False
 if args.unittest:
@@ -218,7 +232,7 @@ if not os.path.exists("CMakeCache.txt"):
     if args.cmake_msg_lvl:
         cmake_msg_lvl = args.cmake_msg_lvl
 
-    fullcmd="{} -DCMAKE_POLICY_DEFAULT_CMP0116=OLD -DCMAKE_MESSAGE_LOG_LEVEL={} -DMOO_CMD={} -DDBT_ROOT={} -DDBT_DEBUG={} -DCMAKE_INSTALL_PREFIX={} -G Ninja {}".format(cmake, cmake_msg_lvl, moo_path, os.environ["DBT_ROOT"], debug_build, INSTALLDIR, SRCDIR)
+    fullcmd="{} -DCMAKE_POLICY_DEFAULT_CMP0116=OLD -DCMAKE_MESSAGE_LOG_LEVEL={} -DMOO_CMD={} -DDBT_ROOT={} -DDBT_DEBUG={} -DDBT_OPTIMIZE_FLAG={} -DCMAKE_INSTALL_PREFIX={} -G Ninja {}".format(cmake, cmake_msg_lvl, moo_path, os.environ["DBT_ROOT"], debug_build, args.optimize_flag, INSTALLDIR, SRCDIR)
 
     rich.print(f"Executing '{fullcmd}'")
     retval=pytee.run(fullcmd.split(" ")[0], fullcmd.split(" ")[1:], build_log)

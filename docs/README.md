@@ -162,6 +162,11 @@ If you want to change cmake message log level, you can use the `--cmake-msg-lvl`
 dbt-build --cmake-msg-lvl=<ERROR|WARNING|NOTICE|STATUS|VERBOSE|DEBUG|TRACE>
 ```
 
+By default the build is performed using gcc's `O2` compilation flag. If you wish to use a different flag, you can use the `--optimize-flag` argument, e.g.:
+```
+dbt-build --optimize-flag O3  # Or Og, etc.
+```
+
 You can see all the options listed if you run the script with the `--help` command, i.e.
 ```
 dbt-build --help
