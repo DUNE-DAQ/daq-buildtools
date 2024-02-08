@@ -2,17 +2,6 @@
 import os
 import sys
 
-if not sys.version_info > (3, 6, 0):
-    print("""
-Python > 3.6.0 is required. On systems with cvmfs, you can obtain Python 3.8.3 by executing the following:
-
-    source `realpath /cvmfs/dunedaq.opensciencegrid.org/spack-externals/spack-installation/share/spack/setup-env.sh`
-    spack load python@3.8.3%gcc@8.2.0
-
-Exiting...
-""")
-    sys.exit(1)
-
 if "DBT_ROOT" in os.environ:
    DBT_ROOT=os.environ["DBT_ROOT"]
 else:

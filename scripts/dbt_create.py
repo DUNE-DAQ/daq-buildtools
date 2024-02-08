@@ -47,8 +47,9 @@ Arguments and options:
                          file in the release's directory on cvmfs
     -p/--pyvenv-requirements: path to the python venv requirements file, used
                          together with the '-i' option
-    -c/--clone-pyvenv: cloning the python virutal environment from the default
-                         venv in the release's directory on cvmfs
+    -q/--quick: if not doing Python development, skip cloning the python
+                         virtual environment from the default venv in the
+                         release's directory on cvmfs
     -s/--spack: install a local spack instance in the workarea
 
 See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools for more
@@ -63,7 +64,7 @@ parser.add_argument("-r", "--release-path", action='store', dest='release_path',
 parser.add_argument("-l", "--list", action="store_true", dest='_list', help=argparse.SUPPRESS)
 parser.add_argument("-i", "--install-pyvenv", action="store_true", dest='install_pyvenv', help=argparse.SUPPRESS)
 parser.add_argument("-p", "--pyvenv-requirements", action='store', dest='pyvenv_requirements', help=argparse.SUPPRESS)
-parser.add_argument("-c", "--clone-pyvenv", action="store_true", dest='clone_pyvenv', help=argparse.SUPPRESS)
+parser.add_argument("-q", "--quick", action="store_true", dest='quick', help=argparse.SUPPRESS)
 parser.add_argument("-s", "--spack", action="store_true", dest='install_spack', help=argparse.SUPPRESS)
 parser.add_argument("release_tag", nargs='?', help=argparse.SUPPRESS)
 parser.add_argument("workarea_dir", nargs='?', help=argparse.SUPPRESS)
@@ -74,6 +75,12 @@ if args.pyvenv_requirements and not args.install_pyvenv:
     error("""
 You supplied the name of a Python requirements file but therefore also need
 to add --install-pyvenv as an argument
+""")
+
+if args.quick and args.install_pyvenv:
+    error("""
+Use of the -q/--quick option means you don't want a local Python environment and
+precludes use of the -i/--install-pyvenv option
 """)
 
 if args.release_path:
@@ -190,12 +197,12 @@ Requested Python requirements file \"{args.pyvenv_requirements}\" not found.
 Please note you need to provide its absolute path. Exiting...
 """)
         cmd = f"{DBT_ROOT}/scripts/dbt-create-pyvenv.sh {args.pyvenv_requirements} 2>&1"
-elif args.clone_pyvenv:
+elif not args.quick:
     print("Setting up the Python subsystem.")
     cmd = f"{DBT_ROOT}/scripts/dbt-clone-pyvenv.sh {RELEASE_PATH}/{DBT_VENV} 2>&1"
 else:
     cmd = "echo "
-    print("Skipping the creation of python vitual environment in the workarea.")
+    print("Skipping the creation of python virtual environment in the workarea.")
     print(f"Default python venv under {RELEASE_PATH}/.venv will be used.")
 
 run_command(cmd)
