@@ -1,6 +1,6 @@
 # DUNE DAQ Buildtools
 
-_This document was last edited Dec-19-2023_
+_This document was last edited Feb-8-2024_
 
 `daq-buildtools` is the toolset to simplify the development of DUNE DAQ packages. It provides environment and building utilities for the DAQ Suite.
 
@@ -14,14 +14,14 @@ To get set up, you'll need access to the cvmfs areas `/cvmfs/dunedaq.openscience
 Simply do:
 ```
 source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt nddaq-v4.3.0
+setup_dbt latest
 ```
-Where `nddaq-v4.3.0` links to daq-buildtools version `v7.5.0`, the latest as of Dec-19-2023.
+Here v7.6.0 is the latest daq-buildtools version as of Feb-8-2024.
 
 After running these two commands, then you'll see something like:
 ```
-Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v7.5.0/bin -> PATH
-Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v7.5.0/scripts -> PATH
+Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v7.6.0/bin -> PATH
+Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v7.6.0/scripts -> PATH
 DBT setuptools loaded
 ```
 
@@ -92,7 +92,7 @@ Along with telling `dbt-create` what you want your work area to be named and wha
 
 * `-s/--spack`: Install a local Spack instance in the work area. This will allow you to install and load whatever Spack packages you wish into your work area. 
 
-* `-c/--clone-pyvenv`: Use this if you wish to develop a Python package. By default, the Python virtual environment your work area uses is in the release area on cvmfs. However, if you choose this option, `dbt-create` will actually copy this virtual environment over to your work area, thereby giving you write permission.
+* `-q/--quick`: Use this if you don't plan to develop a Python package. This is much quicker than the default behavior of dbt-create, which will actually copy the Python virtual environment over to your work area, thereby giving you write permission to the project's Python packages. With `-q/--quick`, the Python virtual environment your work area uses is in the (read-only) release area on cvmfs.
   
 * `-i/--install-pyvenv`: With this option, there will be compilation/installation of python modules using the `pyvenv_requirements.txt` in the release directory. This is typically slower than cloning, but not always. You can take further control by combining it with the `-p <requirements file>` argument, though it's unlikely as a typical developer that you'd want a non-standard set of Python packages. 
 
@@ -160,6 +160,11 @@ dbt-build --cpp-verbose
 If you want to change cmake message log level, you can use the `--cmake-msg-lvl` option:
 ```
 dbt-build --cmake-msg-lvl=<ERROR|WARNING|NOTICE|STATUS|VERBOSE|DEBUG|TRACE>
+```
+
+By default the build is performed using gcc's `O2` compilation flag. If you wish to use a different
+```
+dbt-build --optimize-flag O3  # Or Og, etc.
 ```
 
 You can see all the options listed if you run the script with the `--help` command, i.e.
