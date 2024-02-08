@@ -189,7 +189,11 @@ function spack_setup_env() {
 
     local spack_setup_script=""
     if [[ -z $LOCAL_SPACK_DIR ]]; then
-	spack_setup_script=`realpath $SPACK_RELEASES_DIR/$SPACK_RELEASE/default/spack-installation/share/spack/setup-env.sh`
+	spack_setup_script=$( realpath $SPACK_RELEASES_DIR/$SPACK_RELEASE/spack-installation/share/spack/setup-env.sh 2>/dev/null )
+	if [[ -z $spack_setup_script ]]; then   # Backwards compatibility with the old directory structure
+	    spack_setup_script=$( realpath $SPACK_RELEASES_DIR/$SPACK_RELEASE/default/spack-installation/share/spack/setup-env.sh )
+	fi
+
     else
 	echo -e "${COL_GREEN}Local spack directory is set, loading...${COL_RESET}\n"
 	spack_setup_script=`realpath $LOCAL_SPACK_DIR/share/spack/setup-env.sh`
