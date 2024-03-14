@@ -124,7 +124,7 @@ macro(daq_add_subpackages build_order)
 
   # Warn the user that the build order of some package is not known
   foreach(pkg ${found_pkgs})
-    message(WARNING "Package \"${pkg}\" not provided to the daq_add_subpackages function in ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt. ${pkg} will only be built after the provided packages are built. There's no guarantee this is the correct order; if you know where ${pkg} should be in the dependency hierarchy add it to its appropriate place in the list of packages provided to daq_add_subpackages.")
+    message(WARNING "Package \"${pkg}\" not provided to the daq_add_subpackages function in ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt. ${pkg} will only be built after the provided packages are built. There's no guarantee this is the correct order; if you know where ${pkg} should be in the dependency hierarchy add it to its appropriate place in ${CMAKE_CURRENT_SOURCE_DIR}/dbt-build-order.cmake")
   endforeach()
   
   set(pkgs ${known_pkgs} ${found_pkgs})
