@@ -208,9 +208,8 @@ export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH
 echo -e "${COL_GREEN}...done${COL_RESET}"
 echo
 
-target_cmake="cmake@3.26.3"
-echo "Loading $target_cmake"
-spack load $target_cmake || echo -e "\nWARNING: this script was unable to load \"$target_cmake\"; you may be using an older CMake as a result (run \"which cmake\" to check)\n"
+echo "Loading devtools for latest CMake, gcc, etc."
+spack load devtools || echo -e "\nWARNING: this script was unable to load \"devtools\"; you may be using an older CMake as a result (run \"which cmake\" to check)\n"
 
 export DBT_WORKAREA_ENV_SCRIPT_SOURCED=1
 
