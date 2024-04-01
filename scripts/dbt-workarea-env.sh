@@ -125,6 +125,12 @@ if [[ -z "${DBT_PACKAGE_SETUP_DONE}" ]]; then
       return $retval
     fi
 
+    spack load devtools
+
+    echo
+    echo "Now loading devtools for latest CMake, gcc, etc."
+    spack load devtools || echo -e "\nWARNING: this script was unable to load \"devtools\"; you may be using an older CMake as a result (run \"which cmake\" to check)\n"
+
     # Note: temporary solution - DPF May-19-2022
     # if trace is loaded, source "trace_functions.sh"
     #if spack find --loaded trace; then
@@ -207,9 +213,6 @@ done
 export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH
 echo -e "${COL_GREEN}...done${COL_RESET}"
 echo
-
-echo "Loading devtools for latest CMake, gcc, etc."
-spack load devtools || echo -e "\nWARNING: this script was unable to load \"devtools\"; you may be using an older CMake as a result (run \"which cmake\" to check)\n"
 
 export DBT_WORKAREA_ENV_SCRIPT_SOURCED=1
 
