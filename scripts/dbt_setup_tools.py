@@ -2,6 +2,7 @@
 import glob
 from inspect import currentframe, getframeinfo
 import os
+import re
 import subprocess
 import sys
 import datetime
@@ -32,12 +33,22 @@ def find_work_area():
 def list_releases(release_basepath):
 
     versions = []
+    base_release_regex_signifiers = ["^dunedaq-", "^NB", "^rc-"]
 
     origdir=os.getcwd()
     os.chdir(f"{release_basepath}")
     for dirname in glob.glob(f"*"):
         if os.path.isfile(dirname):
             continue
+
+        is_base_release = False
+        for regex in base_release_regex_signifiers:
+            if re.search(regex, dirname):
+                is_base_release = True
+
+        if is_base_release:
+            continue
+            
         versions.append(dirname)
 
     for version in sorted(versions):
