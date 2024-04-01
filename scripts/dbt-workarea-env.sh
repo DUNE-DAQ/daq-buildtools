@@ -125,8 +125,6 @@ if [[ -z "${DBT_PACKAGE_SETUP_DONE}" ]]; then
       return $retval
     fi
 
-    spack load devtools
-
     echo
     echo "Now loading devtools for latest CMake, gcc, etc."
     spack load devtools || echo -e "\nWARNING: this script was unable to load \"devtools\"; you may be using an older CMake as a result (run \"which cmake\" to check)\n"
