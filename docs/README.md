@@ -16,12 +16,12 @@ Simply do:
 source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
 setup_dbt latest
 ```
-Here v7.7.0 is the latest daq-buildtools version as of Mar-15-2024.
+Here v7.8.1 is the latest daq-buildtools version as of Apr-4-2024.
 
 After running these two commands, then you'll see something like:
 ```
-Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v7.7.0/bin -> PATH
-Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v7.7.0/scripts -> PATH
+Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v7.8.1/bin -> PATH
+Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v7.8.1/scripts -> PATH
 DBT setuptools loaded
 ```
 
