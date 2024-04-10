@@ -174,6 +174,10 @@ export DBT_ROOT_WHEN_CREATED="{os.environ["DBT_ROOT"]}"
 """
 
 if args.install_spack:
+    user_spack_dir = f'{os.environ["HOME"]}/.spack'
+    if os.path.exists(user_spack_dir):
+        print(f'WARNING A spack directory already exists at {user_spack_dir}.')
+        print(f'        This may cause environment conflicts with {TARGETDIR}/.spack')
     os.environ["LOCAL_SPACK_DIR"] = f"{TARGETDIR}/.spack"
     workarea_constants_file_contents += f"""export LOCAL_SPACK_DIR="{os.environ["LOCAL_SPACK_DIR"]}"
 """
