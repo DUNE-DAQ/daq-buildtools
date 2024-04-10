@@ -11,6 +11,7 @@ fi
 #------------------------------------------------------------------------------
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
+export SPACK_DISABLE_LOCAL_CONFIG=true
 export DBT_ROOT=${HERE}
 
 # Import add_many_paths function
