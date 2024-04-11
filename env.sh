@@ -13,7 +13,6 @@ HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
 # Avoid conflicts with local spack environment
 export SPACK_DISABLE_LOCAL_CONFIG=true
-export SPACK_USER_CACHE_PATH=/tmp/$USER/spack
 
 export DBT_ROOT=${HERE}
 
