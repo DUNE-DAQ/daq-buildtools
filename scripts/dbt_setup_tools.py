@@ -33,7 +33,7 @@ def find_work_area():
 def list_releases(release_basepath):
 
     versions = []
-    base_release_regex_signifiers = ["^dunedaq-", "^NB", "^rc-"]
+    base_release_regex_signifiers = ["^dunedaq-", "^NB", "^rc-", "^coredaq-"]
 
     origdir=os.getcwd()
     os.chdir(f"{release_basepath}")

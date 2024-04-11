@@ -144,14 +144,14 @@ if [[ "$retval" != "0" ]]; then
     return $retval
 fi
 
-target_package=dunedaq
+target_package="unknown"
 [[ "$SPACK_RELEASE" =~ (ND|nd) ]] && target_package=nddaq
 [[ "$SPACK_RELEASE" =~ (FD|fd) ]] && target_package=fddaq
 
 spack_load_target_package $target_package
 retval=$?
 if [[ "$retval" != "0" ]]; then
-    error "Failed to load spack target package. Returning..." 
+    error "Failed to load spack target package \"$target_package\". Returning..."
     return $retval
 fi
 
@@ -164,7 +164,7 @@ A python environment outside this work area has already been activated:
 ${the_activated_env}
 If you understand why this is the case and wish to deactivate it, you can
 do so by running "deactivate", then try this script again. 
-Calling spack unload dunedaq and returning...
+Calling spack unload $target_package and returning...
 EOF
 )"
 	spack unload $target_package
@@ -183,7 +183,7 @@ The source of
 ${RELEASE_PATH}/${DBT_VENV}/bin/activate
 failed. This may be because the requested ${RELEASE_TAG} release is incompatible
 with this version of daq-buildtools. Your environment will not be correctly set up.
-Calling spack unload dunedaq and returning...
+Calling spack unload $target_package and returning...
 EOF
 )"
     spack unload $target_package
