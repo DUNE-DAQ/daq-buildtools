@@ -110,7 +110,7 @@ if [[ -z "${DBT_PACKAGE_SETUP_DONE}" ]]; then
     echo -e "${COL_GREEN}This script hasn't yet been sourced (successfully) in this shell; setting up the build environment${COL_RESET}\n"
     
     if [[ "$DBT_PKG_SET" =~ "daqpackages" ]]; then
-        target_package=dunedaq
+        target_package=unknown
 	[[ "$SPACK_RELEASE" =~ (ND|nd) ]] && target_package=nddaq
 	[[ "$SPACK_RELEASE" =~ (FD|fd) ]] && target_package=fddaq
     else
@@ -121,7 +121,7 @@ if [[ -z "${DBT_PACKAGE_SETUP_DONE}" ]]; then
 
     retval=$?
     if [[ "$retval" != "0" ]]; then
-      error "Failed to load spack target package. Returning..."
+      error "Failed to load spack target package \"$target_package\". Returning..."
       return $retval
     fi
 

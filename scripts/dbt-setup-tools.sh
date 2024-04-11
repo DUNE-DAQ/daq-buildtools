@@ -221,11 +221,19 @@ function spack_load_target_package() {
     local spack_pkgname=$1
     local spack_pkg
 
-    if [[ $spack_pkgname =~ (nd|fd|dune)daq ]]; then
+    if [[ $spack_pkgname =~ (nd|fd|core|dune)daq ]]; then
         spack_pkg=$spack_pkgname@${SPACK_RELEASE}
     else
-	local base_release=`spack find --format "{version}" dunedaq`
-	if [ -z "$base_release" ]; then
+	local base_release=$( spack find --format "{version}" coredaq )
+
+	# JCF, Apr-11-2024: Check and see if the old name for the core
+	# packages is used in this release
+
+	if [[ "$base_release" =~ "No package matches the query" ]]; then
+	    base_release=$( spack find --format "{version}" dunedaq )
+	fi
+
+	if [[ "$base_release" =~ "No package matches the query" ]]; then
 	    spack_pkg=$spack_pkgname
         else
 	    spack_pkg=$spack_pkgname@${base_release}
@@ -279,7 +287,7 @@ function list_releases() {
     local release_path=$1
     pushd $release_path >& /dev/null
     echo
-    ls | sort | grep -Ev "^dunedaq-|^NB|^rc-" | xargs -i printf " - %s\n" {}
+    ls | sort | grep -Ev "^dunedaq-|^NB|^rc-|^coredaq-" | xargs -i printf " - %s\n" {}
     echo
     popd >& /dev/null
 }
