@@ -35,6 +35,9 @@ fi
 if [[ -z $SPACK_RELEASES_DIR ]]; then
     error "Environment variable SPACK_RELEASES_DIR needs to be set for this script to work. Exiting..."
 fi
+if [[ -z $SPACK_USER_CACHE_PATH ]]; then
+    export SPACK_USER_CACHE_PATH=${DBT_AREA_ROOT}
+fi
 
 
 ###

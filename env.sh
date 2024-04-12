@@ -11,12 +11,6 @@ fi
 #------------------------------------------------------------------------------
 HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
-# Avoid conflicts with local spack environment
-export SPACK_DISABLE_LOCAL_CONFIG=true
-if [[ -z $DBT_AREA_ROOT ]]; then
-    export SPACK_USER_CACHE_PATH="/tmp/${USER}/spack"
-fi
-
 export DBT_ROOT=${HERE}
 
 # Import add_many_paths function
