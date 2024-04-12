@@ -14,7 +14,6 @@ HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 # Avoid conflicts with local spack environment
 export SPACK_DISABLE_LOCAL_CONFIG=true
 if [[ -z $DBT_AREA_ROOT ]]; then
-    echo "DBT_AREA_ROOT DNE; defaulting to /tmp"
     export SPACK_USER_CACHE_PATH="/tmp/${USER}/spack"
 fi
 
