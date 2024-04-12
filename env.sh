@@ -13,7 +13,10 @@ HERE=$(cd $(dirname $(readlink -f ${BASH_SOURCE})) && pwd)
 
 # Avoid conflicts with local spack environment
 export SPACK_DISABLE_LOCAL_CONFIG=true
-export SPACK_USER_CACHE_PATH=/tmp/$USER/spack
+if [[ -z $DBT_AREA_ROOT ]]; then
+    echo "DBT_AREA_ROOT DNE; defaulting to /tmp"
+    export SPACK_USER_CACHE_PATH="/tmp/${USER}/spack"
+fi
 
 export DBT_ROOT=${HERE}
 
@@ -27,3 +30,4 @@ dbt-workarea-env() { source ${DBT_ROOT}/scripts/dbt-workarea-env.sh $@; }
 dbt-setup-release() { source ${DBT_ROOT}/scripts/dbt-setup-release.sh $@; }
 
 echo -e "${COL_GREEN}DBT setuptools loaded${COL_RESET}"
+

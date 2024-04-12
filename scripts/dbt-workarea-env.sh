@@ -77,6 +77,7 @@ else
     return 3
 fi
 
+export SPACK_USER_CACHE_PATH=${DBT_AREA_ROOT}
 
 SOURCE_DIR="${DBT_AREA_ROOT}/sourcecode"
 BUILD_DIR="${DBT_AREA_ROOT}/build"
