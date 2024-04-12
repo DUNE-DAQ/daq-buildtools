@@ -57,7 +57,10 @@ def release_help():
 
 def release_info():
 
-    releasedata = get_release_data("dunedaq")
+    try:
+      releasedata = get_release_data("coredaq")
+    except:
+      releasedata = get_release_data("dunedaq")
 
     base_release = releasedata["release"]
     target_dir = "Error"
@@ -132,7 +135,10 @@ def package_info(requested_pkg, ok_to_miss = False):
 
    was_found = False
 
-   base_data = get_release_data("dunedaq")
+   try:
+     base_data = get_release_data("coredaq")
+   except:
+     base_data = get_release_data("dunedaq")
 
    is_fd = is_far_detector_release()
 
@@ -141,7 +147,12 @@ def package_info(requested_pkg, ok_to_miss = False):
    else:
       fd_or_nd_data = get_release_data("nddaq")
 
-   for pkg in base_data["dunedaq"]:
+   try:
+     base_packages = base_data["coredaq"]
+   except:
+     base_packages = base_data["dunedaq"]
+
+   for pkg in base_packages:
       if pkg["name"] == requested_pkg or requested_pkg == "all":
          was_found = True
          package_print(pkg)

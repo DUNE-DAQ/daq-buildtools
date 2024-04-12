@@ -24,7 +24,7 @@ Usage
 
 To create a new DUNE DAQ development area:
 
-    {os.path.basename(__file__)} [-n/--nightly] [-b/--base-release <base release type>]  [-r/--release-path <path to release area>] [-i/--install-pyvenv] <dunedaq-release> <target directory>
+    {os.path.basename(__file__)} [-n/--nightly] [-b/--base-release <base release type>]  [-r/--release-path <path to release area>] [-i/--install-pyvenv] <DAQ release> <target directory>
 
 To list the available DUNE DAQ releases:
 
@@ -32,7 +32,7 @@ To list the available DUNE DAQ releases:
 
 Arguments and options:
 
-    dunedaq release: the release the new work area will be based on (e.g. dunedaq-v2.8.0, N22-09-29, etc.)
+    DAQ release: the release the new work area will be based on (e.g. fddaq-v4.3.0-a9, NFDT_DEV_240410_A9, etc.)
     target directory: the name of the work area dbt-create will set up for you
     -b/--base-release: base release type, can be one of [frozen, nightly, candidate]. Default is frozen.
     -n/--nightly: switch from frozen to nightly releases, shortcut for \"-b nightly\"
