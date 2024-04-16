@@ -319,3 +319,55 @@ function load_yaml() {
     python3 -c "import yaml;print(yaml.safe_load(open('$1'))$2)"
 }
 #------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+
+# JCF, Apr-16-2024
+# Based on the requirements in Issue #273, this function will take the
+# name of an environment variable (DUNEDAQ_DB_PATH, e.g.) and proceed
+# to prioritize directories as follows:
+
+# 1) User directories that aren't a source code or local installation directory
+# 2) Source code directories in the work area
+# 3) Installation directories in the work area
+# 4) Any other directories (/cvmfs, etc.)
+
+function prioritize_directories() {
+
+    local dirlist_name="$1"
+
+    local install_patt="$DBT_INSTALL_DIR/*"
+    local sourcecode_patt="$DBT_AREA_ROOT/sourcecode/*"
+    local user_patt="$HOME/*"
+
+    local priority_level1=()
+    local priority_level2=()
+    local priority_level3=()
+    local priority_level4=()
+
+    local dirlist="${!dirlist_name}"
+    IFS=':' read -r -a dirs <<< "$dirlist"
+
+    for dir in "${dirs[@]}"; do
+
+        if [[ "$dir" == $user_patt && ! "$dir" == $sourcecode_patt && ! "$dir" == $install_patt ]]; then
+	    priority_level1+=("$dir")
+	elif [[ "$dir" == $sourcecode_patt ]]; then
+	    priority_level2+=("$dir")
+	elif [[ "$dir" == $install_patt ]]; then
+	    priority_level3+=("$dir")
+	else
+	    priority_level4+=("$dir")
+	fi
+    done
+
+    # First sed command is swapping whitespace for a ":", second is to remove leading and trailing ":"s
+
+    local reordered_dirs=$( echo "${priority_level1[*]}" "${priority_level2[*]}" "${priority_level3[*]}" "${priority_level4[*]}" | sed -r 's/\s+/:/g' | sed -r 's/^:*(.*[^:]).*$/\1/' )
+
+    eval "$dirlist_name=\"$reordered_dirs\""
+
+}
+
+
+#------------------------------------------------------------------------------

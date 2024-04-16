@@ -201,15 +201,17 @@ for p in ${DBT_PACKAGES}; do
     # Share
     pkg_share="${PNAME//-/_}_SHARE"
     declare -xg "${pkg_share}"="${DBT_INSTALL_DIR}/${p}/share"
-
     add_many_paths PATH "${PKG_INSTALL_PATH}/bin" "${PKG_INSTALL_PATH}/test/bin"
     add_many_paths PYTHONPATH "${PKG_INSTALL_PATH}/lib64/python"
     add_many_paths LD_LIBRARY_PATH "${PKG_INSTALL_PATH}/lib64"  "${PKG_INSTALL_PATH}/test/lib64"
     add_many_paths CET_PLUGIN_PATH "${PKG_INSTALL_PATH}/lib64" "${PKG_INSTALL_PATH}/test/lib64"
-    add_many_paths DUNEDAQ_SHARE_PATH  "${PKG_INSTALL_PATH}/share" 
+    add_many_paths DUNEDAQ_SHARE_PATH  "${PKG_INSTALL_PATH}/share"
+    add_many_paths DUNEDAQ_DB_PATH "${SOURCE_DIR}/$p"
 done
 
-export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH
+prioritize_directories DUNEDAQ_DB_PATH
+
+export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH DUNEDAQ_DB_PATH
 echo -e "${COL_GREEN}...done${COL_RESET}"
 echo
 
