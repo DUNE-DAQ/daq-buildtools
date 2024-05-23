@@ -55,7 +55,11 @@ Usage
         --cmake-msg-lvl setting "CMAKE_MESSAGE_LOG_LEVEL", default is "NOTICE", choices are ERROR|WARNING|NOTICE|STATUS|VERBOSE|DEBUG|TRACE.
         --cmake-trace enable cmake tracing
         --cmake-graphviz generates a target dependency graph
+<<<<<<< HEAD
 
+=======
+        --codegen-only means you only want CMake to run its config+generate stages, and not actually compile the code
+>>>>>>> 3a25447 (JCF: change name from no-build to codegen-only)
 
     All arguments are optional. With no arguments, CMake will typically just run
     build, unless build/CMakeCache.txt is missing
@@ -86,6 +90,10 @@ parser.add_argument("--lint", nargs="?", const="all", help=argparse.SUPPRESS)
 parser.add_argument("--cmake-msg-lvl", dest="cmake_msg_lvl", help=argparse.SUPPRESS)
 parser.add_argument("--cmake-trace", action="store_true", dest="cmake_trace", help=argparse.SUPPRESS)
 parser.add_argument("--cmake-graphviz", action="store_true", dest="cmake_graphviz", help=argparse.SUPPRESS)
+<<<<<<< HEAD
+=======
+parser.add_argument("--codegen-only", action="store_true", dest="codegen_only", help=argparse.SUPPRESS)
+>>>>>>> 3a25447 (JCF: change name from no-build to codegen-only)
 parser.add_argument("-y", "--yes-to-all", action="store_true", dest="yes_to_all", help=argparse.SUPPRESS)
 
 args = parser.parse_args()
@@ -121,7 +129,11 @@ if not os.path.exists(BUILDDIR):
 
 os.chdir(BUILDDIR)
 
+<<<<<<< HEAD
 if args.clean_build:
+=======
+if args.clean_build or args.codegen_only:
+>>>>>>> 3a25447 (JCF: change name from no-build to codegen-only)
     # Want to be damn sure we're in the right directory, recursive directory removal is no joke...
     if os.path.basename(os.getcwd()) == "build":
 
@@ -268,6 +280,15 @@ else:
 
 erase_installdir_contents()
 
+<<<<<<< HEAD
+=======
+if args.codegen_only:
+   rich.print(f"CMake's build file config+generate stages took {cfggentime} seconds")
+   rich.print(f"Start time: {starttime_cfggen_d}")
+   rich.print(f"End time:   {endtime_cfggen_d}")
+   sys.exit(0)
+
+>>>>>>> 3a25447 (JCF: change name from no-build to codegen-only)
 starttime_build_d=get_time("as_date")
 starttime_build_s=get_time("as_seconds_since_epoch")
 

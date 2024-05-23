@@ -172,6 +172,11 @@ By default the build is performed using gcc's `O2` compilation flag. If you wish
 dbt-build --optimize-flag O3  # Or Og, etc.
 ```
 
+If you wish to only generate files but _not_ also perform a compilation (this is a kind of expert action, but there are use cases for it) you can run:
+```
+dbt-build --codegen-only
+```
+
 You can see all the options listed if you run the script with the `--help` command, i.e.
 ```
 dbt-build --help
