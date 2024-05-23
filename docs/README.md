@@ -169,7 +169,7 @@ dbt-build --optimize-flag O3  # Or Og, etc.
 
 If you wish to only generate files but _not_ also perform a compilation (this is a kind of expert action, but there are use cases for it) you can run:
 ```
-dbt-build --no-build
+dbt-build --codegen-only
 ```
 
 You can see all the options listed if you run the script with the `--help` command, i.e.
