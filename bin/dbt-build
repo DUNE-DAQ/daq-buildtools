@@ -56,7 +56,7 @@ Usage
         --optimize-flag takes a gcc optimization flag as argument and passes it through to the build
         --cmake-trace enable cmake tracing
         --cmake-graphviz generates a target dependency graph
-
+        --no-build means you only want CMake to run its config+generate stages, and not actually compile the code
 
     All arguments are optional. With no arguments, CMake will typically just run
     build, unless build/CMakeCache.txt is missing
@@ -88,6 +88,7 @@ parser.add_argument("--cmake-msg-lvl", dest="cmake_msg_lvl", help=argparse.SUPPR
 parser.add_argument("--optimize-flag", dest="optimize_flag", help=argparse.SUPPRESS)
 parser.add_argument("--cmake-trace", action="store_true", dest="cmake_trace", help=argparse.SUPPRESS)
 parser.add_argument("--cmake-graphviz", action="store_true", dest="cmake_graphviz", help=argparse.SUPPRESS)
+parser.add_argument("--no-build", action="store_true", dest="no_build", help=argparse.SUPPRESS)
 parser.add_argument("-y", "--yes-to-all", action="store_true", dest="yes_to_all", help=argparse.SUPPRESS)
 
 args = parser.parse_args()
@@ -135,13 +136,13 @@ if not os.path.exists(BUILDDIR):
 
 os.chdir(BUILDDIR)
 
-if args.clean_build:
+if args.clean_build or args.no_build:
     # Want to be damn sure we're in the right directory, recursive directory removal is no joke...
     if os.path.basename(os.getcwd()) == "build":
 
         if not force_clean:
             rich.print(f"""
-    Clean build requested, will delete all the contents of build directory \"{os.getcwd()}\".
+    Given options provided, will delete all the contents of {BUILDDIR} and {INSTALLDIR}.
     If you wish to abort, you have 5 seconds to hit Ctrl-c"
             """)
             sleep(5)
@@ -281,6 +282,12 @@ else:
     nprocs_argument = f"-j {nprocs}"
 
 erase_installdir_contents()
+
+if args.no_build:
+   rich.print(f"CMake's build file config+generate stages took {cfggentime} seconds")
+   rich.print(f"Start time: {starttime_cfggen_d}")
+   rich.print(f"End time:   {endtime_cfggen_d}")
+   sys.exit(0)
 
 starttime_build_d=get_time("as_date")
 starttime_build_s=get_time("as_seconds_since_epoch")
