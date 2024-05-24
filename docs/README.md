@@ -14,13 +14,16 @@ To get set up, you'll need access to the cvmfs areas `/cvmfs/dunedaq.openscience
 Simply do:
 ```
 source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt fddaq-v4.4.1
+setup_dbt latest_v5
 ```
+...in order to pick up the latest daq-buildtools intended for the v5 development line, or
+```
+source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
+setup_dbt latest_v4   # "setup_dbt latest" also works
+```
+...in order to pick up the latest daq-buildtools intended for the v4 development line. Note that `latest_v4` is aliased to `v8.3.0` and `latest_v5` is aliased to `v8.4.0`. 
 
-Note that `fddaq-v4.4.1` will point to `v8.3.0` of this package, used
-during the `fddaq-v4.4.1` release period.
-
-After running these two commands, then you'll see something like:
+After running these two commands, then you'll see something along the lines of:
 ```
 Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v8.3.0/bin -> PATH
 Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v8.3.0/scripts -> PATH
@@ -176,6 +179,7 @@ If you wish to only generate files but _not_ also perform a compilation (this is
 ```
 dbt-build --codegen-only
 ```
+Note that the above requires you to have set up the `latest_v5` version of daq-buildtools, as it's focused on OKS code generation studies. 
 
 You can see all the options listed if you run the script with the `--help` command, i.e.
 ```
