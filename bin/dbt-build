@@ -284,9 +284,17 @@ else:
 erase_installdir_contents()
 
 if args.codegen_only:
-   rich.print(f"CMake's build file config+generate stages took {cfggentime} seconds")
-   rich.print(f"Start time: {starttime_cfggen_d}")
-   rich.print(f"End time:   {endtime_cfggen_d}")
+
+   os.chdir(BUILDDIR)
+
+   for pkgname in [filename for filename in os.listdir(SRCDIR) if os.path.isdir(filename)]:
+      targetname = f"{pkgname}_pre_build_stage_done"
+      fullcmd = f"cmake --build . --target {targetname}"
+      retval=pytee.run(fullcmd.split(" ")[0], fullcmd.split(" ")[1:], build_log)
+
+      if retval != 0:
+         error(f"This script ran into a problem running \"{fullcmd}\" from {BUILDDIR}; exiting...")
+
    sys.exit(0)
 
 starttime_build_d=get_time("as_date")
