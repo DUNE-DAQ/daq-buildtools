@@ -1,6 +1,6 @@
 # DUNE DAQ Buildtools
 
-_This document was last edited May-24-2024_
+_This document was last edited June-7-2024_
 
 `daq-buildtools` is the toolset to simplify the development of DUNE DAQ packages. It provides environment and building utilities for the DAQ Suite.
 
@@ -14,16 +14,13 @@ To get set up, you'll need access to the cvmfs areas `/cvmfs/dunedaq.openscience
 Simply do:
 ```
 source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt latest_v5
+setup_dbt fddaq-v4.4.2
 ```
-...in order to pick up the latest daq-buildtools intended for the v5 development line, or
-```
-source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt latest_v4   # "setup_dbt latest" also works
-```
-...in order to pick up the latest daq-buildtools intended for the v4 development line. Note that `latest_v4` is aliased to `v8.3.0` and `latest_v5` is aliased to `v8.4.0`. 
 
-After running these two commands, then you'll see something along the lines of:
+Note that `fddaq-v4.4.2` will point to `v8.3.0` of this package, used
+during the `fddaq-v4.4.2` release period.
+
+After running these two commands, then you'll see something like:
 ```
 Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v8.3.0/bin -> PATH
 Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v8.3.0/scripts -> PATH
@@ -40,10 +37,10 @@ Each time that you log into a fresh Linux shell and want to either (1) set up an
 If you only want access to a DUNE DAQ software release (its executables, etc.) without actually developing DUNE DAQ software itself, you'll want to run a release from cvmfs. Please note that in general, frozen releases (especially patch frozen releases) are intended for this scenario, and _not_ for development. After setting up daq-buildtools, you can simply run the following command if you wish to use a frozen release:
 
 ```sh
-dbt-setup-release <release> # fddaq-v4.4.1-a9 the latest frozen release as of May-17-2024
+dbt-setup-release <release> # fddaq-v4.4.2-a9 the latest frozen release as of June-7-2024
 ```
 
-Note that if you set up a frozen release you'll get a message along the lines of `Release "fddaq-v4.4.1-a9" requested; interpreting this as release "fddaq-v4.4.1-a9-1"`; this simply reflects that the latest build iteration of the frozen release (`-1`, `-2`, etc.) has been alias'd out for the convenience of the user.
+Note that if you set up a frozen release you'll get a message along the lines of `Release "fddaq-v4.4.2-a9" requested; interpreting this as release "fddaq-v4.4.2-a9-1"`; this simply reflects that the latest build iteration of the frozen release (`-1`, `-2`, etc.) has been alias'd out for the convenience of the user.
 
 As of July 2023, the DUNE DAQ software stack has been split into far detector and near detector-specific parts. Starting with the `v4.1.0` release of the stack, do _not_ use the traditional convention of `dunedaq-vX.Y.Z` as the frozen release label, but instead, `fddaq-vX.Y.Z` and `nddaq-vX.Y.Z`. 
 
@@ -174,12 +171,6 @@ By default the build is performed using gcc's `O2` compilation flag. If you wish
 ```
 dbt-build --optimize-flag O3  # Or Og, etc.
 ```
-
-If you wish to only generate files but _not_ also perform a compilation (this is a kind of expert action, but there are use cases for it) you can run:
-```
-dbt-build --codegen-only
-```
-Note that the above requires you to have set up the `latest_v5` version of daq-buildtools, as it's focused on OKS code generation studies. 
 
 You can see all the options listed if you run the script with the `--help` command, i.e.
 ```
