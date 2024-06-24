@@ -104,6 +104,7 @@ elif not args.release_tag or not args.workarea_dir:
     error("Need to supply a release tag and a new work area directory. Run '{} -h' for more information.".format(os.path.basename(__file__)))
 
 RELEASE_PATH=os.path.realpath(f"{RELEASE_BASEPATH}/{args.release_tag}")
+os.environ["RELEASE_SOURCE_PATH"] = f"{RELEASE_PATH}/sourcecode"
 RELEASE=RELEASE_PATH.rstrip("/").split("/")[-1]
 if RELEASE != args.release_tag:
     print(f"Release \"{args.release_tag}\" requested; interpreting this as release \"{RELEASE}\"")
@@ -171,6 +172,7 @@ workarea_constants_file_contents = \
     f"""export SPACK_RELEASE="{os.environ["SPACK_RELEASE"]}"
 export SPACK_RELEASES_DIR="{os.environ["SPACK_RELEASES_DIR"]}"
 export DBT_ROOT_WHEN_CREATED="{os.environ["DBT_ROOT"]}"
+export DUNE_DAQ_RELEASE_SOURCE="{os.environ["RELEASE_SOURCE_PATH"]}"
 """
 
 if args.install_spack:
