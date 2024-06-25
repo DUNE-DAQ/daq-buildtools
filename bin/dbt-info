@@ -243,11 +243,17 @@ def sourcecode_info():
    repos = [os.path.join(codepath, d) for d in os.listdir(codepath) if os.path.isdir(os.path.join(codepath, d))]
 
    print()
-   for repo in repos:
-      os.chdir(repo)
-      print(f"%s: " % (repo.split("/")[-1]), end="")
-      run_command('echo -n \"$( git rev-parse --abbrev-ref HEAD )$( git diff --no-ext-diff --quiet --exit-code || echo \* ) \" ')
+   if repos:
+      print('Source code for locally checked out packages:')
+      for repo in repos:
+         os.chdir(repo)
+         print(f"%s: " % (repo.split("/")[-1]), end="")
+         run_command('echo -n \"$( git rev-parse --abbrev-ref HEAD )$( git diff --no-ext-diff --quiet --exit-code || echo \* ) \" ')
+   else: 
+      print('There are no locally checked out packages in $DBT_AREA_ROOT/sourcecode')
    print()
+
+   print(f"Source code for packages not checked out locally is in {os.environ.get('DUNE_DAQ_RELEASE_SOURCE')}")
 
 def full_help():
     release_help()
