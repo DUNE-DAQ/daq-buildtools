@@ -1,6 +1,6 @@
 # DUNE DAQ Buildtools
 
-_This document was last edited June-20-2024_
+_This document was last edited June-26-2024_
 
 `daq-buildtools` is the toolset to simplify the development of DUNE DAQ packages. It provides environment and building utilities for the DAQ Suite.
 
@@ -14,16 +14,19 @@ To get set up, you'll need access to the cvmfs areas `/cvmfs/dunedaq.openscience
 Simply do:
 ```
 source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt fddaq-v4.4.3
+setup_dbt latest_v5
 ```
-
-Note that `fddaq-v4.4.3` will point to `v8.3.0` of this package, used
-during the `fddaq-v4.4.3` release period.
+...in order to pick up the latest daq-buildtools intended for the v5 development line, or
+```
+source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
+setup_dbt latest_v4   # "setup_dbt latest" also works
+```
+...in order to pick up the latest daq-buildtools intended for the v4 development line. Note that `latest_v4` is aliased to `v8.3.0` and `latest_v5` is aliased to `v8.6.0`. 
 
 After running these two commands, then you'll see something like:
 ```
-Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v8.3.0/bin -> PATH
-Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v8.3.0/scripts -> PATH
+Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v8.6.0/bin -> PATH
+Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v8.6.0/scripts -> PATH
 DBT setuptools loaded
 ```
 
@@ -65,7 +68,7 @@ The majority of work areas are set up to build against the most recent nightly r
 ```sh
 dbt-create -n <nightly release> <name of work area subdirectory> # E.g., NFD_DEV_240213_A9
 ```
-To see all available nightly releases, run `dbt-create -l -n` or `dbt-create -l -b nightly`.
+You can also use `-n last_fddaq` or `-n last_nddaq` to build against the most recent _production_ branch, e.g., `NFD_PROD4_240213_A9`. To see all available nightly releases, run `dbt-create -l -n` or `dbt-create -l -b nightly`. Note also that you can leave out defining the name of the work area subdirectory, in which case it defaults to the same name as the release. 
 
 If you want to build against a candidate release, run:
 ```sh
@@ -171,6 +174,11 @@ By default the build is performed using gcc's `O2` compilation flag. If you wish
 ```
 dbt-build --optimize-flag O3  # Or Og, etc.
 ```
+If you wish to only generate files but _not_ also perform a compilation (this is a kind of expert action, but there are use cases for it) you can run:
+```
+dbt-build --codegen-only
+```
+Note that the above requires you to have set up the `latest_v5` version of daq-buildtools, as it's focused on OKS code generation studies. 
 
 You can see all the options listed if you run the script with the `--help` command, i.e.
 ```
