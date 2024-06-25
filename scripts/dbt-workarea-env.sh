@@ -130,13 +130,6 @@ if [[ -z "${DBT_PACKAGE_SETUP_DONE}" ]]; then
     echo "Now loading devtools for latest CMake, gcc, etc."
     spack load devtools || echo -e "\nWARNING: this script was unable to load \"devtools\"; you may be using an older CMake as a result (run \"which cmake\" to check)\n"
 
-    # Note: temporary solution - DPF May-19-2022
-    # if trace is loaded, source "trace_functions.sh"
-    #if spack find --loaded trace; then
-    #    source `which trace_functions.sh`
-    #fi
-    [[ $(type -P "trace_functions.sh") ]] && source `which trace_functions.sh`
-
     # Assumption is you've already spack loaded python, etc...
     local_venv_dir=${DBT_AREA_ROOT}/${DBT_VENV}
     release_venv_dir=`realpath ${SPACK_RELEASES_DIR}/$SPACK_RELEASE/${DBT_VENV}`
