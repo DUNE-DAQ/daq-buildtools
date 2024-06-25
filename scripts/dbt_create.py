@@ -24,7 +24,7 @@ Usage
 
 To create a new DUNE DAQ development area:
 
-    {os.path.basename(__file__)} [-n/--nightly] [-b/--base-release <base release type>]  [-r/--release-path <path to release area>] [-i/--install-pyvenv] <DAQ release> <target directory>
+    {os.path.basename(__file__)} [-n/--nightly] [-b/--base-release <base release type>]  [-r/--release-path <path to release area>] [-i/--install-pyvenv] <DAQ release> (target directory)
 
 To list the available DUNE DAQ releases:
 
@@ -33,7 +33,7 @@ To list the available DUNE DAQ releases:
 Arguments and options:
 
     DAQ release: the release the new work area will be based on (e.g. fddaq-v4.3.0-a9, NFDT_DEV_240410_A9, etc.)
-    target directory: the name of the work area dbt-create will set up for you
+    target directory: the name of the work area dbt-create will set up for you. Defaults to the name of the release.
     -b/--base-release: base release type, can be one of [frozen, nightly, candidate]. Default is frozen.
     -n/--nightly: switch from frozen to nightly releases, shortcut for \"-b nightly\"
     -l/--list: show the list of available releases
@@ -100,8 +100,8 @@ else:
 if args._list:
     list_releases(RELEASE_BASEPATH)
     sys.exit(0)
-elif not args.release_tag or not args.workarea_dir:
-    error("Need to supply a release tag and a new work area directory. Run '{} -h' for more information.".format(os.path.basename(__file__)))
+elif not args.release_tag:
+    error("Need to supply a release tag. Run '{} -h' for more information.".format(os.path.basename(__file__)))
 
 RELEASE_PATH=os.path.realpath(f"{RELEASE_BASEPATH}/{args.release_tag}")
 RELEASE=RELEASE_PATH.rstrip("/").split("/")[-1]
@@ -115,9 +115,13 @@ Release path
 does not exist. Note that you need to pass \"-n\" for a nightly build or \"-b candidate\"
 for a candidate release build. Exiting...""")
 
-TARGETDIR=args.workarea_dir
+if args.workarea_dir:
+    TARGETDIR=args.workarea_dir
+else:
+    TARGETDIR=args.release_tag
+
 if os.path.exists(TARGETDIR):
-    error(f"""Desired work area directory
+    error(f"""Desired work area directory 
 \"{TARGETDIR}\" already exists; exiting...""")
 
 if "DBT_WORKAREA_ENV_SCRIPT_SOURCED" in os.environ:
