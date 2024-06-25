@@ -106,8 +106,9 @@ elif not args.release_tag or not args.workarea_dir:
 RELEASE_PATH=os.path.realpath(f"{RELEASE_BASEPATH}/{args.release_tag}")
 RELEASE_SOURCE_PATH=f"{RELEASE_PATH}/sourcecode"
 if not os.path.exists(RELEASE_SOURCE_PATH):
-    print(f'WARNING The environment variable DUNE_DAQ_RELEASE_SOURCE has been set')
-    print(f'        to {RELEASE_SOURCE_PATH}, but this path does not exist.')
+    print(f'WARNING The environment variable DUNE_DAQ_RELEASE_SOURCE has been set to')
+    print(f'        {RELEASE_SOURCE_PATH},')
+    print(f'        but this path does not exist.')
 os.environ["RELEASE_SOURCE_PATH"] = RELEASE_SOURCE_PATH
 RELEASE=RELEASE_PATH.rstrip("/").split("/")[-1]
 if RELEASE != args.release_tag:
