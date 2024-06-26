@@ -103,6 +103,7 @@ fi
 
 RELEASE_TAG=${ARGS[0]}
 RELEASE_PATH=$(realpath -m "${SPACK_RELEASES_DIR}/${RELEASE_TAG}")
+export DUNE_DAQ_RELEASE_SOURCE=${RELEASE_PATH}/sourcecode
 export SPACK_RELEASE=$( echo $RELEASE_PATH | sed -r 's!.*/([^/]+)/?$!\1!' )
 
 test ! "$SPACK_RELEASE" == "$RELEASE_TAG"  && echo "Release \"$RELEASE_TAG\" requested; interpreting this as release \"$SPACK_RELEASE\""
