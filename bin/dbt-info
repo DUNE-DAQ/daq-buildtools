@@ -109,7 +109,7 @@ def release_size_info():
          print(f"path: {repopath}")
          run_command(f"du {repopath} -sk | sed -r -n 's/^([0-9]+).*/size: \\1 kB/p'")
          print("number of packages: ", end = "") 
-         run_command(f"spack find -p --loaded | grep {repopath} | wc -l")
+         run_command(f"spack find -p | grep {repopath} | wc -l")
          print()
    else:
       error("Something went wrong trying to find the Spack repos used in this release")
