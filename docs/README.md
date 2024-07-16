@@ -1,6 +1,6 @@
 # DUNE DAQ Buildtools
 
-_This document was last edited July-11-2024_
+_This document was last edited June-26-2024_
 
 `daq-buildtools` is the toolset to simplify the development of DUNE DAQ packages. It provides environment and building utilities for the DAQ Suite.
 
@@ -14,16 +14,19 @@ To get set up, you'll need access to the cvmfs areas `/cvmfs/dunedaq.openscience
 Simply do:
 ```
 source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt fddaq-v4.4.4
+setup_dbt latest_v5
 ```
-
-Note that `fddaq-v4.4.4` will point to `v8.3.0` of this package, used
-during the `fddaq-v4.4.4` release period.
+...in order to pick up the latest daq-buildtools intended for the v5 development line, or
+```
+source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
+setup_dbt latest_v4   # "setup_dbt latest" also works
+```
+...in order to pick up the latest daq-buildtools intended for the v4 development line. Note that `latest_v4` is aliased to `v8.3.0` and `latest_v5` is aliased to `v8.6.0`. 
 
 After running these two commands, then you'll see something like:
 ```
-Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v8.3.0/bin -> PATH
-Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v8.3.0/scripts -> PATH
+Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v8.6.0/bin -> PATH
+Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v8.6.0/scripts -> PATH
 DBT setuptools loaded
 ```
 
@@ -37,10 +40,10 @@ Each time that you log into a fresh Linux shell and want to either (1) set up an
 If you only want access to a DUNE DAQ software release (its executables, etc.) without actually developing DUNE DAQ software itself, you'll want to run a release from cvmfs. Please note that in general, frozen releases (especially patch frozen releases) are intended for this scenario, and _not_ for development. After setting up daq-buildtools, you can simply run the following command if you wish to use a frozen release:
 
 ```sh
-dbt-setup-release <release> # fddaq-v4.4.4-a9 the latest frozen release as of July-11-2024
+dbt-setup-release <release> # fddaq-v4.4.3-a9 the latest frozen release as of June-20-2024
 ```
 
-Note that if you set up a frozen release you'll get a message along the lines of `Release "fddaq-v4.4.4-a9" requested; interpreting this as release "fddaq-v4.4.4-a9-1"`; this simply reflects that the latest build iteration of the frozen release (`-1`, `-2`, etc.) has been alias'd out for the convenience of the user.
+Note that if you set up a frozen release you'll get a message along the lines of `Release "fddaq-v4.4.3-a9" requested; interpreting this as release "fddaq-v4.4.3-a9-1"`; this simply reflects that the latest build iteration of the frozen release (`-1`, `-2`, etc.) has been alias'd out for the convenience of the user.
 
 As of July 2023, the DUNE DAQ software stack has been split into far detector and near detector-specific parts. Starting with the `v4.1.0` release of the stack, do _not_ use the traditional convention of `dunedaq-vX.Y.Z` as the frozen release label, but instead, `fddaq-vX.Y.Z` and `nddaq-vX.Y.Z`. 
 
@@ -59,13 +62,13 @@ If you wish to develop DUNE DAQ software, you can start by creating a work area.
 Each work area is based on a DUNE DAQ software release, which defines what external and DUNE DAQ packages the code you develop in a work area are built against. Releases come in four categories:
 * **Nightly Releases**: packages in nightly releases are built each night using the heads of their `develop` and `production/v4` branches. Depending on whether it's the far detector stack or the near detector stack, and whether it's a develop or production build, these are generally labeled either as `NFD_<branch>_<YY><MM><DD>_<OS>` (far detector) or `NND_<branch>_<YY><MM><DD>_<OS>` (near detector). E.g. `NFD_DEV_240213_A9` is the AL9 nightly develop build for the far detector on February 13th, 2024, while `NFD_PROD4_240213_C8` is the CentOS nightly production build for the far detector on the same date. Note that, prior to February 13th, 2024, the labeling convention is `NFD<YY>-<MM>-<DD>` for the far detector stack and `NND<YY>-<MM>-<DD>` for the near detector stack. 
 * **Frozen Releases**: a frozen release typically comes out every couple of months, and only after extensive testing supervised by a Release Coordinator. Depending on whether it's the far detector stack or the near detector stack, labeled as `fddaq-vX.Y.X` or `nddaq-vX.Y.Z`. 
-* **Candidate Releases**: a type of release meant specifically for frozen release testing. Generally labeled as `fddaq-vX.Y.Z-rc<candidate iteration>-<OS>` or `nddaq-vX.Y.Z-rc<candidate iteration>-<OS>`. For example, `fddaq-v4.3.0-rc3-a9` is the third release candidate for the AL9 build of `fddaq-v4.3.0`. Note that, prior to February 13th, 2024, the labeling convention is `fddaq-vX.Y.Z-c<candidate iteration>`
+* **Candidate Releases**: a type of release meant specifically for frozen release testing. Generally labeled as `fddaq-vX.Y.Z-rc<candidate iteration>-<OS>` or `nddaq-vX.Y.Z-rc<candidate iteration>-<OS>`. For example, `fddaq-v4.4.0-rc4-a9` is the second release candidate for the AL9 build of `fddaq-v4.3.0`. Note that, prior to February 13th, 2024, the labeling convention is `fddaq-vX.Y.Z-c<candidate iteration>`
 
 The majority of work areas are set up to build against the most recent nightly release. To do so, run:
 ```sh
 dbt-create -n <nightly release> <name of work area subdirectory> # E.g., NFD_DEV_240213_A9
 ```
-To see all available nightly releases, run `dbt-create -l -n` or `dbt-create -l -b nightly`.
+You can also use `-n last_fddaq` or `-n last_nddaq` to build against the most recent _production_ branch, e.g., `NFD_PROD4_240213_A9`. To see all available nightly releases, run `dbt-create -l -n` or `dbt-create -l -b nightly`. Note also that you can leave out defining the name of the work area subdirectory, in which case it defaults to the same name as the release. 
 
 If you want to build against a candidate release, run:
 ```sh
@@ -171,6 +174,11 @@ By default the build is performed using gcc's `O2` compilation flag. If you wish
 ```
 dbt-build --optimize-flag O3  # Or Og, etc.
 ```
+If you wish to only generate files but _not_ also perform a compilation (this is a kind of expert action, but there are use cases for it) you can run:
+```
+dbt-build --codegen-only
+```
+Note that the above requires you to have set up the `latest_v5` version of daq-buildtools, as it's focused on OKS code generation studies. 
 
 You can see all the options listed if you run the script with the `--help` command, i.e.
 ```
