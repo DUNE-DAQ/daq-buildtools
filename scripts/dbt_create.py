@@ -147,7 +147,7 @@ except PermissionError:
     error(f"You don't have permission to create {TARGETDIR} from {os.getenv('PWD')}. Exiting...")
 
 os.chdir(TARGETDIR)
-TARGETDIR=os.getenv('PWD') # Get full path
+TARGETDIR=os.getcwd() # Get full path
 
 BUILDDIR=f"{TARGETDIR}/build"
 LOGDIR=f"{TARGETDIR}/log"
