@@ -20,9 +20,10 @@ def error(errmsg):
     sys.exit(1)
 
 def find_work_area():
-    currdir=os.getcwd()
+    currdir=os.getenv('PWD')
 
     while True:
+        print(currdir)
         if os.path.exists("{}/{}".format(currdir, DBT_AREA_FILE)):
             return currdir
         elif currdir != "":
@@ -35,7 +36,7 @@ def list_releases(release_basepath):
     versions = []
     base_release_regex_signifiers = ["^dunedaq-", "^NB", "^rc-", "^coredaq-"]
 
-    origdir=os.getcwd()
+    origdir=os.getenv('PWD')
     os.chdir(f"{release_basepath}")
     for dirname in glob.glob(f"*"):
         if os.path.isfile(dirname):
