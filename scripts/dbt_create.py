@@ -124,7 +124,7 @@ for a candidate release build. Exiting...""")
 if args.workarea_dir:
     TARGETDIR=args.workarea_dir
 else:
-    TARGETDIR=args.release_tag
+    TARGETDIR=RELEASE
 
 if os.path.exists(TARGETDIR):
     error(f"""Desired work area directory 
