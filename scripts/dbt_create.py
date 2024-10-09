@@ -144,10 +144,10 @@ starttime_s=get_time("as_seconds_since_epoch")
 try:
     pathlib.Path(TARGETDIR).mkdir(parents=True)
 except PermissionError:
-    error(f"You don't have permission to create {TARGETDIR} from {os.getenv('PWD')}. Exiting...")
+    error(f"You don't have permission to create {TARGETDIR} from {os.getcwd()}. Exiting...")
 
 os.chdir(TARGETDIR)
-TARGETDIR=os.getenv('PWD') # Get full path
+TARGETDIR=os.getcwd() # Get full path
 
 BUILDDIR=f"{TARGETDIR}/build"
 LOGDIR=f"{TARGETDIR}/log"
