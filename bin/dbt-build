@@ -64,14 +64,11 @@ Usage
 
 """
 
-print("AAAA")
 BASEDIR=find_work_area()
-print(f"AAAA {BASEDIR}")
 
 if not os.path.exists(BASEDIR):
     error(f"Work area directory \"{BASEDIR}\" not found. Exiting...")
 
-raise SystemExit(0)
 
 BUILDDIR=f"{BASEDIR}/build"
 LOGDIR=f"{BASEDIR}/log"
