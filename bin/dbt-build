@@ -33,7 +33,7 @@ sys.path.append(f'{DBT_ROOT}/scripts')
 from dbt_setup_tools import error, find_work_area, get_time
 import pytee
 
-orig_working_dir=os.getcwd()
+orig_working_dir=os.getenv('PWD')
 
 def get_package_list( build_dir ) :
     return sh.find(rf"-L {build_dir} -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles  -printf %f\n".split()).split()
@@ -65,8 +65,10 @@ Usage
 """
 
 BASEDIR=find_work_area()
+
 if not os.path.exists(BASEDIR):
     error(f"Work area directory \"{BASEDIR}\" not found. Exiting...")
+
 
 BUILDDIR=f"{BASEDIR}/build"
 LOGDIR=f"{BASEDIR}/log"
@@ -138,7 +140,7 @@ os.chdir(BUILDDIR)
 
 if args.clean_build or args.codegen_only:
     # Want to be damn sure we're in the right directory, recursive directory removal is no joke...
-    if os.path.basename(os.getcwd()) == "build":
+    if os.path.basename(os.getenv('PWD')) == "build":
 
         if not force_clean:
             rich.print(f"""
@@ -147,15 +149,15 @@ if args.clean_build or args.codegen_only:
             """)
             sleep(5)
 
-        for filename in os.listdir(os.getcwd()):
-            file_path = os.path.join(os.getcwd(), filename)
+        for filename in os.listdir(os.getenv('PWD')):
+            file_path = os.path.join(os.getenv('PWD'), filename)
             if os.path.isfile(file_path) or os.path.islink(file_path):
                 os.unlink(file_path)
             elif os.path.isdir(file_path):
                 rmtree(file_path)
     else:
         error(f"""
-You requested a clean build, but this script thinks that {os.getcwd()} isn't
+You requested a clean build, but this script thinks that {os.getenv('PWD')} isn't
 a build directory. Please contact John Freeman at jcfree@fnal.gov and notify him of this message.
         """)
 
@@ -437,11 +439,11 @@ if args.lint:
     datestring=re.sub("[: ]+", "_", stringio_obj8.getvalue().strip())
 
     if not os.path.exists("styleguide"):
-        rich.print(f"Cloning styleguide into {os.getcwd()} so linting can be applied")
+        rich.print(f"Cloning styleguide into {os.getenv('PWD')} so linting can be applied")
         sh.git("clone", "https://github.com/DUNE-DAQ/styleguide.git")
 
         if not os.path.exists("styleguide"):
-            error("There was a problem cloning the styleguide repo needed for linting into {}".format(os.getcwd()))
+            error("There was a problem cloning the styleguide repo needed for linting into {}".format(os.getenv('PWD')))
 
     code_to_lint_is_a_file = False
 
