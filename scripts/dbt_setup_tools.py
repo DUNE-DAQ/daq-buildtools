@@ -20,10 +20,11 @@ def error(errmsg):
     sys.exit(1)
 
 def find_work_area():
-    currdir=subprocess.check_output('pwd', shell=True).decode("utf-8")
-
+    currdir=subprocess.check_output('pwd', shell=True).decode("utf-8").strip()
     while True:
-        if os.path.exists("{}/{}".format(currdir, DBT_AREA_FILE)):
+        file_path = os.path.join(currdir, DBT_AREA_FILE)
+
+        if os.path.exists(file_path):
             return currdir
         elif currdir != "":
             currdir="/".join(currdir.split("/")[:-1])
