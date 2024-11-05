@@ -7,8 +7,9 @@ if [[ "$?" != 0 ]]; then
 fi
 
 view_only_option="--view-differences-only"
+print_markdown_option="--output-markdown-file"
 
-if [[ "$#" != "1" && "$#" != "2" ]]; then
+if [[ "$#" != "1" && "$#" != "2"  && "$#" != 3]]; then
 
 cat<<EOF >&2
 
@@ -23,6 +24,11 @@ of its subdirectories.
 If the optional $view_only_option argument is supplied, then
 instead of actually editing the files, it'll simply show what edits
 would be made
+
+If the optional $print_markdown_option argument is supplied, then
+it will output a .md summary file showing which files pass and don't
+pass the clang formatting. This is primarily intended as part of a 
+GitHub Action.
 
 EOF
 
@@ -104,6 +110,7 @@ if [[ "$?" != "0" ]]; then
     error "There was a problem copying ${DBT_ROOT}/configs/.clang-format to this directory. Exiting..."
 fi
 
+> files_to_format_list.txt
 
 function format_files() {
 
