@@ -145,14 +145,16 @@ function format_files() {
         if $output_markdown_table ; then
             markdown_content+="| $orig_file | :white_check_mark: Already formatted |\n"
         fi
-	elif ! $differences_only ; then
-	    echo "Updating $orig_file with new formatting"
-	    echo
+    else
         if $output_markdown_table ; then
             markdown_content+="| $orig_file | :x: Needs formatting |\n"
         fi
-	    mv $tmpfile $orig_file
-	fi
+        if ! $differences_only ; then
+            echo "Updating $orig_file with new formatting"
+            echo
+            mv $tmpfile $orig_file
+        fi
+    fi
     done
     
     if $output_markdown_table ; then
