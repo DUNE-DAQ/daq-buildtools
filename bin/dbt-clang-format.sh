@@ -9,7 +9,7 @@ fi
 view_only_option="--view-differences-only"
 output_markdown_option="--output-markdown-file"
 
-if [[ "$#" != "1" && "$#" != "2"  && "$#" != 3]]; then
+if [[ "$#" != "1" && "$#" != "2"  && "$#" != 3 ]]; then
 
 cat<<EOF >&2
 
@@ -120,8 +120,6 @@ if [[ "$?" != "0" ]]; then
     error "There was a problem copying ${DBT_ROOT}/configs/.clang-format to this directory. Exiting..."
 fi
 
-> files_to_format_list.txt
-
 function format_files() {
 
     local differences_only=$1
@@ -158,7 +156,9 @@ function format_files() {
     done
     
     if $output_markdown_table ; then
-        echo -e $markdown_content > clang_format_summary_table.md
+        markdown_file_name="clang_format_summary_table.md"
+        echo -e $markdown_content > $markdown_file_name
+        echo "Markdown summary table saved as $(readlink -f $markdown_file_name)"
     fi
 }
 
