@@ -7,7 +7,7 @@ if [[ "$?" != 0 ]]; then
 fi
 
 view_only_option="--view-differences-only"
-print_markdown_option="--output-markdown-file"
+output_markdown_option="--output-markdown-file"
 
 if [[ "$#" != "1" && "$#" != "2"  && "$#" != 3]]; then
 
@@ -25,7 +25,7 @@ If the optional $view_only_option argument is supplied, then
 instead of actually editing the files, it'll simply show what edits
 would be made
 
-If the optional $print_markdown_option argument is supplied, then
+If the optional $output_markdown_option argument is supplied, then
 it will output a .md summary file showing which files pass and don't
 pass the clang formatting. This is primarily intended as part of a 
 GitHub Action.
@@ -37,6 +37,7 @@ fi
 
 filename=$1
 arg2=$2
+arg3=$3
 
 if [[ ! -e $filename ]]; then
     error "Unable to find $filename; exiting..." 
@@ -49,6 +50,15 @@ if [[ -n $arg2 ]]; then
     else
 	error "Only allowed second argument is \"$view_only_option\""
     fi
+fi
+
+output_markdown_file=false
+if [[ -n $arg3 ]]; then
+    if [[ "$arg3" == "$output_markdown_option" ]]; then
+    output_markdown_file=true
+    else
+    error "Only allowed third argument is \"$output_markdown_option\""
+    fi 
 fi
 
 if [[ -z ${DBT_WORKAREA_ENV_SCRIPT_SOURCED:-} ]]; then
@@ -116,6 +126,10 @@ function format_files() {
 
     local differences_only=$1
     local files_to_format=$2
+    local output_markdown_table=$3
+    if $output_markdown_table ; then 
+        local markdown_content="| File | Status| \n| --- | --- |\n"
+    fi
 
     for orig_file in $files_to_format ; do
 
@@ -130,12 +144,22 @@ function format_files() {
 	    echo
 	    echo "$orig_file already properly formatted"
 	    echo
+        if $output_markdown_table ; then
+            markdown_content+="| $orig_file | :white_check_mark: Already formatted |\n"
+        fi
 	elif ! $differences_only ; then
 	    echo "Updating $orig_file with new formatting"
 	    echo
+        if $output_markdown_table ; then
+            markdown_content+="| $orig_file | :x: Needs formatting |\n"
+        fi
 	    mv $tmpfile $orig_file
 	fi
     done
+    
+    if $output_markdown_table ; then
+        echo -e $markdown_content > clang_format_summary_table.md
+    fi
 }
 
 files_to_format=""
@@ -153,7 +177,7 @@ elif [[ -f $filename ]]; then
     fi
 fi
 
-format_files true "$files_to_format"
+format_files true "$files_to_format" $output_markdown_file
 
 if ! $differences_only ; then
     
