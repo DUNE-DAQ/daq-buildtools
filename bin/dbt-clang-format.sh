@@ -132,7 +132,6 @@ function format_files() {
     local differences_only=$1
     local files_to_format=$2
     local output_markdown_table=$3
-    echo "MARKDOWN OPTION: $output_markdown_table"
     if $output_markdown_table ; then 
         local markdown_content="| File | Status| \n| --- | --- |\n"
     fi
