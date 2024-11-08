@@ -6,59 +6,66 @@ if [[ "$?" != 0 ]]; then
     exit 1
 fi
 
-view_only_option="--view-differences-only"
-output_markdown_option="--output-markdown-file"
+print_usage() {
+    cat <<EOF >&2
 
-if [[ "$#" != "1" && "$#" != "2"  && "$#" != 3 ]]; then
+Usage: $(basename "$0") <file or directory to format> [ -v | --view-differences-only ] [ -m | --markdown-summary ]
 
-cat<<EOF >&2
-
-Usage: $(basename $0) <file or directory to examine> ( $view_only_option )
-
-Given a file, this script will apply clang-format to that file
+Given a file, this script will apply clang-format to that file.
 
 Given a directory, it will apply clang-format to all the
 source (*.cxx, *.cpp) and header (*.hpp) files in that directory as well as all
 of its subdirectories.
 
-If the optional $view_only_option argument is supplied, then
-instead of actually editing the files, it'll simply show what edits
-would be made
-
-If the optional $output_markdown_option argument is supplied, then
-it will output a .md summary file showing which files pass and don't
-pass the clang formatting. This is primarily intended as part of a 
-GitHub Action.
-
+Optional arguments:
+  -v | --view-differences-only    Show differences without applying them.
+  -m | --markdown-summary         Output results in markdown format.
 EOF
-
     exit 1
+}
+
+if [[ $# -eq 0 || $# -gt 3 ]]; then
+    print_usage
 fi
 
 filename=$1
-arg2=$2
-arg3=$3
+shift
+differences_only=false
+output_markdown_file=false
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -v|--view-differences-only)
+        if $differences_only ; then
+            error "The -v flag can only be used once. Exiting..."
+        fi
+        differences_only=true
+        shift
+        ;;
+    -m|--markdown-summary)
+        if $output_markdown_file ; then
+            error "The -m flag can only be used once. Exiting..."
+        fi
+        output_markdown_file=true
+        shift
+        ;;
+    --)
+        shift
+        break
+        ;;
+    -*)
+        echo "Invalid option: $1" >&2
+        exit 1
+        ;;
+    *)
+        echo "Unexpected argument: $1" >&2
+        exit 1
+        ;;
+  esac
+done
 
 if [[ ! -e $filename ]]; then
-    error "Unable to find $filename; exiting..." 
-fi
-
-differences_only=false
-if [[ -n $arg2 ]]; then
-    if [[ "$arg2" == "$view_only_option" ]]; then
-	differences_only=true
-    else
-	error "Only allowed second argument is \"$view_only_option\""
-    fi
-fi
-
-output_markdown_file=false
-if [[ -n $arg3 ]]; then
-    if [[ "$arg3" == "$output_markdown_option" ]]; then
-    output_markdown_file=true
-    else
-    error "Only allowed third argument is \"$output_markdown_option\""
-    fi 
+    error "Unable to find $filename; make sure to pass a file or directory name as the first argument. Exiting..." 
 fi
 
 if [[ -z ${DBT_WORKAREA_ENV_SCRIPT_SOURCED:-} ]]; then
@@ -125,6 +132,7 @@ function format_files() {
     local differences_only=$1
     local files_to_format=$2
     local output_markdown_table=$3
+    echo "MARKDOWN OPTION: $output_markdown_table"
     if $output_markdown_table ; then 
         local markdown_content="| File | Status| \n| --- | --- |\n"
     fi
@@ -160,7 +168,7 @@ function format_files() {
     if $output_markdown_table ; then
         markdown_file_name="clang_format_summary_table.md"
         echo -e $markdown_content > $markdown_file_name
-        echo "Markdown summary table saved as $(readlink -f $markdown_file_name)"
+        echo -e "Markdown summary table saved as $(readlink -f $markdown_file_name)\n"
     fi
 }
 
@@ -193,7 +201,7 @@ EOF
     while true; do
 	read -p "" yn
 	case $yn in
-            [Yy]* ) format_files false "$files_to_format"; break;;
+            [Yy]* ) format_files false "$files_to_format" false; break;;
             [Nn]* ) exit;;
             * ) echo "Please answer yes or no.";;
 	esac
