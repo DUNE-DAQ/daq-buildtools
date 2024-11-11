@@ -4,30 +4,8 @@ COL_RED="\e[1;31m"
 COL_GREEN="\e[1;32m"
 
 source ${DBT_ROOT}/scripts/dbt-setup-tools.sh
-if [[ "$?" != 0 ]]; then
-    echo "The source of dbt-setup-tools.sh failed; this may mean you need to set up the dbt-buildtools environment. Exiting..." >&2
-    exit 1
-fi
 LOGDIR=${DBT_AREA_ROOT}/log
 test_log=$LOGDIR/unit_tests_$( date | sed -r 's/[: ]+/_/g' ).log
-output_markdown_file=false
-
-OPTS="m"
-while getopts $OPTS opt; do
-  case ${opt} in
-    m)
-      output_markdown_file=true
-      ;;
-    \?)
-      echo "Invalid option: -$OPTARG" >&2
-      exit 1
-      ;;
-    :)
-      echo "Option -$OPTARG requires an argument." >&2
-      exit 1
-      ;;
-  esac
-done
 
 function echo_success() {
   echo -e "${COL_GREEN}SUCCESS${COL_RESET}"
