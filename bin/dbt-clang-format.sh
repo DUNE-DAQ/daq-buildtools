@@ -133,7 +133,7 @@ function format_files() {
     local files_to_format=$2
     local output_markdown_table=$3
     if $output_markdown_table ; then 
-        local markdown_content="# Clang-Format Report"
+        local markdown_content="# Clang-Format Report\n"
     fi
     previous_package_name=""
 
