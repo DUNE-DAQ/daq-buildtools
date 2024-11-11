@@ -133,10 +133,18 @@ function format_files() {
     local files_to_format=$2
     local output_markdown_table=$3
     if $output_markdown_table ; then 
-        local markdown_content="| File | Status| \n| --- | --- |\n"
+        local markdown_content="# Clang-Format Report"
     fi
+    previous_package_name=""
 
     for orig_file in $files_to_format ; do
+
+    this_package_name=$(echo "$orig_file" | cut -d '/' -f 1)
+    if [[ "$this_package_name" != "$previous_package_name" ]]; then
+        markdown_content+="## $this_package_name \n"
+        markdown_content+="| Test | Status| \n| --- | --- |\n"
+        previous_package_name=$this_package_name
+    fi
 
 	echo "Processing ${orig_file}..."
 	tmpfile=/tmp/$( uuidgen )
