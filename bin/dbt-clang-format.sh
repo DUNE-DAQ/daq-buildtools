@@ -141,7 +141,7 @@ function format_files() {
 
     for orig_file in $files_to_format ; do
 
-    this_package_name=$(echo "$orig_file" | cut -d '/' -f 1)
+    this_package_name=$(echo "$orig_file" | cut -d '/' -f 2)
     echo "This package is ${this_package_name}"
     if [[ "$this_package_name" != "$previous_package_name" ]]; then
         markdown_content+="## $this_package_name \n"
