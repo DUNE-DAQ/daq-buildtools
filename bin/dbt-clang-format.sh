@@ -188,7 +188,11 @@ files_to_format=""
 extensions="*.hpp *.cpp *.cxx *.hxx"
 
 if [[ -d $filename ]]; then
-    files_to_format=$( for extension in $extensions ; do find $filename -name $extension; done )
+    files_to_format=$( 
+        for extension in $extensions ; do 
+            find $filename -name $extension; 
+        done | sort -t '/' -k 2
+    )
 elif [[ -f $filename ]]; then
     extension=$( echo $filename | sed -r 's/.*\.([^.]+)$/\1/' )
 
