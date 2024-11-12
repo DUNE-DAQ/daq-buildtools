@@ -1,12 +1,12 @@
 # DUNE DAQ Buildtools
 
-_This document was last edited Oct-10-2024_
+_This document was last edited Nov-12-2024_
 
 `daq-buildtools` is the toolset to simplify the development of DUNE DAQ packages. It provides environment and building utilities for the DAQ Suite.
 
 ## System requirements
 
-To get set up, you'll need access to the cvmfs areas `/cvmfs/dunedaq.opensciencegrid.org` and `/cvmfs/dunedaq-development.opensciencegrid.org`. This is the case, e.g., on the np04 cluster at CERN. By default, the environment variable `SPACK_DISABLE_LOCAL_CONFIG` is set to `true`, which allows spack to skip user configurations found under `~/.spack`. In rare cases, if you want spack to pick up your local configurations, you can unset this environment variable by issuing `unset SPACK_DISABLE_LOCAL_CONFIG`. However, the recommended way of using customized spack configrations is via the use of a workarea with a local spack instance. Customizations to spack configurations can be directly put into that local instance. More details about how to create a workarea with a spack instance can be found in the "[Advanced dbt-create options section](#Advanced dbt-create options)" on this page. 
+To get set up, you'll need access to the cvmfs areas `/cvmfs/dunedaq.opensciencegrid.org` and `/cvmfs/dunedaq-development.opensciencegrid.org`. This is the case, e.g., on the np04 cluster at CERN.
 
 <a name="Setup_of_daq-buildtools"></a>
 ## Setup of `daq-buildtools`
@@ -14,14 +14,9 @@ To get set up, you'll need access to the cvmfs areas `/cvmfs/dunedaq.openscience
 Simply do:
 ```
 source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt latest_v5
+setup_dbt fddaq-v5.2.0
 ```
-...in order to pick up the latest daq-buildtools intended for the v5 development line, or
-```
-source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt latest_v4   # "setup_dbt latest" also works
-```
-...in order to pick up the latest daq-buildtools intended for the v4 development line. Note that `latest_v4` is aliased to `v8.3.0` and `latest_v5` is aliased to `v8.7.1`. 
+Note that `fddaq-v5.2.0` is aliased to `v8.7.1`. 
 
 After running these two commands, then you'll see something like:
 ```
@@ -40,14 +35,14 @@ Each time that you log into a fresh Linux shell and want to either (1) set up an
 If you only want access to a DUNE DAQ software release (its executables, etc.) without actually developing DUNE DAQ software itself, you'll want to run a release from cvmfs. Please note that in general, frozen releases (especially patch frozen releases) are intended for this scenario, and _not_ for development. After setting up daq-buildtools, you can simply run the following command if you wish to use a frozen release:
 
 ```sh
-dbt-setup-release <release> # fddaq-v4.4.4-a9 the latest frozen release as of June-26-2024
+dbt-setup-release <release> # fddaq-v5.2.0-a9 the latest frozen release as of Nov-12-2024
 ```
 
-Note that if you set up a frozen release you'll get a message along the lines of `Release "fddaq-v4.4.4-a9" requested; interpreting this as release "fddaq-v4.4.4-a9-1"`; this simply reflects that the latest build iteration of the frozen release (`-1`, `-2`, etc.) has been alias'd out for the convenience of the user.
+Note that if you set up a frozen release you'll get a message along the lines of `Release "fddaq-v5.2.0-a9" requested; interpreting this as release "fddaq-v5.2.0-a9-1"`; this simply reflects that the latest build iteration of the frozen release (`-1`, `-2`, etc.) has been alias'd out for the convenience of the user.
 
-Instead of a frozen release you can also set up nightly releases or candidate releases using the same arguments as are described later for `dbt-create`; e.g. if you want to set up candidate release `fddaq-v4.4.0-rc4-a9` you can do:
+Instead of a frozen release you can also set up nightly releases or candidate releases using the same arguments as are described later for `dbt-create`; e.g. if you want to set up candidate release `fddaq-v5.2.0-rc3-a9` you can do:
 ```
-dbt-setup-release -b candidate fddaq-v4.4.0-rc4-a9
+dbt-setup-release -b candidate fddaq-v5.2.0-rc3-a9
 ```
 
 `dbt-setup-release` will set up both the external packages and DAQ packages, as well as activate the Python virtual environment. Note that the Python virtual environment activated here is read-only. 
@@ -60,7 +55,7 @@ If you wish to develop DUNE DAQ software, you can start by creating a work area.
 Each work area is based on a DUNE DAQ software release, which defines what external and DUNE DAQ packages the code you develop in a work area are built against. Releases come in four categories:
 * **Nightly Releases**: packages in nightly releases are built each night using the heads of their `develop` and `production/v4` branches. Depending on whether it's the far detector stack or the near detector stack, and whether it's a develop or production build, these are generally labeled either as `NFD_<branch>_<YY><MM><DD>_<OS>` (far detector) or `NND_<branch>_<YY><MM><DD>_<OS>` (near detector). E.g. `NFD_DEV_240716_A9` is the AL9 nightly develop build for the far detector on July 16th, 2024.  
 * **Frozen Releases**: a frozen release typically comes out every couple of months, and only after extensive testing supervised by a Release Coordinator. Depending on whether it's the far detector stack or the near detector stack, this is labeled as `fddaq-vX.Y.X-<OS>` or `nddaq-vX.Y.Z-<OS>`, e.g., `fddaq-v4.4.4-a9`.  
-* **Candidate Releases**: a type of release meant specifically for frozen release testing. Generally labeled as `fddaq-vX.Y.Z-rc<candidate iteration>-<OS>` or `nddaq-vX.Y.Z-rc<candidate iteration>-<OS>`. For example, `fddaq-v4.4.0-rc4-a9` is the fourth release candidate for the AL9 build of `fddaq-v4.4.0`. Note that, prior to February 13th, 2024, the labeling convention is `fddaq-vX.Y.Z-c<candidate iteration>`
+* **Candidate Releases**: a type of release meant specifically for frozen release testing. Generally labeled as `fddaq-vX.Y.Z-rc<candidate iteration>-<OS>` or `nddaq-vX.Y.Z-rc<candidate iteration>-<OS>`. For example, `fddaq-v4.4.0-rc4-a9` is the fourth release candidate for the AL9 build of `fddaq-v4.4.0`.
 
 The majority of work areas are set up to build against the most recent nightly release. To do so, run:
 ```sh
@@ -202,8 +197,6 @@ Once the runtime environment is set, just run the application you need. listrev,
 
 Now that you know how to set up a work area, a classic option for learning about how to run DAQ modules in a work area is [the listrev documentation](https://dune-daq-sw.readthedocs.io/en/latest/packages/listrev/).
 
-In the listrev instructions you'll be running a program called `nanorc` to run the DAQ. To learn more about `nanorc` itself, take a look at [the nanorc documentation](https://dune-daq-sw.readthedocs.io/en/latest/packages/nanorc/).
-
 
 <a name="Finding_Info"></a>
 ## Finding Info on Your Work Area
@@ -259,7 +252,7 @@ There are also useful Spack commands which can be executed to learn about the ve
 * `spack find --loaded -p <package name>` will tell you the path to the actual contents of a Spack-installed package
 
 Finally, when `dbt-build` is run, a file called `daq_app_rte.sh` is
-produced and placed in your installation area (`$DBT_INSTALL_DIR`). You generally don't need to think about `daq_app_rte.sh` unless you're curious; it's a sourceable file which contains environment variables that [nanorc](https://dune-daq-sw.readthedocs.io/en/latest/packages/nanorc/) uses to launch processes when performing runs. 
+produced and placed in your installation area (`$DBT_INSTALL_DIR`). You generally don't need to think about `daq_app_rte.sh` unless you're curious; it's a sourceable file which contains environment variables that [drunc](https://dune-daq-sw.readthedocs.io/en/latest/packages/drunc/) uses to launch processes when performing runs. 
 
 ## Next Step
 
