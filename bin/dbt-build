@@ -392,7 +392,9 @@ if run_tests:
         unittestdirs = stringio_obj7.getvalue().split()
 
         if len(unittestdirs) == 0:
-            rich.print(f"[red]No unit tests have been written for {pkgname}[/red]", file = sys.stderr)
+            echo_no_unittest = f"-e No unit tests written for package {pkgname}"
+            pytee.run("echo", echo_no_unittest.split(), test_log_summary)
+            #rich.print(f"[red]No unit tests have been written for {pkgname}[/red]", file = sys.stderr)
             continue
 
         if not "BOOST_TEST_LOG_LEVEL" in os.environ:
