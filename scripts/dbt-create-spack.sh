@@ -49,10 +49,6 @@ else
     echo -e "INFO [`eval $timenow`]: creating a local spack instance under ${LOCAL_SPACK_DIR}. "
     existing_spack_dir=$( realpath $SPACK_RELEASES_DIR/$SPACK_RELEASE/spack-installation 2>/dev/null )
 
-    if [[ -z $existing_spack_dir ]]; then   # Backwards compatibility with the old directory structure
-	existing_spack_dir=$( realpath $SPACK_RELEASES_DIR/$SPACK_RELEASE/default/spack-installation )
-    fi
-
     stack_new_spack $existing_spack_dir $LOCAL_SPACK_DIR
 fi
 
