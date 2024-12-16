@@ -149,7 +149,10 @@ target_package="unknown"
 [[ "$SPACK_RELEASE" =~ (ND|nd) ]] && target_package=nddaq
 [[ "$SPACK_RELEASE" =~ (FD|fd) ]] && target_package=fddaq
 
-spack_load_target_package $target_package
+# For dbt-setup-release, we don't need to drag in build-only dependencies
+variant="~~dev"
+
+spack_load_target_package $target_package $variant
 retval=$?
 if [[ "$retval" != "0" ]]; then
     error "Failed to load spack target package \"$target_package\". Returning..."

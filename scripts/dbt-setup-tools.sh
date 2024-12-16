@@ -218,6 +218,8 @@ function spack_load_target_package() {
     local spack_pkgname=$1
     local spack_pkg
 
+    local pkg_variant=$2
+
     if [[ $spack_pkgname =~ (nd|fd|core|dune)daq ]]; then
         spack_pkg=$spack_pkgname@${SPACK_RELEASE}
     else
@@ -243,9 +245,9 @@ function spack_load_target_package() {
 
 	local cmd=""
 	if [[ -n $SPACK_VERBOSE ]] && $SPACK_VERBOSE ; then
-	    cmd="spack --debug load $spack_pkg"
+	    cmd="spack --debug load $spack_pkg $pkg_variant" 
 	else
-	    cmd="spack load $spack_pkg"
+	    cmd="spack load $spack_pkg $pkg_variant"
 	fi
 
 
