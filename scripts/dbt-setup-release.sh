@@ -47,7 +47,7 @@ Arguments and options:
 
     dunedaq-release: is the name of the release the running environment will be based on (e.g. dunedaq-v2.0.0)
     -n/--nightly: switch to nightly releases, shortcut for "-b/--base-release nightly"
-    -b/--base-release: base release type, choosing from ['frozen', 'nighlty', 'candidate', 'test'], default is 'frozen'.
+    -b/--base-release: base release type, choosing from ['frozen', 'nightly', 'candidate', 'test'], default is 'frozen'.
     -l/--list: show the list of available releases
     -r/--release-path: is the path to the release archive (defaults to either $PROD_BASEPATH (frozen) or $NIGHTLY_BASEPATH (nightly))
 
