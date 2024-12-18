@@ -223,59 +223,59 @@ function spack_load_target_package() {
     if [[ $spack_pkgname =~ (nd|fd|core|dune)daq ]]; then
         spack_pkg=$spack_pkgname@${SPACK_RELEASE}
     else
-       local base_release=$( spack find --format "{version}" coredaq )
+	local base_release=$( spack find --format "{version}" coredaq )
 
-         # JCF, Apr-11-2024: Check and see if the old name for the core
-         # packages is used in this release
+	# JCF, Apr-11-2024: Check and see if the old name for the core
+	# packages is used in this release
 
-         if [[ "$base_release" =~ "No package matches the query" ]]; then
-             base_release=$( spack find --format "{version}" dunedaq )
-         fi
+	if [[ "$base_release" =~ "No package matches the query" ]]; then
+	    base_release=$( spack find --format "{version}" dunedaq )
+	fi
 
-         if [[ "$base_release" =~ "No package matches the query" ]]; then
-             spack_pkg=$spack_pkgname
-         else
-             spack_pkg=$spack_pkgname@${base_release}
-         fi
-     fi
+	if [[ "$base_release" =~ "No package matches the query" ]]; then
+	    spack_pkg=$spack_pkgname
+        else
+	    spack_pkg=$spack_pkgname@${base_release}
+	fi
+    fi
 
     pkg_loaded_status=$(spack find --loaded -l $spack_pkg | sed -r -n '/^\w{7} '$spack_pkgname'/p' )
     
     if [[ -z $pkg_loaded_status || $pkg_loaded_status =~ "0 loaded packages" || $pkg_loaded_status =~ "No package matches the query: $spack_pkgname" ]]; then
 
-    local cmd=""
-    if [[ -n $SPACK_VERBOSE ]] && $SPACK_VERBOSE ; then
-        cmd="spack --debug load $spack_pkg $pkg_variant" 
+	local cmd=""
+	if [[ -n $SPACK_VERBOSE ]] && $SPACK_VERBOSE ; then
+	    cmd="spack --debug load $spack_pkg $pkg_variant" 
+	else
+	    cmd="spack load $spack_pkg $pkg_variant"
+	fi
+
+
+	cat<<EOF
+
+This script is calling "$cmd"; it will print "Finished loading" 
+on successful completion. 
+
+If this is the first time the "spack load ..." command has been run in
+a while on this node it may take ~15 minutes; this is because cvmfs is
+populating its local cache. Please be patient; subsequent runs should
+take less than a minute.
+
+EOF
+	$cmd
+	retval=$?
+	if [[ "$retval" == "0" ]]; then
+	    echo "Finished loading"
+	else
+	    error "There was a problem calling ${cmd}"
+	    return $retval
+	fi
+	
     else
-        cmd="spack load $spack_pkg $pkg_variant"
+	spack find -p -l --loaded $spack_pkgname
+	error "There already appear to be \"$spack_pkgname\" packages loaded in; this is disallowed."
+	return 1
     fi
-
-
-    cat<<EOF
-
-  This script is calling "$cmd"; it will print "Finished loading" 
-  on successful completion. 
-
-  If this is the first time the "spack load ..." command has been run in
-  a while on this node it may take ~15 minutes; this is because cvmfs is
-  populating its local cache. Please be patient; subsequent runs should
-  take less than a minute.
-
-  EOF
-    $cmd
-    retval=$?
-    if [[ "$retval" == "0" ]]; then
-        echo "Finished loading"
-    else
-        error "There was a problem calling ${cmd}"
-        return $retval
-    fi
-    
-      else
-    spack find -p -l --loaded $spack_pkgname
-    error "There already appear to be \"$spack_pkgname\" packages loaded in; this is disallowed."
-    return 1
-      fi
 
 }
 #------------------------------------------------------------------------------
