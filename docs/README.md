@@ -1,6 +1,6 @@
 # DUNE DAQ Buildtools
 
-_This document was last edited Feb-8-2024_
+_This document was last edited Jan-30-2025_
 
 `daq-buildtools` is the toolset to simplify the development of DUNE DAQ packages. It provides environment and building utilities for the DAQ Suite.
 
@@ -234,6 +234,15 @@ This file is sourced whenever you run `dbt-workarea-env`, and it tells both the 
 * `$SPACK_RELEASES_DIR`: The base of the directory containing the DUNE DAQ software installations. 
 * `DBT_ROOT_WHEN_CREATED`: The directory containing the `env.sh` file which was sourced before this work area was first created
 * `LOCAL_SPACK_DIR`: If the `-s/--spack` was passed to `dbt-create` when the work area was built, this points to where the local Spack area is located
+
+### `dbt-lcov.sh`
+
+Strictly speaking, this script is more about finding info about your code than about your work area per se in that it determines what fraction of your lines of code and functions the unit tests in your work area's repos cover. This script wraps calls to our installed external [`lcov` package](https://github.com/linux-test-project/lcov). Assuming you've set up your work area's enviroment and are in its base, if you run
+```
+dbt-lcov.sh`
+```
+what will happen is that, if needed, the script will insert a few lines of CMake code into the `sourcecode/CMakeLists.txt` file which will ensure that when the repos are built the output will be instrumented in a manner `lcov` can use. It will then perform a clean build now that `sourcecode/CMakeLists.txt` has been modified, followed by a run of the unit tests. It will then output the results in a subdirectory called `./code_coverage_results`; in particular, `./code_coverage_results/html/index.html` is a webpage which will display the fractions mentioned above. 
+
 
 ### Useful Spack commands
 
