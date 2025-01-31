@@ -237,11 +237,13 @@ This file is sourced whenever you run `dbt-workarea-env`, and it tells both the 
 
 ### `dbt-lcov.sh`
 
-Strictly speaking, this script is more about finding info about your code than about your work area per se in that it determines what fraction of your lines of code and functions the unit tests in your work area's repos cover. This script wraps calls to our installed external [`lcov` package](https://github.com/linux-test-project/lcov). Assuming you've set up your work area's enviroment and are in its base, if you run
+Strictly speaking, this script is more about finding info about your code than about your work area. It determines what fraction of your lines of code and functions the unit tests in your work area's repos cover. This script wraps calls to our installed external [`lcov` package](https://github.com/linux-test-project/lcov). Assuming you've set up your work area's enviroment and are in its base, if you run
 ```
-dbt-lcov.sh`
+dbt-lcov.sh
 ```
-what will happen is that, if needed, the script will insert a few lines of CMake code into the `sourcecode/CMakeLists.txt` file which will ensure that when the repos are built the output will be instrumented in a manner `lcov` can use. It will then perform a clean build now that `sourcecode/CMakeLists.txt` has been modified, followed by a run of the unit tests. It will then output the results in a subdirectory called `./code_coverage_results`; in particular, `./code_coverage_results/html/index.html` is a webpage which will display the fractions mentioned above. 
+what will happen is that, if it hasn't already been run, the script will insert a few lines of CMake code into the `sourcecode/CMakeLists.txt` file which will ensure that when the repos are built the output will be instrumented in a manner `lcov` can use. It will then perform a clean build now that `sourcecode/CMakeLists.txt` has been modified, followed by a run of the unit tests. It will then output the results in a subdirectory called `./code_coverage_results`; in particular, `./code_coverage_results/html/index.html` is a webpage which will display the fractions mentioned above. 
+
+Please note that due to the modification of `sourcecode/CMakeLists.txt`, you wouldn't want to use the code you build for normal running (e.g., for performance testing or data readout). Likely it's best to use a work area dedicated to code coverage study as opposed to other functions.  
 
 
 ### Useful Spack commands
