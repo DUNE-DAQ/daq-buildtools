@@ -221,7 +221,12 @@ function spack_load_target_package() {
     local daq_pkg_variant=${2:-+dev}
 
     if [[ $spack_pkgname =~ (nd|fd|core|dune)daq || $spack_pkgname == "externals" ]]; then
-        spack_pkg="$spack_pkgname@${SPACK_RELEASE} ${daq_pkg_variant}"
+        # For backwards compatibility, check for dev variant before loading it
+        if spack find --variants coredaq | grep -q "~dev"; then
+          spack_pkg="$spack_pkgname@${SPACK_RELEASE} ${daq_pkg_variant}"
+        else
+          spack_pkg="$spack_pkgname@${SPACK_RELEASE}"
+        fi
     else
 	local base_release=$( spack find --format "{version}" coredaq ${daq_pkg_variant} )
 
