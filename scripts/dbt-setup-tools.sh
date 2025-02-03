@@ -220,15 +220,13 @@ function spack_load_target_package() {
 
     local daq_pkg_variant=${2:-+dev}
 
+    if ! spack find --variants $spack_pkgname | grep -q "$daq_pkg_variant"; then
+        daq_pkg_variant=""
+    fi
     if [[ $spack_pkgname =~ (nd|fd|core|dune)daq || $spack_pkgname == "externals" ]]; then
-        # For backwards compatibility, check for dev variant before loading it
-        if spack find --variants coredaq | grep -q "~dev"; then
-          spack_pkg="$spack_pkgname@${SPACK_RELEASE} ${daq_pkg_variant}"
-        else
-          spack_pkg="$spack_pkgname@${SPACK_RELEASE}"
-        fi
+        spack_pkg="$spack_pkgname@${SPACK_RELEASE}${daq_pkg_variant}"
     else
-	local base_release=$( spack find --format "{version}" coredaq ${daq_pkg_variant} )
+	local base_release=$( spack find --format "{version}" coredaq${daq_pkg_variant} )
 
 	# JCF, Apr-11-2024: Check and see if the old name for the core
 	# packages is used in this release
