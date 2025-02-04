@@ -220,9 +220,12 @@ function spack_load_target_package() {
 
     local daq_pkg_variant=${2:-+dev}
 
+    echo "spack find --variants: $(spack find --variants $spack_pkgname)"
     if ! spack find --variants $spack_pkgname | grep -q "$daq_pkg_variant"; then
         daq_pkg_variant=""
     fi
+    echo "Package name: $spack_pkgname"
+    echo "Variant: $daq_pkg_variant"
     if [[ $spack_pkgname =~ (nd|fd|core|dune)daq || $spack_pkgname == "externals" ]]; then
         spack_pkg="$spack_pkgname@${SPACK_RELEASE}${daq_pkg_variant}"
     else
