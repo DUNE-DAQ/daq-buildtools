@@ -47,7 +47,7 @@ Arguments and options:
 
     dunedaq-release: is the name of the release the running environment will be based on (e.g. dunedaq-v2.0.0)
     -n/--nightly: switch to nightly releases, shortcut for "-b/--base-release nightly"
-    -b/--base-release: base release type, choosing from ['frozen', 'nighlty', 'candidate', 'test'], default is 'frozen'.
+    -b/--base-release: base release type, choosing from ['frozen', 'nightly', 'candidate', 'test'], default is 'frozen'.
     -l/--list: show the list of available releases
     -r/--release-path: is the path to the release archive (defaults to either $PROD_BASEPATH (frozen) or $NIGHTLY_BASEPATH (nightly))
 
@@ -149,7 +149,10 @@ target_package="unknown"
 [[ "$SPACK_RELEASE" =~ (ND|nd) ]] && target_package=nddaq
 [[ "$SPACK_RELEASE" =~ (FD|fd) ]] && target_package=fddaq
 
-spack_load_target_package $target_package
+# For dbt-setup-release, we don't need to drag in build-only dependencies
+variant="~dev"
+
+spack_load_target_package $target_package $variant
 retval=$?
 if [[ "$retval" != "0" ]]; then
     error "Failed to load spack target package \"$target_package\". Returning..."
