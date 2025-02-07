@@ -236,13 +236,12 @@ This file is sourced whenever you run `dbt-workarea-env`, and it tells both the 
 * `DBT_ROOT_WHEN_CREATED`: The directory containing the `env.sh` file which was sourced before this work area was first created
 * `LOCAL_SPACK_DIR`: If the `-s/--spack` was passed to `dbt-create` when the work area was built, this points to where the local Spack area is located
 
-#<<<<<<< HEAD
-#If you set up your work area using `daq-buildtools v8.6.1` or later (i.e., using the `develop` line instead of `production/v4`), you'll also see something like
+If you set up your work area using `daq-buildtools v8.6.1` or later (i.e., using the `develop` line instead of `production/v4`), you'll also see something like
 ```
 export DUNE_DAQ_RELEASE_SOURCE="/cvmfs/dunedaq-development.opensciencegrid.org/candidates/fddaq-v5.1.0-rc1-a9/sourcecode"
 ```
 `DUNE_DAQ_RELEASE_SOURCE` points to a cvmfs area containing the source code used to build this release. This can be useful for inspecting packages not checked out locally under `$DBT_AREA_ROOT/sourcecode`. 
-=======
+
 ### `dbt-lcov.sh`
 
 Strictly speaking, this script is more about finding info about your code than about your work area per se in that it determines what fraction of your lines of code and functions the unit tests in your work area's repos cover. This script wraps calls to our installed external [`lcov` package](https://github.com/linux-test-project/lcov). Assuming you've set up your work area's enviroment and are in its base, if you run
@@ -251,16 +250,14 @@ dbt-lcov.sh`
 ```
 what will happen is that, if needed, the script will insert a few lines of CMake code into the `sourcecode/CMakeLists.txt` file which will ensure that when the repos are built the output will be instrumented in a manner `lcov` can use. It will then perform a clean build now that `sourcecode/CMakeLists.txt` has been modified, followed by a run of the unit tests. It will then output the results in a subdirectory called `./code_coverage_results`; in particular, `./code_coverage_results/html/index.html` is a webpage which will display the fractions mentioned above. 
 
->>>>>>> 97fd124 (JCF: Issue #289: Update README.md to include mention of dbt-lcov.sh)
-
 ### Useful Spack commands
 
 There are also useful Spack commands which can be executed to learn about the versions of the individual packages you're working with, once you've run `dbt-workarea-env` or `dbt-setup-release`. An [excellent Spack tutorial](https://spack-tutorial.readthedocs.io/en/latest/tutorial_basics.html) inside the official Spack documentation is worth a look, but a few Spack commands can be used right away to learn more about your environment. They're presented both for the case of you having set up a nightly release and a frozen release:
-* `spack find --loaded -N | grep coredaq-vX.Y.Z` or `spack find --loaded -N | grep NB` will tell you all the DUNE DAQ packages shared by both far- and near detector software which have been loaded by `dbt-workarea-env` or `dbt-setup-release`
-* `spack find --loaded -N | grep fddaq-vX.Y.Z` or `spack find --loaded -N | grep FD` for far detector DUNE DAQ packages
-* `spack find --loaded -N | grep nddaq-vX.Y.Z` or `spack find --loaded -N | grep ND` for near detector DUNE DAQ packages
-* `spack find --loaded -N | grep dunedaq-externals` for external packages not developed by DUNE collaborators
-* `spack find --loaded -p <package name>` will tell you the path to the actual contents of a Spack-installed package
+* `spack find -N -d --loaded | grep NB` will tell you all the DUNE DAQ packages shared by both far- and near detector software which have been loaded by `dbt-workarea-env` or `dbt-setup-release`
+* `spack find -N -d --loaded | grep NFD` for far detector-specific DUNE DAQ packages
+* `spack find -N -d --loaded | grep NND` for near detector-specific DUNE DAQ packages
+* `spack find -N -d --loaded | grep dunedaq-externals` for external packages not developed by DUNE collaborators
+* `spack find -p <package name>` will tell you the path to the actual contents of a Spack-installed package
 
 Finally, when `dbt-build` is run, a file called `daq_app_rte.sh` is
 produced and placed in your installation area (`$DBT_INSTALL_DIR`). You generally don't need to think about `daq_app_rte.sh` unless you're curious; it's a sourceable file which contains environment variables that [drunc](https://dune-daq-sw.readthedocs.io/en/latest/packages/drunc/) uses to launch processes when performing runs. 
