@@ -44,12 +44,13 @@ usage_blurb=f"""
 Usage
 -----
 
-      {os.path.basename(__file__)} [-c/--clean] [-d/--debug] [-j<n>/--jobs <number parallel build jobs>] [--unittest (<optional package name>)] [--lint (<optional package name|optional file name>)] [-v/--cpp-verbose] [-h/--help]
+      {os.path.basename(__file__)} [-c/--clean] [-d/--debug] [-j<n>/--jobs <number parallel build jobs>] [--unittest (<optional package name>)] [--pytest <optional package name>] [--lint (<optional package name|optional file name>)] [-v/--cpp-verbose] [-h/--help]
 
         -c/--clean means the contents of ./build are deleted and CMake's config+generate+build stages are run
         -d/--debug means you want to build your software with optimizations off and debugging info on
         -j/--jobs means you want to specify the number of jobs used by cmake to build the project
         --unittest means that unit test executables found in ./build/<optional package name>/unittest are run, or all unit tests in ./build/*/unittest are run if no package name is provided
+        --pytest means that pytest tests found in ./build/<optional package name>/integtest are run, or all pytest tests in ./build/*/integtest are run if no package name is provided
         --lint means you check for deviations in ./sourcecode/<optional package name> from the DUNE style guide, https://dune-daq-sw.readthedocs.io/en/latest/packages/styleguide/, or deviations in all local repos if no package name is provided. You can also pass the name of an individual file. 
         -v/--cpp-verbose means that you want verbose output from the compiler
         --cmake-msg-lvl setting "CMAKE_MESSAGE_LOG_LEVEL", default is "NOTICE", choices are ERROR|WARNING|NOTICE|STATUS|VERBOSE|DEBUG|TRACE.
@@ -83,6 +84,7 @@ parser.add_argument("-d", "--debug", action="store_true", dest='debug_build', he
 parser.add_argument("-v", "--cpp-verbose", action="store_true", dest='cpp_verbose', help=argparse.SUPPRESS)
 parser.add_argument("-j", "--jobs", action='store', type=int, dest='n_jobs', help=argparse.SUPPRESS)
 parser.add_argument("--unittest", nargs="?", const="all", help=argparse.SUPPRESS)
+parser.add_argument("--pytest", nargs="?", const="all", help=argparse.SUPPRESS)
 parser.add_argument("--lint", nargs="?", const="all", help=argparse.SUPPRESS)
 parser.add_argument("--cmake-msg-lvl", dest="cmake_msg_lvl", help=argparse.SUPPRESS)
 parser.add_argument("--optimize-flag", dest="optimize_flag", help=argparse.SUPPRESS)
@@ -110,6 +112,12 @@ if args.unittest:
     run_tests=True
     if args.unittest != "all":
         package_to_test = args.unittest
+
+run_pytests = False
+if args.pytest:
+    run_pytests=True
+    if args.pytest != "all":
+        package_to_pytest = args.pytest
 
 lint = False
 if args.lint:
@@ -429,6 +437,20 @@ RUNNING UNIT TESTS IN {unittestdir}
 
             rich.print(f"[yellow]Testing complete for package \"{pkgname}\". Ran {num_unit_tests} unit test suites.[/yellow]")
             rich.print("")
+
+if run_pytests:
+    datestring = re.sub("[: ]+", "_", sh.date().strip())
+
+    test_log_dir = f"{LOGDIR}/unit_tests_{datestring}"
+    test_log_summary = f"{test_log_dir}/unit_test_summary.log"
+    os.mkdir(test_log_dir)
+
+    os.chdir(BUILDDIR)
+
+    if args.pytest == "all":
+        package_list = sh.find("-L . -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles").strip().split()
+    else:
+        package_list = [package_to_test]
 
 if args.lint:
     os.chdir(BASEDIR)
