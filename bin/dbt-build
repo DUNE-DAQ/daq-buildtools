@@ -441,16 +441,33 @@ RUNNING UNIT TESTS IN {unittestdir}
 if run_pytests:
     datestring = re.sub("[: ]+", "_", sh.date().strip())
 
-    test_log_dir = f"{LOGDIR}/unit_tests_{datestring}"
-    test_log_summary = f"{test_log_dir}/unit_test_summary.log"
-    os.mkdir(test_log_dir)
+    pytest_log_dir = f"{LOGDIR}/pytest_tests_{datestring}"
+    pytest_log_summary = f"{pytest_log_dir}/pytest_summary.log"
+    os.mkdir(pytest_log_dir)
 
-    os.chdir(BUILDDIR)
+    os.chdir(SRCDIR)
 
     if args.pytest == "all":
-        package_list = sh.find("-L . -mindepth 1 -maxdepth 1 -type d -not -name CMakeFiles").strip().split()
+        pytest_package_list = sh.find("-L . -mindepth 1 -maxdepth 1 -type d -not -name .pytest_cache".split()).strip().split()
+        print('Package list:', pytest_package_list)
     else:
-        package_list = [package_to_test]
+        pytest_package_list = [package_to_test]
+
+    # Tests that still need porting from v4 to v5
+    ignore_args = """--ignore trigger/integtest/td_leakage_between_runs_test.py 
+                     --ignore "hsilibs/integtest/iceberg_real_hsi_test.py""".split()
+    print('ignore_args:', ignore_args)
+
+    for package in pytest_package_list:
+        capture_args = f"-v -s --junit-xml=pytest_{package}_results.xml".split()
+        pytest_args = capture_args + [package] + ignore_args
+        print('pytest_args:', pytest_args)
+        if pytest_args:
+            sh.pytest(*pytest_args, _out=sys.stdout, _err=sys.stderr)
+        else:
+            print("No packages found for pytest.")
+
+    rich.print(f"[yellow]Pytests complete for \"{package}\".[/yellow]")
 
 if args.lint:
     os.chdir(BASEDIR)
@@ -529,6 +546,14 @@ Detailed unit test results are saved in the following directory:
 {test_log_dir}
 """
 
+pytestinfo = ""
+if run_pytests:
+    pytestinfo=f"""
+Pytest summary can be found in {pytest_log_summary}.
+Detailed pytest results are saved in the following directory:
+{pytest_log_dir}
+"""
+
 lintinfo = ""
 if args.lint and not code_to_lint_is_a_file:    
     lintinfo=f"""
@@ -543,6 +568,7 @@ build details you can either scroll up or run the following:
 less -R {build_log}
 
 {testinfo}
+{pytestinfo}
 {lintinfo}
 """)
 
