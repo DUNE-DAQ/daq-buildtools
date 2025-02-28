@@ -206,16 +206,16 @@ cfggentime=None
 if not os.path.exists("CMakeCache.txt"):
     running_config_and_generate = True
 
-    found_cvmfs_ninja = False
+    found_spack_ninja = False
     try:
-        res = re.search(r"^/cvmfs", sh.which("ninja"))
+        res = re.search(r"-\w{32}/bin/ninja$", sh.which("ninja"))
         if res is not None:
-           found_cvmfs_ninja = True
+           found_spack_ninja = True
     except:
         pass
 
-    if not found_cvmfs_ninja:
-        error("Ninja seems to be missing. The \"which ninja\" command did not yield an executable in the /cvmfs area. Exiting...")
+    if not found_spack_ninja:
+        error("Ninja seems to be missing. The \"which ninja\" command did not yield an executable in a Spack-installed package. Exiting...")
 
     stringio_obj3 = io.StringIO()
     the_which_cmd = sh.Command("which")  # Needed because of a complex alias, at least on mu2edaq
