@@ -450,31 +450,30 @@ if run_pytests:
 
     if args.pytest == "all":
         pytest_package_list = sh.find("-L . -mindepth 1 -maxdepth 1 -type d -not -name .pytest_cache".split()).strip().split()
-        print('Package list:', pytest_package_list)
     else:
         pytest_package_list = [package_to_pytest]
 
-    # Tests that still need porting from v4 to v5
-    ignore_args = """--ignore trigger/integtest/td_leakage_between_runs_test.py 
-                     --ignore "hsilibs/integtest/iceberg_real_hsi_test.py""".split()
-    print('ignore_args:', ignore_args)
+    # Optional tests to ignore, such as tests that still need porting from v4 to v5
+    #ignore_args = """--ignore trigger/integtest/td_leakage_between_runs_test.py 
+    #                 --ignore "hsilibs/integtest/iceberg_real_hsi_test.py""".split()
+    ignore_args = []
 
     for package in pytest_package_list:
         package_has_tests = sh.find(f"-L {package}/ -name integtest -type d".split()).strip().split()
         if not package_has_tests:
-            print(f"Package {package} does not have any pytest tests in its integtest/ directory. Skipping...")
+            echo_no_pytest = f"-e \033[31mNo pytest tests found in the integtest/ directory for package {os.path.basename(package)} \033[0m"
+            pytee.run("echo", echo_no_pytest.split(), pytest_log_summary)
             continue
-        package_tests = sh.find(f"-L {package}/integtest -name *_test.py -type f".split()).strip().split()
-        # Example: Tests for ./dfmodules: ['./dfmodules/integtest/disabled_output_test.py', './dfmodules/integtest/insufficient_disk_space_test.py', './dfmodules/integtest/large_trigger_record_test.py', './dfmodules/integtest/multi_output_file_test.py']
+        # Pytests should be stored in the integtest/ directory
+        package_pytests = sh.find(f"-L {package}/integtest -name *_test.py -type f".split()).strip().split()
 
-        print(f'Tests for {package}: {package_tests}')
-        for test in package_tests:
-            #capture_args = f"-v -s --junit-xml={pytest_log_dir}/{package}_{test}_results.xml".split()
-            print(f'--------{test}---------')
-            capture_args = f"--junit-xml={pytest_log_dir}/{package}_{test}_results.xml".split()
-            pytest_args = capture_args + [test] + ignore_args
-            print('pytest_args:', pytest_args)
-            with open(f"{pytest_log_dir}/{package}_pytest.log", "w") as log:
+        for pytest in package_pytests:
+            pytest_name = os.path.basename(pytest.replace('.py', ''))
+            pytest_full_output_log = f"{pytest_log_dir}/{package}_{pytest_name}.log"
+            pytest_junit_xml_output = f"{pytest_log_dir}/{package}_{pytest_name}_results.xml"
+            capture_args = f"--junit-xml={pytest_junit_xml_output}".split()
+            pytest_args = capture_args + [pytest] + ignore_args
+            with open(pytest_full_output_log, "w") as log:
                 process = subprocess.Popen(
                     ["pytest", package] + capture_args + ignore_args, 
                     stdout=subprocess.PIPE,
@@ -489,6 +488,15 @@ if run_pytests:
 
                 process.wait()
                 exit_code = process.returncode
+                if exit_code != 0:
+                    echo_result = f"-e {package}.{pytest_name:.<70}FAILURE"
+                else:
+                    echo_result = f"-e {package}.{pytest_name:.<70}SUCCESS"
+                pytee.run("echo", echo_result.split(), pytest_log_summary)
+
+            rich.print(f"""[yellow]Test \"{pytest_name}\" complete for package \"{package}\". 
+            The full pytest output can be found at {pytest_full_output_log}
+            The junit xml file can be found at {pytest_junit_xml_output}[/yellow]""")
 
 if args.lint:
     os.chdir(BASEDIR)
