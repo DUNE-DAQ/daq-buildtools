@@ -471,7 +471,7 @@ if run_pytests:
             pytest_name = os.path.basename(pytest.replace('.py', ''))
             pytest_full_output_log = f"{pytest_log_dir}/{package}_{pytest_name}.log"
             pytest_junit_xml_output = f"{pytest_log_dir}/{package}_{pytest_name}_results.xml"
-            capture_args = f"--junit-xml={pytest_junit_xml_output}".split()
+            capture_args = f"-v -s --junit-xml={pytest_junit_xml_output}".split()
             pytest_args = capture_args + [pytest] + ignore_args
             with open(pytest_full_output_log, "w") as log:
                 process = subprocess.Popen(
@@ -497,6 +497,12 @@ if run_pytests:
             rich.print(f"""[yellow]Test \"{pytest_name}\" complete for package \"{package}\". 
             The full pytest output can be found at {pytest_full_output_log}
             The junit xml file can be found at {pytest_junit_xml_output}[/yellow]""")
+
+        # Remove __pycache__ directories
+        pycache_dir = sh.find('.', '-name', '__pycache__', '-type', 'd').strip().split()
+        if pycache_dir:
+            rich.print(f"[yellow] Removing __pycache__ directory from {pycache_dir}")
+            sh.rm('-rf', pycache_dir)
 
 if args.lint:
     os.chdir(BASEDIR)
