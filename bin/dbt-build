@@ -442,40 +442,39 @@ RUNNING UNIT TESTS IN {unittestdir}
 if run_pytests:
     datestring = re.sub("[: ]+", "_", sh.date().strip())
 
-    pytest_log_dir = f"{LOGDIR}/pytest_tests_{datestring}"
-    pytest_log_summary = f"{pytest_log_dir}/pytest_summary.log"
-    os.mkdir(pytest_log_dir)
+    pytest_log_dir = pathlib.Path(LOGDIR)/f"pytest_tests_{datestring}"
+    pytest_log_summary = pytest_log_dir/"pytest_summary.log"
+    pytest_log_dir.mkdir(parents=True, exist_ok=True)
 
-    os.chdir(SRCDIR)
+    os.chdir(BASEDIR)
 
     if args.pytest == "all":
-        pytest_package_list = sh.find("-L . -mindepth 1 -maxdepth 1 -type d -not -name .pytest_cache".split()).strip().split()
+        pytest_package_list = [path for path in pathlib.Path('sourcecode').iterdir() 
+                               if path.is_dir() and path.name != '.pytest_cache']
     else:
-        pytest_package_list = [package_to_pytest]
+        pytest_package_list = [pathlib.Path(f'sourcecode/{package_to_pytest}')]
 
     # Optional tests to ignore, such as tests that still need porting from v4 to v5
     #ignore_args = """--ignore trigger/integtest/td_leakage_between_runs_test.py 
     #                 --ignore "hsilibs/integtest/iceberg_real_hsi_test.py""".split()
     ignore_args = []
 
-    for package in pytest_package_list:
-        package_has_tests = sh.find(f"-L {package}/ -name integtest -type d".split()).strip().split()
-        if not package_has_tests:
-            echo_no_pytest = f"-e \033[31mNo pytest tests found in the integtest/ directory for package {os.path.basename(package)} \033[0m"
-            pytee.run("echo", echo_no_pytest.split(), pytest_log_summary)
+    for package_path in pytest_package_list:
+        package = package_path.stem
+        if not (package_path/"integtest").is_dir():
+            pytee.run("echo", ["-e", f"\033[31mNo pytest tests found in {package}/integtest\033[0m"], pytest_log_summary)
             continue
         # Pytests should be stored in the integtest/ directory
-        package_pytests = sh.find(f"-L {package}/integtest -name *_test.py -type f".split()).strip().split()
+        package_pytests = package_path.glob('integtest/*_test.py')
 
-        for pytest in package_pytests:
-            pytest_name = os.path.basename(pytest.replace('.py', ''))
-            pytest_full_output_log = f"{pytest_log_dir}/{package}_{pytest_name}.log"
-            pytest_junit_xml_output = f"{pytest_log_dir}/{package}_{pytest_name}_results.xml"
-            capture_args = f"-v -s --junit-xml={pytest_junit_xml_output}".split()
-            pytest_args = capture_args + [pytest] + ignore_args
+        for pytest_path in package_pytests:
+            pytest_name = (pathlib.Path(pytest_path).stem).replace('.py', '')
+            pytest_full_output_log = pytest_log_dir / f"{package}_{pytest_name}.log"
+            pytest_junit_xml_output = pytest_log_dir / f"{package}_{pytest_name}_results.xml"
+            pytest_cmd = ["pytest", pytest_path, "-v", "-s", f"--junit-xml={pytest_junit_xml_output}"] + ignore_args
             with open(pytest_full_output_log, "w") as log:
                 process = subprocess.Popen(
-                    ["pytest", package] + capture_args + ignore_args, 
+                    pytest_cmd,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True,
@@ -488,21 +487,26 @@ if run_pytests:
 
                 process.wait()
                 exit_code = process.returncode
-                if exit_code != 0:
-                    echo_result = f"-e {package}.{pytest_name:.<70}FAILURE"
-                else:
-                    echo_result = f"-e {package}.{pytest_name:.<70}SUCCESS"
-                pytee.run("echo", echo_result.split(), pytest_log_summary)
+                result_message = f"-e {package}.{pytest_name:.<70}{'SUCCESS' if exit_code == 0 else 'FAILURE'}"
+                pytee.run("echo", result_message.split(), pytest_log_summary)
 
             rich.print(f"""[yellow]Test \"{pytest_name}\" complete for package \"{package}\". 
             The full pytest output can be found at {pytest_full_output_log}
             The junit xml file can be found at {pytest_junit_xml_output}[/yellow]""")
 
         # Remove __pycache__ directories
-        pycache_dir = sh.find('.', '-name', '__pycache__', '-type', 'd').strip().split()
-        if pycache_dir:
-            rich.print(f"[yellow] Removing __pycache__ directory from {pycache_dir}")
+        pycache_dir = package_path/'integtest/__pycache__'
+        if pycache_dir.is_dir():
+            rich.print(f"[yellow] Removing __pycache__ directory from {package_path/'integtest'}")
             sh.rm('-rf', pycache_dir)
+    # Move .pytest_cache directory to suppress build warnings
+    src_pytest_cache = pathlib.Path('sourcecode/.pytest_cache')
+    if src_pytest_cache.is_dir():
+        rich.print(f"[yellow] Moving {src_pytest_cache} to {BASEDIR}")
+        base_pytest_cache = pathlib.Path(f'{BASEDIR}/.pytest_cache')
+        if base_pytest_cache.is_dir():
+            sh.rm('-rf', base_pytest_cache)
+        src_pytest_cache.rename(base_pytest_cache)
 
 if args.lint:
     os.chdir(BASEDIR)
