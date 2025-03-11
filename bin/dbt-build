@@ -45,13 +45,13 @@ usage_blurb=f"""
 Usage
 -----
 
-      {os.path.basename(__file__)} [-c/--clean] [-d/--debug] [-j<n>/--jobs <number parallel build jobs>] [--unittest (<optional package name>)] [--pytest <optional package name>] [--lint (<optional package name|optional file name>)] [-v/--cpp-verbose] [-h/--help]
+      {os.path.basename(__file__)} [-c/--clean] [-d/--debug] [-j<n>/--jobs <number parallel build jobs>] [--unittest (<optional package name>)] [--integtest <optional package name>] [--lint (<optional package name|optional file name>)] [-v/--cpp-verbose] [-h/--help]
 
         -c/--clean means the contents of ./build are deleted and CMake's config+generate+build stages are run
         -d/--debug means you want to build your software with optimizations off and debugging info on
         -j/--jobs means you want to specify the number of jobs used by cmake to build the project
         --unittest means that unit test executables found in ./build/<optional package name>/unittest are run, or all unit tests in ./build/*/unittest are run if no package name is provided
-        --pytest means that pytest tests found in ./build/<optional package name>/integtest are run, or all pytest tests in ./build/*/integtest are run if no package name is provided
+        --integtest means that pytest tests found in ./build/<optional package name>/integtest are run, or all pytest tests in ./sourcecode/*/integtest are run if no package name is provided
         --lint means you check for deviations in ./sourcecode/<optional package name> from the DUNE style guide, https://dune-daq-sw.readthedocs.io/en/latest/packages/styleguide/, or deviations in all local repos if no package name is provided. You can also pass the name of an individual file. 
         -v/--cpp-verbose means that you want verbose output from the compiler
         --cmake-msg-lvl setting "CMAKE_MESSAGE_LOG_LEVEL", default is "NOTICE", choices are ERROR|WARNING|NOTICE|STATUS|VERBOSE|DEBUG|TRACE.
@@ -85,7 +85,7 @@ parser.add_argument("-d", "--debug", action="store_true", dest='debug_build', he
 parser.add_argument("-v", "--cpp-verbose", action="store_true", dest='cpp_verbose', help=argparse.SUPPRESS)
 parser.add_argument("-j", "--jobs", action='store', type=int, dest='n_jobs', help=argparse.SUPPRESS)
 parser.add_argument("--unittest", nargs="?", const="all", help=argparse.SUPPRESS)
-parser.add_argument("--pytest", nargs="?", const="all", help=argparse.SUPPRESS)
+parser.add_argument("--integtest", nargs="?", const="all", help=argparse.SUPPRESS)
 parser.add_argument("--lint", nargs="?", const="all", help=argparse.SUPPRESS)
 parser.add_argument("--cmake-msg-lvl", dest="cmake_msg_lvl", help=argparse.SUPPRESS)
 parser.add_argument("--optimize-flag", dest="optimize_flag", help=argparse.SUPPRESS)
@@ -114,11 +114,11 @@ if args.unittest:
     if args.unittest != "all":
         package_to_test = args.unittest
 
-run_pytests = False
-if args.pytest:
-    run_pytests=True
-    if args.pytest != "all":
-        package_to_pytest = args.pytest
+run_integtests = False
+if args.integtest:
+    run_integtests=True
+    if args.integtest != "all":
+        package_to_integtest = args.integtest
 
 lint = False
 if args.lint:
@@ -439,42 +439,42 @@ RUNNING UNIT TESTS IN {unittestdir}
             rich.print(f"[yellow]Testing complete for package \"{pkgname}\". Ran {num_unit_tests} unit test suites.[/yellow]")
             rich.print("")
 
-if run_pytests:
+if run_integtests:
     datestring = re.sub("[: ]+", "_", sh.date().strip())
 
-    pytest_log_dir = pathlib.Path(LOGDIR)/f"pytest_tests_{datestring}"
-    pytest_log_summary = pytest_log_dir/"pytest_summary.log"
-    pytest_log_dir.mkdir(parents=True, exist_ok=True)
+    integtest_log_dir = pathlib.Path(LOGDIR)/f"integtest_tests_{datestring}"
+    integtest_log_summary = integtest_log_dir/"integtest_summary.log"
+    integtest_log_dir.mkdir(parents=True, exist_ok=True)
 
     os.chdir(BASEDIR)
 
-    if args.pytest == "all":
-        pytest_package_list = [path for path in pathlib.Path('sourcecode').iterdir() 
+    if args.integtest == "all":
+        integtest_package_list = [path for path in pathlib.Path('sourcecode').iterdir() 
                                if path.is_dir() and path.name != '.pytest_cache']
     else:
-        pytest_package_list = [pathlib.Path(f'sourcecode/{package_to_pytest}')]
+        integtest_package_list = [pathlib.Path(f'sourcecode/{package_to_integtest}')]
 
     # Optional tests to ignore, such as tests that still need porting from v4 to v5
     #ignore_args = """--ignore trigger/integtest/td_leakage_between_runs_test.py 
     #                 --ignore "hsilibs/integtest/iceberg_real_hsi_test.py""".split()
     ignore_args = []
 
-    for package_path in pytest_package_list:
+    for package_path in integtest_package_list:
         package = package_path.stem
         if not (package_path/"integtest").is_dir():
-            pytee.run("echo", ["-e", f"\033[31mNo pytest tests found in {package}/integtest\033[0m"], pytest_log_summary)
+            pytee.run("echo", ["-e", f"\033[31mNo python integration tests found in {package}/integtest\033[0m"], integtest_log_summary)
             continue
-        # Pytests should be stored in the integtest/ directory
-        package_pytests = package_path.glob('integtest/*_test.py')
+        # Integration tests should be stored in the integtest/ directory
+        package_integtests = package_path.glob('integtest/*_test.py')
 
-        for pytest_path in package_pytests:
-            pytest_name = (pathlib.Path(pytest_path).stem).replace('.py', '')
-            pytest_full_output_log = pytest_log_dir / f"{package}_{pytest_name}.log"
-            pytest_junit_xml_output = pytest_log_dir / f"{package}_{pytest_name}_results.xml"
-            pytest_cmd = ["pytest", pytest_path, "-v", "-s", f"--junit-xml={pytest_junit_xml_output}"] + ignore_args
-            with open(pytest_full_output_log, "w") as log:
+        for integtest_path in package_integtests:
+            integtest_name = (pathlib.Path(integtest_path).stem).replace('.py', '')
+            integtest_full_output_log = integtest_log_dir / f"{package}_{integtest_name}.log"
+            integtest_junit_xml_output = integtest_log_dir / f"{package}_{integtest_name}_results.xml"
+            integtest_cmd = ["pytest", integtest_path, "-v", "-s", f"--junit-xml={integtest_junit_xml_output}"] + ignore_args
+            with open(integtest_full_output_log, "w") as log:
                 process = subprocess.Popen(
-                    pytest_cmd,
+                    integtest_cmd,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True,
@@ -487,12 +487,12 @@ if run_pytests:
 
                 process.wait()
                 exit_code = process.returncode
-                result_message = f"-e {package}.{pytest_name:.<70}{'SUCCESS' if exit_code == 0 else 'FAILURE'}"
-                pytee.run("echo", result_message.split(), pytest_log_summary)
+                result_message = f"-e {package}.{integtest_name:.<70}{'SUCCESS' if exit_code == 0 else 'FAILURE'}"
+                pytee.run("echo", result_message.split(), integtest_log_summary)
 
-            rich.print(f"""[yellow]Test \"{pytest_name}\" complete for package \"{package}\". 
-            The full pytest output can be found at {pytest_full_output_log}
-            The junit xml file can be found at {pytest_junit_xml_output}[/yellow]""")
+            rich.print(f"""[green]Test \"{integtest_name}\" complete for package \"{package}\". 
+            The full integtest output can be found at {integtest_full_output_log}
+            The junit xml file can be found at {integtest_junit_xml_output}[/green]""")
 
         # Remove __pycache__ directories
         pycache_dir = package_path/'integtest/__pycache__'
@@ -585,12 +585,12 @@ Detailed unit test results are saved in the following directory:
 {test_log_dir}
 """
 
-pytestinfo = ""
-if run_pytests:
-    pytestinfo=f"""
-Pytest summary can be found in {pytest_log_summary}.
-Detailed pytest results are saved in the following directory:
-{pytest_log_dir}
+integtestinfo = ""
+if run_integtests:
+    integtestinfo=f"""
+Integration test summary can be found in {integtest_log_summary}.
+Detailed integtest results are saved in the following directory:
+{integtest_log_dir}
 """
 
 lintinfo = ""
@@ -607,7 +607,7 @@ build details you can either scroll up or run the following:
 less -R {build_log}
 
 {testinfo}
-{pytestinfo}
+{integtestinfo}
 {lintinfo}
 """)
 
