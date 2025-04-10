@@ -1,0 +1,99 @@
+#!/usr/bin/env python3
+import subprocess
+import argparse
+import sys, os
+import re
+from pathlib import Path
+
+if "DBT_ROOT" in os.environ:
+    DBT_ROOT=os.environ["DBT_ROOT"]
+else:
+    print("Environment variable DBT_ROOT isn't set, which suggests you haven't yet set up the daq-buildtools environment. Exiting...")
+    sys.exit(1)
+
+def get_last_commit_hash():
+    return subprocess.check_output(["git", "rev-parse", "HEAD"]).decode().strip()
+
+def get_last_dbt_tag_commit_hash(tag_name):
+    return subprocess.check_output([
+        "git", "log", "--grep", r"\[DBT-TAG\]", "--pretty=format:%H", "-n", "1"
+    ]).decode().strip()
+    commit_hash, commit_msg = log_entry.split(":", 1)
+    if tag_name not in commit_msg:
+        raise RuntimeError(f"Last [DBT-TAG] commit does not match expected tag {tag_name}. Found: '{commit_msg}'")
+
+def is_valid_tag_format(tag_name):
+    """Check if the tag follows the format vX.Y.Z"""
+    tag_pattern = r"^v\d+\.\d+\.\d+$"
+    return bool(re.match(tag_pattern, tag_name))
+
+def bump_cmakelists_version(tag_name):
+    cmakelists_file = Path("CMakeLists.txt")
+    if not cmakelists_file.is_file():
+        print(f"ERROR: No CMakeLists.txt found. Make sure you're in a directory containing one.")
+        sys.exit(1)
+    match = re.match(r"v(\d+)\.(\d+)\.(\d+)", tag_name)
+    major, minor, patch = match.groups()
+    contents = cmakelists_file.read_text()
+    new_contents = re.sub(
+        r"(project\([^)]*VERSION )\d+\.\d+\.\d+",
+        rf"\g<1>{major}.{minor}.{patch}",
+        contents,
+        flags=re.IGNORECASE
+    )
+    cmakelists_file.write_text(new_contents)
+
+def tag_version(tag_name):
+    if not is_valid_tag_format(tag_name):
+        print(f"ERROR: Invalid tag format. Expected format: vX.Y.Z. Got: {tag_name}")
+        sys.exit(1)
+
+    # Check if the tag already exists
+    existing_tags = subprocess.check_output(["git", "tag", "-l"]).decode("utf-8").strip().split("\n")
+    if tag_name in existing_tags:
+        print(f"ERROR: Tag '{tag_name}' already exists. Aborting.")
+        sys.exit(1)
+
+    bump_cmakelists_version(tag_name)
+
+    # Commit the change
+    subprocess.check_call(["git", "add", "CMakeLists.txt"])
+    subprocess.check_call(["git", "commit", "-m", f"[DBT-TAG] Bump version to {tag_name}"])
+    
+    # Create the tag
+    subprocess.check_call(["git", "tag", tag_name])
+
+    print(f"Tagged as {tag_name}")
+
+def revert_last_dbt_tag_commit(tag_name):
+    head = get_last_commit_hash()
+    last_dbt_tag = get_last_dbt_tag_commit_hash(tag_name)
+
+    if head != last_dbt_tag:
+        print("ERROR: Latest commit is not a [DBT-TAG] commit. Will not revert.")
+        sys.exit(1)
+
+    print(f"Reverting [DBT-TAG] commit: {head}")
+    subprocess.check_call(["git", "tag", "-d", tag_name])
+    subprocess.check_call(["git", "reset", "--hard", "HEAD~1"])
+
+    print(f"Successfully reverted commit and removed tag {tag_name}")
+
+def main():
+    parser = argparse.ArgumentParser(description="A tool for version bumping and tagging with Git.")
+    parser.add_argument("tag", help="The tag to set in the format vX.Y.Z")
+    parser.add_argument(
+        "--revert", 
+        action="store_true", 
+        help="Revert the last tag commit if it exists"
+    )
+
+    args = parser.parse_args()
+
+    if args.revert:
+        revert_last_dbt_tag_commit(args.tag)
+    else:
+        tag_version(args.tag)
+
+if __name__ == "__main__":
+    main()
