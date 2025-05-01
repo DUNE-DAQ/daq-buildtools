@@ -8,7 +8,7 @@ source ${HERE}/dbt-setup-constants.sh
 CUSTOM_BASEPATH=""
 SHOW_RELEASE_LIST=false
 NIGHTLY=false
-BASETYPE='frozen'
+BASETYPE='stable'
 DEFAULT_BUILD_TYPE=RelWithDebInfo
 
 options=$(getopt -o 'hnlr:b:' -l ',help,nightly,list,release-path:,base-release:' -- "$@") || return 10
@@ -37,19 +37,19 @@ Usage
 
 To setup a new running environment for a DAQ release:
       
-    ${scriptname} [-r/--release-path <path to release area>] [-n/--nightly] [-b/--base-release <frozen, nightly, candidate, test>] <dunedaq-release>
+    ${scriptname} [-r/--release-path <path to release area>] [-n/--nightly] [-b/--base-release <stable, frozen, nightly, candidate, test>] <dunedaq-release>
 
 To list the available DUNE DAQ releases:
 
-    ${scriptname} -l/--list [-n/--nightly] [-b/--base-release <frozen, nightly, candidate, test>] [-r/--release-path <path to release area>]
+    ${scriptname} -l/--list [-n/--nightly] [-b/--base-release <stable, frozen, nightly, candidate, test>] [-r/--release-path <path to release area>]
 
 Arguments and options:
 
     dunedaq-release: is the name of the release the running environment will be based on (e.g. dunedaq-v2.0.0)
     -n/--nightly: switch to nightly releases, shortcut for "-b/--base-release nightly"
-    -b/--base-release: base release type, choosing from ['frozen', 'nightly', 'candidate', 'test'], default is 'frozen'.
+    -b/--base-release: base release type, choosing from ['stable', 'frozen', 'nightly', 'candidate', 'test'], default is 'stable'. Note that 'frozen' is the former name for 'stable' and remains an alias for it.
     -l/--list: show the list of available releases
-    -r/--release-path: is the path to the release archive (defaults to either $PROD_BASEPATH (frozen) or $NIGHTLY_BASEPATH (nightly))
+    -r/--release-path: is the path to the release archive (defaults to either $PROD_BASEPATH (stable/frozen), $NIGHTLY_BASEPATH (nightly) or $CANDIDATE_RELEASE_BASEPATH (candidate) )
 
 EOU
             return 0;;           # error
@@ -67,16 +67,16 @@ else
     if [ "${NIGHTLY}" = true ]; then
         BASETYPE='nightly'
     fi
-    if [ "${BASETYPE}" == 'frozen' ]; then
+    if [[ "${BASETYPE}" == 'stable' || "${BASETYPE}" == 'frozen' ]]; then
         export SPACK_RELEASES_DIR="${PROD_BASEPATH}"
-    elif [ "${BASETYPE}" = 'nightly' ]; then
+    elif [[ "${BASETYPE}" = 'nightly' ]]; then
         export SPACK_RELEASES_DIR="${NIGHTLY_BASEPATH}"
-    elif [ "${BASETYPE}" = 'candidate' ]; then
+    elif [[ "${BASETYPE}" = 'candidate' ]]; then
         export SPACK_RELEASES_DIR="${CANDIDATE_RELEASE_BASEPATH}"
-    elif [ "${BASETYPE}" = 'test' ]; then
+    elif [[ "${BASETYPE}" = 'test' ]]; then
         export SPACK_RELEASES_DIR="${TEST_RELEASE_BASEPATH}"
     else
-        error "Wrong option for -b/--base-release, please choose from [frozen, nightly, candidate, test]."
+        error "Wrong option for -b/--base-release, please choose from [stable, frozen, nightly, candidate, test]."
     fi
 fi
 
