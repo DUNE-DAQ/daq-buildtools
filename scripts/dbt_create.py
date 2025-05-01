@@ -34,11 +34,11 @@ Arguments and options:
 
     DAQ release: the release the new work area will be based on (e.g. fddaq-v4.3.0-a9, NFDT_DEV_240410_A9, etc.)
     target directory: the name of the work area dbt-create will set up for you. Defaults to the name of the release.
-    -b/--base-release: base release type, can be one of [stable, nightly, candidate]. Default is stable.
-    -n/--nightly: switch from stable to nightly releases, shortcut for \"-b nightly\"
+    -b/--base-release: base release type, can be one of [stable, frozen, nightly, candidate]. Default is stable (frozen, the former term for this, is an alias to stable).
+    -n/--nightly: use a nightly release, shortcut for \"-b nightly\"
     -l/--list: show the list of available releases
     -r/--release-path: is the path to the release archive (defaults to
-                       {PROD_BASEPATH} (stable)
+                       {PROD_BASEPATH} (stable/frozen)
                        {NIGHTLY_BASEPATH} (nightly)
                        {CANDIDATE_RELEASE_BASEPATH} (candidate)
                        {TEST_RELEASE_BASEPATH} (test))
@@ -59,7 +59,7 @@ See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools for mor
 
 parser = argparse.ArgumentParser(usage=usage_blurb)
 parser.add_argument("-n", "--nightly", action="store_true", help=argparse.SUPPRESS)
-parser.add_argument("-b", "--base-release", choices=['stable', 'nightly', 'candidate', 'test'], default='stable', help=argparse.SUPPRESS)
+parser.add_argument("-b", "--base-release", choices=['stable', 'frozen', 'nightly', 'candidate', 'test'], default='stable', help=argparse.SUPPRESS)
 parser.add_argument("-r", "--release-path", action='store', dest='release_path', help=argparse.SUPPRESS)
 parser.add_argument("-l", "--list", action="store_true", dest='_list', help=argparse.SUPPRESS)
 parser.add_argument("-i", "--install-pyvenv", action="store_true", dest='install_pyvenv', help=argparse.SUPPRESS)
@@ -88,7 +88,7 @@ if args.release_path:
 else:
     if args.nightly:
         args.base_release = 'nightly'
-    if args.base_release == 'stable':
+    if args.base_release == 'stable' or args.base_release == 'frozen':
         RELEASE_BASEPATH=PROD_BASEPATH
     if args.base_release == 'nightly':
         RELEASE_BASEPATH=NIGHTLY_BASEPATH
