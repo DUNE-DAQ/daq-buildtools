@@ -68,11 +68,11 @@ def get_repo_info(repo_path):
     #now, get the repo ref. Call it 'NONE' if unknown.
     try:
         # Try to get branch name
-        ref = run_git_cmd(['symbolic-ref', '--short', 'HEAD'],quiet_fail=True)
+        ref = run_git_cmd(repo_path,['symbolic-ref', '--short', 'HEAD'],quiet_fail=True)
     except subprocess.CalledProcessError:
         # If in detached HEAD, get current tag or commit hash
         try:
-            ref = run_git_cmd(['describe', '--tags'],quiet_fail=True)
+            ref = run_git_cmd(repo_path,['describe', '--tags'],quiet_fail=True)
         except subprocess.CalledProcessError:
             ref = None
 
@@ -91,7 +91,7 @@ def get_repo_info(repo_path):
     }
 
 @click.command()
-@click.argument('recipe_name',help='Name to give to this recipe (output will be <recipe_name>.yaml)')
+@click.argument('recipe_name')
 @click.option('--require-valid-refs',is_flag=True,help='Require all refs are valid (default False)')
 def generate_dunedaq_setup_recipe(recipe_name,require_valid_refs):
     """Generate a DAQ workarea setup recipe based on the current source tree.
