@@ -8,7 +8,7 @@ from datetime import datetime
 import urllib.request
 import tempfile
 
-class CustomError(CustomError):
+class CustomError(click.ClickException):
     def format_message(self):
         return f"🚨 ERROR: {self.message}"
 
@@ -64,7 +64,7 @@ def setup_dunedaq_from_recipe(recipe_source, use_ref, build, workarea_name):
     if not all_commits_valid:
         raise CustomError('Not all commits are valid. Check errors and rerun.')
     if not all_refs_valid and use_ref:
-        raise CustomError('Not all refs and you have requested to use them. '
+        raise CustomError('Not all refs are valid and you have requested to use them. '
                           'Check errors and rerun, or rerun without "--use-ref" option.')
 
     #now create a workarea

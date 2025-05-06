@@ -5,7 +5,7 @@ import yaml
 import subprocess
 import click
 
-class CustomError(CustomError):
+class CustomError(click.ClickException):
     def format_message(self):
         return f"🚨 ERROR: {self.message}"
 
@@ -19,8 +19,8 @@ def get_dunedaq_release_type(release_name):
     elif release_name.startswith('N'):
         return 'nightly'
     else:
-        #return 'frozen'
-        return 'static'
+        return 'frozen' #use frozen for now, for better backwards compatibility
+        #return 'static'
 
 def validate_git_commit(repo_path, commit, repo_name):
 
