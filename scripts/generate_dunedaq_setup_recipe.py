@@ -5,6 +5,10 @@ import yaml
 import subprocess
 import click
 
+class CustomError(CustomError):
+    def format_message(self):
+        return f"🚨 ERROR: {self.message}"
+
 def run_git_cmd(repo_path,args,quiet_fail=False):
     return subprocess.check_output(['git', '-C', repo_path] + args,
                                    stderr=subprocess.DEVNULL if quiet_fail else None).decode().strip()
@@ -23,14 +27,16 @@ def validate_git_commit(repo_path, commit, repo_name):
     # 1. Check for uncommitted changes
     status = run_git_cmd(repo_path,['status', '--porcelain'])
     if status:
-        click.echo(f"Repository '{repo_name}' has uncommitted changes! Commit them before re-running.",
+        click.echo(f"🚨 ERROR: Repository '{repo_name}' has uncommitted changes! "
+                   "Commit them before re-running.",
                    err=True)
         return False
 
     # 2. Check if commit is reachable from a remote branch or tag
     branches = run_git_cmd(repo_path,['branch', '-r', '--contains', commit])
     if not any('origin/' in line for line in branches.splitlines()):
-        click.echo(f"Commit {commit[:7]} in repo '{repo_name}' is not pushed to origin. Push before re-running.",
+        click.echo(f"🚨 ERROR: Commit {commit[:7]} in repo '{repo_name}' is not pushed to origin. "
+                   "Push before re-running.",
                    err=True)
         return False
 
@@ -92,7 +98,8 @@ def get_repo_info(repo_path):
 
 @click.command()
 @click.argument('recipe_name')
-@click.option('--require-valid-refs',is_flag=True,help='Require all refs are valid (default False)')
+@click.option('--require-valid-refs',is_flag=True,
+              help='Require all refs are valid (default False)')
 def generate_dunedaq_setup_recipe(recipe_name,require_valid_refs):
     """Generate a DAQ workarea setup recipe based on the current source tree.
 
@@ -103,8 +110,8 @@ def generate_dunedaq_setup_recipe(recipe_name,require_valid_refs):
     daq_release = os.environ.get("DUNE_DAQ_BASE_RELEASE")
 
     if not daq_release:
-        raise click.ClickException("DUNE_DAQ_BASE_RELEASE not set in environment!"
-                                   "Setup dunedaq before running this script.")
+        raise CustomError("DUNE_DAQ_BASE_RELEASE not set in environment! "
+                          "Setup dunedaq before running this script.")
 
     sourcecode_dir = os.path.join(os.environ.get("DBT_AREA_ROOT"), "sourcecode")
 
@@ -121,11 +128,11 @@ def generate_dunedaq_setup_recipe(recipe_name,require_valid_refs):
 
     #check that all commits are ok, and optionally that all refs are ok
     if not all_commits_valid:
-        raise click.ClickException('ERROR: Not all commits are valid. Check errors and rerun.')
+        raise CustomError('Not all commits are valid. Check errors and rerun.')
 
     if require_valid_refs and not all_refs_valid:
-        raise click.ClickException('ERROR: Not all refs are valid, and you have requested they are.'
-                                   'Check errors/warnings and rerun.')
+        raise CustomError('Not all refs are valid, and you have requested they are. '
+                          'Check errors/warnings and rerun.')
 
     config = {
         'recipe_name': recipe_name,

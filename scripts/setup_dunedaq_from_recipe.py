@@ -8,6 +8,10 @@ from datetime import datetime
 import urllib.request
 import tempfile
 
+class CustomError(CustomError):
+    def format_message(self):
+        return f"🚨 ERROR: {self.message}"
+
 @click.command()
 @click.argument('recipe_source')
 @click.option('--use-ref', is_flag=True, help='Use the ref (branch or tag) instead of the exact commit hash')
@@ -30,7 +34,7 @@ def setup_dunedaq_from_recipe(recipe_source, use_ref, build, workarea_name):
     else:
         recipe_file = os.path.abspath(recipe_source)
         if not os.path.exists(recipe_file):
-            raise click.ClickException(f"Config file {recipe_file} not found.")
+            raise CustomError(f"Config file {recipe_file} not found.")
         
     with open(recipe_file) as f:
         recipe = yaml.safe_load(f)
@@ -51,17 +55,17 @@ def setup_dunedaq_from_recipe(recipe_source, use_ref, build, workarea_name):
         commit_valid = repo['commit_valid']
 
         if not commit_valid:
-            click.echo(f'ERROR: commit {commit} in repo {name} not valid. Check with recipe creator.',err=True)
+            click.echo(f'🚨 ERROR: commit {commit} in repo {name} not valid. Check with recipe creator.',err=True)
             all_commits_valid = False
         if not ref_valid and use_ref:
-            click.echo(f'ERROR: ref {ref} in repo {name} not valid. Check with recipe creator.',err=True)
+            click.echo(f'🚨 ERROR: ref {ref} in repo {name} not valid. Check with recipe creator.',err=True)
             all_refs_valid = False
 
     if not all_commits_valid:
-        raise click.ClickException('ERROR: Not all commits are valid. Check errors and rerun.')
+        raise CustomError('Not all commits are valid. Check errors and rerun.')
     if not all_refs_valid and use_ref:
-        raise click.ClickException('ERROR: Not all refs and you have requested to use them. '
-                                   'Check errors and rerun, or rerun without "--use-ref" option.')
+        raise CustomError('Not all refs and you have requested to use them. '
+                          'Check errors and rerun, or rerun without "--use-ref" option.')
 
     #now create a workarea
     timestamp = datetime.now().strftime('%d%b_%H%M')
@@ -109,17 +113,17 @@ def setup_dunedaq_from_recipe(recipe_source, use_ref, build, workarea_name):
                 continue
             if resolved:
                 if ref_commit != commit:
-                    click.echo(f"  ⚠️  WARNING: ref '{ref}' now points to a different commit than recorded")
-                    click.echo(f"     current: {ref_commit}")
-                    click.echo(f"     saved:   {commit}")
+                    click.echo(f"⚠️ WARNING: ref '{ref}' now points to a different commit than recorded")
+                    click.echo(f"   current: {ref_commit}")
+                    click.echo(f"   saved:   {commit}")
             else:
-                click.echo(f"  ⚠️  Could not resolve ref '{ref}' to check commit hash")
+                click.echo(f"⚠️  WARNING: could not resolve ref '{ref}' to check commit hash")
 
         # Checkout based on selected mode
         if use_ref:
             if not resolved:
-                raise click.ClickException(f'ERROR: Unable to resolve {ref} in repo {name} and you have requested to use it. '
-                                           'Check errors, or rerun without "--use-ref" option.')
+                raise CustomError(f'Unable to resolve {ref} in repo {name} and you have requested to use it. '
+                                  'Check errors, or rerun without "--use-ref" option.')
             click.echo(f"  Checking out ref: {ref}")
             subprocess.run(['git', 'checkout', ref], check=True)
         else:
