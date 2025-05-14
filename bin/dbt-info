@@ -205,7 +205,6 @@ def pymodule_info(requested_package):
    possible_venv_dir = glob.glob( "%s/.venv/lib/python*/site-packages/%s" % (os.environ["DBT_AREA_ROOT"], package ))
 
    if len(possible_venv_dir) == 0:
-
       # Need to find the package in Spack
       package_info(package, ok_to_miss = True)
       externals_info(package, ok_to_miss = False)
@@ -223,11 +222,32 @@ def pymodule_info(requested_package):
       else:
          data = get_release_data("nddaq")
 
-      for pkg in data["pymodules"]:
-         if pkg["name"] == package:
-            was_found = True
-            package_print(pkg, check_spack = False)
-            return
+      pyvenv_file = "%s/%s/pyvenv_requirements.txt" % (os.environ["SPACK_RELEASES_DIR"], os.environ["SPACK_RELEASE"])
+      assert os.path.exists(pyvenv_file)
+
+      pattern1 = re.compile(
+        rf'git\+https://github\.com/DUNE-DAQ/{re.escape(package)}@([0-9a-f]+)#egg={re.escape(package)}'
+    )
+
+      pattern2 = re.compile(
+         rf'{re.escape(package)}==([0-9\.]+)'
+         )
+
+      with open(pyvenv_file, 'r') as f:
+        content = f.read()
+
+      match = pattern1.search(content)
+
+      if match:
+         print(f"DUNE DAQ Python package \"{package}\" taken from commit \"{match.group(1)}\"")
+         return
+
+      match = pattern2.search(content)
+      if match:
+         print(f"External Python package \"{package}\" at version \"{match.group(1)}\"")
+         return
+
+      print("Unable to find info on Python package {package}; may not be listed in {pyvenv_file}")
 
    else:
       error("Flaw in the logic of this script; please contact John Freeman at jcfree@fnal.gov")
