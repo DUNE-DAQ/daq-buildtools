@@ -202,7 +202,13 @@ def pymodule_info(requested_package):
    if package == "all":
       error("The \"all\" option is not supported for Python modules")
 
-   possible_venv_dir = glob.glob( "%s/.venv/lib/python*/site-packages/%s" % (os.environ["DBT_AREA_ROOT"], package ))
+   venv_subdir = package
+   if package == "connectivityserver":
+      venv_subdir = "connection-service"
+   elif package == "daq-assettools":
+      venv_subdir = "daq_assettools"
+
+   possible_venv_dir = glob.glob( "%s/.venv/lib/python*/site-packages/%s" % (os.environ["DBT_AREA_ROOT"], venv_subdir ))
 
    if len(possible_venv_dir) == 0:
       # Need to find the package in Spack
@@ -226,7 +232,7 @@ def pymodule_info(requested_package):
       assert os.path.exists(pyvenv_file)
 
       pattern1 = re.compile(
-        rf'git\+https://github\.com/DUNE-DAQ/{re.escape(package)}@([0-9a-zA-Z/]+)#egg={re.escape(package)}'
+        rf'git\+https://github\.com/DUNE-DAQ/{re.escape(package)}@([0-9a-zA-Z/]+)#egg'
     )
 
       pattern2 = re.compile(
@@ -247,7 +253,7 @@ def pymodule_info(requested_package):
          print(f"External Python package \"{package}\" at version \"{match.group(1)}\"")
          return
 
-      print("Unable to find info on Python package {package}; may not be listed in {pyvenv_file}")
+      print(f"Unable to find info on Python package {package}; may not be listed in {pyvenv_file}")
 
    else:
       error("Flaw in the logic of this script; please contact John Freeman at jcfree@fnal.gov")
