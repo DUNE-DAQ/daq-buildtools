@@ -207,6 +207,8 @@ def pymodule_info(requested_package):
       venv_subdir = "connection-service"
    elif package == "daq-assettools":
       venv_subdir = "daq_assettools"
+   elif package == "runconf-ui":
+      venv_subdir = "runconf_ui"
 
    possible_venv_dir = glob.glob( "%s/.venv/lib/python*/site-packages/%s" % (os.environ["DBT_AREA_ROOT"], venv_subdir ))
 
