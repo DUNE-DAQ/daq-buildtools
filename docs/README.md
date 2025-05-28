@@ -102,9 +102,9 @@ A new (June 2025) pair of scripts in daq-buildtools enables users to create a wo
 ```
 dbt-generate-dunedaq-setup-recipe.py <recipe label>
 ```
-and the script will generate a file called `<recipe label>.yaml`. This human-readable file will contain details about the original area, and can then be used later to generate a work area based on the same nightly/candidate/stable release as well as the same repos and their commits as the original area. To do so one can simply pass the file to `dbt-generate-dunedaq-setup-recipe.py`:
+and the script will generate a file called `<recipe label>.yaml`. This human-readable file will contain details about the original area, and can then be used later to generate a work area based on the same nightly/candidate/stable release as well as the same repos and their commits as the original area. To do so one can simply pass the file to `dbt-setup-dunedaq-from-recipe.py` as well as the desired name of the new work area:
 ```
-dbt-generate-dunedaq-setup-recipe.py <recipe label>.yaml
+dbt-setup-dunedaq-from-recipe.py --workarea-name <name of new work area> <recipe label>.yaml
 ```
 Both scripts have further options; pass `--help` as an argument to either one in order to get more details. 
 
