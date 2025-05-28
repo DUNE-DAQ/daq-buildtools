@@ -1,6 +1,6 @@
 # DUNE DAQ Buildtools
 
-_This document was last edited Jan-30-2025_
+_This document was last edited May-28-2025_
 
 `daq-buildtools` is the toolset to simplify the development of DUNE DAQ packages. It provides environment and building utilities for the DAQ Suite.
 
@@ -96,6 +96,17 @@ Along with telling `dbt-create` what you want your work area to be named and wha
   
 * `-i/--install-pyvenv`: With this option, there will be compilation/installation of python modules using the `pyvenv_requirements.txt` in the release directory. This is typically slower than cloning, but not always. You can take further control by combining it with the `-p <requirements file>` argument, though it's unlikely as a typical developer that you'd want a non-standard set of Python packages. 
 
+### Cloning an entire work area
+
+A new (June 2025) pair of scripts in daq-buildtools enables users to create a work area by cloning another work area, using a YAML recipe file as an intermediary. The basic approach is simple. To create a recipe file from an existing area, assuming its environment is set up, just do the following:
+```
+dbt-generate-dunedaq-setup-recipe.py <recipe label>
+```
+and the script will generate a file called `<recipe label>.yaml`. This human-readable file will contain details about the original area, and can then be used later to generate a work area based on the same nightly/candidate/stable release as well as the same repos and their commits as the original area. To do so one can simply pass the file to `dbt-generate-dunedaq-setup-recipe.py`:
+```
+dbt-generate-dunedaq-setup-recipe.py <recipe label>.yaml
+```
+Both scripts have further options; pass `--help` as an argument to either one in order to get more details. 
 
 <a name="Cloning_and_building"></a>
 ## Cloning and building a package repo
