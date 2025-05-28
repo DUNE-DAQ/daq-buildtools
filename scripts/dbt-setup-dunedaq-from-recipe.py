@@ -1,30 +1,38 @@
 #!/usr/bin/env python3
 
 import os
-import subprocess
-import yaml
-import click
+DBT_ROOT=os.environ["DBT_ROOT"]
+exec(open(f'{DBT_ROOT}/scripts/dbt_setup_constants.py').read())
+
+import argparse
 from datetime import datetime
-import urllib.request
+import subprocess
+import sys
 import tempfile
+import urllib.request
+import yaml
 
-class CustomError(click.ClickException):
-    def format_message(self):
-        return f"🚨 ERROR: {self.message}"
+sys.path.append(f'{DBT_ROOT}/scripts')
+from dbt_setup_tools import error
 
-@click.command()
-@click.argument('recipe_source')
-@click.option('--use-ref', is_flag=True, help='Use the ref (branch or tag) instead of the exact commit hash')
-@click.option('--build', is_flag=True, help='Also build the local area after creating it.')
-@click.option('--workarea-name',
-              help='Optional name for workarea to create (default: testarea_<recipe_name>_<timestamp>)')
+parser = argparse.ArgumentParser()
+parser.add_argument('--use-ref', action='store_true', help='Use the ref (branch or tag) instead of the exact commit hash')
+parser.add_argument('--build', action='store_true', help='Also build the local area after creating it.')
+parser.add_argument('--workarea-name', action='store', dest='workarea_name', help='Optional name for workarea to create (default: testarea_<recipe_name>_<timestamp>)')
+parser.add_argument('recipe_source', nargs='?', help='Name of a recipe file create via dbt-generate-dunedaq-setup-recipe.py')
+
+args = parser.parse_args()
+
+if not args.recipe_source:
+    error("You need to supply the name of a recipe\n file to this script; rerun with \"-h\" for further details")
+
 def setup_dunedaq_from_recipe(recipe_source, use_ref, build, workarea_name):
     """Set up a DAQ workarea based on a saved configuration file or a URL"""
 
     is_url = recipe_source.startswith("http://") or recipe_source.startswith("https://")
     
     if is_url:
-        click.echo(f"Downloading config from: {recipe_source}")
+        print(f"Downloading config from: {recipe_source}")
         with urllib.request.urlopen(recipe_source) as response:
             content = response.read()
         tmp_file = tempfile.NamedTemporaryFile(delete=False)
@@ -34,7 +42,7 @@ def setup_dunedaq_from_recipe(recipe_source, use_ref, build, workarea_name):
     else:
         recipe_file = os.path.abspath(recipe_source)
         if not os.path.exists(recipe_file):
-            raise CustomError(f"Config file {recipe_file} not found.")
+            error(f"Config file {recipe_file} not found.")
         
     with open(recipe_file) as f:
         recipe = yaml.safe_load(f)
@@ -55,23 +63,22 @@ def setup_dunedaq_from_recipe(recipe_source, use_ref, build, workarea_name):
         commit_valid = repo['commit_valid']
 
         if not commit_valid:
-            click.echo(f'🚨 ERROR: commit {commit} in repo {name} not valid. Check with recipe creator.',err=True)
+            error(f'🚨 ERROR: commit {commit} in repo {name} not valid. Check with recipe creator.')
             all_commits_valid = False
         if not ref_valid and use_ref:
-            click.echo(f'🚨 ERROR: ref {ref} in repo {name} not valid. Check with recipe creator.',err=True)
+            error(f'🚨 ERROR: ref {ref} in repo {name} not valid. Check with recipe creator.')
             all_refs_valid = False
 
     if not all_commits_valid:
-        raise CustomError('Not all commits are valid. Check errors and rerun.')
+        error('Not all commits are valid. Check errors and rerun.')
     if not all_refs_valid and use_ref:
-        raise CustomError('Not all refs are valid and you have requested to use them. '
-                          'Check errors and rerun, or rerun without "--use-ref" option.')
+        error('Not all refs are valid and you have requested to use them. Check errors and rerun, or rerun without "--use-ref" option.')
 
     #now create a workarea
     timestamp = datetime.now().strftime('%d%b_%H%M')
     workarea_name = workarea_name or f"testarea_{recipe_name}_{timestamp}"
 
-    click.echo(f"Creating workarea '{workarea_name}' with release '{daq_release}'...")
+    print(f"Creating workarea '{workarea_name}' with release '{daq_release}'...")
 
     subprocess.run(['bash', '-c', f'''
         dbt-create -b {daq_release_type} {daq_release} {workarea_name}
@@ -89,7 +96,7 @@ def setup_dunedaq_from_recipe(recipe_source, use_ref, build, workarea_name):
         ref = repo['ref']
         commit = repo['commit']
 
-        click.echo(f"\nCloning {name}...")
+        print(f"\nCloning {name}...")
         subprocess.run(['git', 'clone', url, name], check=True)
 
         repo_path = os.path.join(sourcecode_path, name)
@@ -113,31 +120,30 @@ def setup_dunedaq_from_recipe(recipe_source, use_ref, build, workarea_name):
                 continue
             if resolved:
                 if ref_commit != commit:
-                    click.echo(f"⚠️ WARNING: ref '{ref}' now points to a different commit than recorded")
-                    click.echo(f"   current: {ref_commit}")
-                    click.echo(f"   saved:   {commit}")
+                    print(f"⚠️ WARNING: ref '{ref}' now points to a different commit than recorded")
+                    print(f"   current: {ref_commit}")
+                    print(f"   saved:   {commit}")
             else:
-                click.echo(f"⚠️  WARNING: could not resolve ref '{ref}' to check commit hash")
+                print(f"⚠️  WARNING: could not resolve ref '{ref}' to check commit hash")
 
         # Checkout based on selected mode
         if use_ref:
             if not resolved:
-                raise CustomError(f'Unable to resolve {ref} in repo {name} and you have requested to use it. '
-                                  'Check errors, or rerun without "--use-ref" option.')
-            click.echo(f"  Checking out ref: {ref}")
+                error(f'Unable to resolve {ref} in repo {name} and you have requested to use it. Check errors, or rerun without "--use-ref" option.')
+            print(f"  Checking out ref: {ref}")
             subprocess.run(['git', 'checkout', ref], check=True)
         else:
-            click.echo(f"  Checking out commit: {commit}")
+            print(f"  Checking out commit: {commit}")
             subprocess.run(['git', 'checkout', commit], check=True)
 
         os.chdir(sourcecode_path)
 
     os.chdir(workarea_path)  # Back to workarea root
 
-    click.echo(f"\n ✅ Workarea '{workarea_path}' set up successfully.")
+    print(f"\n ✅ Workarea '{workarea_path}' set up successfully.")
 
     if build:
-        click.echo("\nSetting up environment and building...")
+        print("\nSetting up environment and building...")
         subprocess.run(['bash', '-c', f'''
             cd {workarea_path} &&
             source env.sh &&
@@ -145,7 +151,6 @@ def setup_dunedaq_from_recipe(recipe_source, use_ref, build, workarea_name):
             dbt-workarea-env
         '''], check=True, executable='/bin/bash')
 
-        click.echo(f"\n ✅ Workarea '{workarea_path}' built up successfully.")
+        print(f"\n ✅ Workarea '{workarea_path}' built up successfully.")
 
-if __name__ == '__main__':
-    setup_dunedaq_from_recipe()
+setup_dunedaq_from_recipe(args.recipe_source, args.use_ref, args.build, args.workarea_name)
