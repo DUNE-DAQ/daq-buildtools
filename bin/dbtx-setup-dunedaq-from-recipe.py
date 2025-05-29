@@ -16,17 +16,23 @@ sys.path.append(f'{DBT_ROOT}/scripts')
 from dbt_setup_tools import error
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--use-ref', action='store_true', help='Use the ref (branch or tag) instead of the exact commit hash')
-parser.add_argument('--build', action='store_true', help='Also build the local area after creating it.')
-parser.add_argument('--workarea-name', action='store', dest='workarea_name', help='Optional name for workarea to create (default: testarea_<recipe_name>_<timestamp>)')
-parser.add_argument('recipe_source', nargs='?', help='Name of a recipe file create via dbt-generate-dunedaq-setup-recipe.py')
+parser.add_argument('--use-ref', action='store_true',
+                    help='Use the ref (branch or tag) instead of the exact commit hash')
+parser.add_argument('--build', action='store_true',
+                    help='Also build the local area after creating it.')
+parser.add_argument('--use-ssh-repos', action='store_true',
+                    help='Use ssh repo sources, instead of https (default)')
+parser.add_argument('--workarea-name', action='store', dest='workarea_name',
+                    help='Optional name for workarea to create (default: testarea_<recipe_name>_<timestamp>)')
+parser.add_argument('recipe_source', nargs='?',
+                    help='Name of a recipe file create via dbt-generate-dunedaq-setup-recipe.py')
 
 args = parser.parse_args()
 
 if not args.recipe_source:
     error("You need to supply the name of a recipe\n file to this script; rerun with \"-h\" for further details")
 
-def setup_dunedaq_from_recipe(recipe_source, use_ref, build, workarea_name):
+def setup_dunedaq_from_recipe(recipe_source, use_ref, build, use_ssh_repos, workarea_name):
     """Set up a DAQ workarea based on a saved configuration file or a URL"""
 
     is_url = recipe_source.startswith("http://") or recipe_source.startswith("https://")
@@ -92,11 +98,11 @@ def setup_dunedaq_from_recipe(recipe_source, use_ref, build, workarea_name):
     #now loop over the repos in the recipe, clone and checkout what's needed
     for repo in repos:
         name = repo['name']
-        url = repo['url']
+        url = f'git@github.com:DUNE-DAQ/{name}.git' if use_ssh_repos else f'https://github.com/DUNE-DAQ/{name}.git'
         ref = repo['ref']
         commit = repo['commit']
 
-        print(f"\nCloning {name}...")
+        print(f"\nCloning {name} from {url}...")
         subprocess.run(['git', 'clone', url, name], check=True)
 
         repo_path = os.path.join(sourcecode_path, name)
@@ -153,4 +159,4 @@ def setup_dunedaq_from_recipe(recipe_source, use_ref, build, workarea_name):
 
         print(f"\n ✅ Workarea '{workarea_path}' built up successfully.")
 
-setup_dunedaq_from_recipe(args.recipe_source, args.use_ref, args.build, args.workarea_name)
+setup_dunedaq_from_recipe(args.recipe_source, args.use_ref, args.build, args.use_ssh_repos, args.workarea_name)

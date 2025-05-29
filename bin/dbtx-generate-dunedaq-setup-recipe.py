@@ -68,7 +68,7 @@ def get_repo_info(repo_path):
 
     #get the repo name, and the url
     name = os.path.basename(repo_path)
-    url = f'https://github.com/DUNE-DAQ/{name}.git'
+    #url = f'https://github.com/DUNE-DAQ/{name}.git'
     #url = run_git_cmd(['config', '--get', 'remote.origin.url'])
 
     #now, get the repo ref. Call it 'NONE' if unknown.
@@ -89,7 +89,7 @@ def get_repo_info(repo_path):
 
     return {
         'name': name,
-        'url': url,
+        #'url': url,
         'ref': ref,
         'ref_valid': ref_valid,
         'commit': commit,
