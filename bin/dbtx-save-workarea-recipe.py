@@ -100,7 +100,7 @@ def get_repo_info(repo_path):
 @click.argument('recipe_name')
 @click.option('--require-valid-refs',is_flag=True,
               help='Require all refs are valid (default False)')
-def generate_dunedaq_setup_recipe(recipe_name,require_valid_refs):
+def save_workarea_recipe(recipe_name,require_valid_refs):
     """Generate a DAQ workarea setup recipe based on the current source tree.
 
     RECIPE_NAME is the base name for the output YAML file.
@@ -147,4 +147,4 @@ def generate_dunedaq_setup_recipe(recipe_name,require_valid_refs):
     click.echo(f"Wrote setup recipe to {yaml_filename}")
 
 if __name__ == '__main__':
-    generate_dunedaq_setup_recipe()
+    save_workarea_recipe()

@@ -32,7 +32,7 @@ args = parser.parse_args()
 if not args.recipe_source:
     error("You need to supply the name of a recipe\n file to this script; rerun with \"-h\" for further details")
 
-def setup_dunedaq_from_recipe(recipe_source, use_ref, build, use_ssh_repos, workarea_name):
+def create_workarea_from_recipe(recipe_source, use_ref, build, use_ssh_repos, workarea_name):
     """Set up a DAQ workarea based on a saved configuration file or a URL"""
 
     is_url = recipe_source.startswith("http://") or recipe_source.startswith("https://")
@@ -159,4 +159,4 @@ def setup_dunedaq_from_recipe(recipe_source, use_ref, build, use_ssh_repos, work
 
         print(f"\n ✅ Workarea '{workarea_path}' built up successfully.")
 
-setup_dunedaq_from_recipe(args.recipe_source, args.use_ref, args.build, args.use_ssh_repos, args.workarea_name)
+create_workarea_from_recipe(args.recipe_source, args.use_ref, args.build, args.use_ssh_repos, args.workarea_name)
