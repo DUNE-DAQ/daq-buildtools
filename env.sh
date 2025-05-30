@@ -22,5 +22,7 @@ export PATH
 dbt-workarea-env() { source ${DBT_ROOT}/scripts/dbt-workarea-env.sh $@; }
 dbt-setup-release() { source ${DBT_ROOT}/scripts/dbt-setup-release.sh $@; }
 
+export SPACK_DISABLE_LOCAL_CONFIG=true
+
 echo -e "${COL_GREEN}DBT setuptools loaded${COL_RESET}"
 
