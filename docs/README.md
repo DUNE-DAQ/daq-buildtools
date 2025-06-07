@@ -100,11 +100,11 @@ Along with telling `dbt-create` what you want your work area to be named and wha
 
 A new (June 2025) pair of experimental scripts in daq-buildtools enables users to create a work area by cloning another work area, using a YAML recipe file as an intermediary. The basic approach is simple. To create a recipe file from an existing area, assuming its environment is set up, just do the following:
 ```
-dbtx-generate-dunedaq-setup-recipe.py <recipe label>
+dbtx-save-workarea-recipe.py <recipe label>
 ```
-and the script will generate a file called `<recipe label>.yaml`. This human-readable file will contain details about the original area, and can then be used later to generate a work area based on the same nightly/candidate/stable release as well as the same repos and their commits as the original area. To do so one can simply pass the file to `dbtx-setup-dunedaq-from-recipe.py` as well as the desired name of the new work area:
+and the script will generate a file called `<recipe label>.yaml`. This human-readable file will contain details about the original area, and can then be used later to generate a work area based on the same nightly/candidate/stable release as well as the same repos and their commits as the original area. To do so one can simply pass the file to `dbtx-create-workarea-from-recipe.py` as well as the desired name of the new work area:
 ```
-dbtx-setup-dunedaq-from-recipe.py --workarea-name <name of new work area> <recipe label>.yaml
+dbtx-create-workarea-from-recipe.py --workarea-name <name of new work area> <recipe label>.yaml
 ```
 Both scripts have further options; pass `--help` as an argument to either one in order to get more details. 
 
