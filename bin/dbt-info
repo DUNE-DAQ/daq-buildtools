@@ -194,13 +194,25 @@ def externals_info(requested_pkg, ok_to_miss = False):
       print(f"Unable to find \"{requested_pkg}\"")
 
 def pymodule_help():
-   print(f"\n{this_script} pymodule <name of python module>")
+   print(f"\n{this_script} pymodule <name of Python module> # Use \"all\" instead of a package name to list all DUNE DAQ Python packages")
 
 def pymodule_info(requested_package):
-   package=requested_package
 
-   if package == "all":
-      error("The \"all\" option is not supported for Python modules")
+   packages = []
+   if requested_package != "all":
+      packages.append( requested_package )
+   else:
+      pattern = re.compile(r'git\+https://github\.com/DUNE-DAQ/([^@]+)@')
+      with open("%s/%s/pyvenv_requirements.txt" % (os.environ["SPACK_RELEASES_DIR"], os.environ["SPACK_RELEASE"]), 'r') as inf:
+         for line in inf:
+            match = pattern.search(line)
+            if match:
+                packages.append( match.group(1) )
+
+   for package in packages:
+      process_pymodule(package)
+
+def process_pymodule(package):
 
    venv_subdir = package
    if package == "connectivityserver":
@@ -213,7 +225,11 @@ def pymodule_info(requested_package):
    possible_venv_dir = glob.glob( "%s/.venv/lib/python*/site-packages/%s" % (os.environ["DBT_AREA_ROOT"], venv_subdir ))
 
    if len(possible_venv_dir) == 0:
+
       # Need to find the package in Spack
+      if package[0:3] != "py-":
+         error("The requested package wasn't found in .venv and doesn't appear to be a Python package in Spack")
+
       package_info(package, ok_to_miss = True)
       externals_info(package, ok_to_miss = False)
 
@@ -234,7 +250,7 @@ def pymodule_info(requested_package):
       assert os.path.exists(pyvenv_file)
 
       pattern1 = re.compile(
-        rf'git\+https://github\.com/DUNE-DAQ/{re.escape(package)}@([0-9a-zA-Z/]+)#egg'
+        rf'git\+https://github\.com/DUNE-DAQ/{re.escape(package)}@([0-9a-zA-Z/\.]+)#egg'
     )
 
       pattern2 = re.compile(
