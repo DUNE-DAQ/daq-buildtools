@@ -615,8 +615,8 @@ for (path, retval) in unittest_overviews:
       rich.print('[green]SUCCESS[/green]')
    else:
       rich.print('[red]FAILURE[/red]')
-      rich.print("\n")
 
+rich.print("\n")
 rich.print(f"""
 This script is ending normally. This implies your code successfully compiled; to see
 build details you can either scroll up or run the following:
