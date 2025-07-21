@@ -376,6 +376,7 @@ for pkg in get_package_list(BUILDDIR):
 with open(f"{INSTALLDIR}/build_summary_info.json", 'w') as sbi_f:
     json.dump( summary_build_info, sbi_f, sort_keys=True, indent=4 )
 
+unittest_overviews = []
 if run_tests:
     stringio_obj5 = io.StringIO()
     sh.date(_out=stringio_obj5)
@@ -424,6 +425,8 @@ RUNNING UNIT TESTS IN {unittestdir}
                 if which(unittest_path, mode=os.X_OK) is not None:
                     pytee.run("echo", "-e Start of unit test suite {}".format(unittest).split(), test_log)
                     retval = pytee.run(unittest_path, "", test_log)
+
+                    unittest_overviews.append( (unittest_path, retval) )
                     ## Generate test_log_summary now
                     f_test_log = open(test_log, 'r')
                     test_result = re.findall(r'\*\*\* (No errors detected)', f_test_log.read())
@@ -437,7 +440,7 @@ RUNNING UNIT TESTS IN {unittestdir}
                     num_unit_tests += 1
 
             rich.print(f"[yellow]Testing complete for package \"{pkgname}\". Ran {num_unit_tests} unit test suites.[/yellow]")
-            rich.print("")
+            rich.print("\n")
 
 if run_integtests:
     datestring = re.sub("[: ]+", "_", sh.date().strip())
@@ -600,6 +603,20 @@ Automated code linting results can be found in the following directory:
 {lint_log_dir}.
 """
 
+# Recreate the output of the old dbt-unittest-summary.sh script
+
+if len(unittest_overviews) > 0:
+   rich.print("\n\n")
+   rich.print(f"[yellow]###########################SUMMARY OF UNIT TESTS##############################[/yellow]")
+
+for (path, retval) in unittest_overviews:
+   print(f"{path:.<120}", end = "")
+   if retval == 0:
+      rich.print('[green]SUCCESS[/green]')
+   else:
+      rich.print('[red]FAILURE[/red]')
+
+rich.print("\n")
 rich.print(f"""
 This script is ending normally. This implies your code successfully compiled; to see
 build details you can either scroll up or run the following:
