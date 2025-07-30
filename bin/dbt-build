@@ -612,7 +612,7 @@ Automated code linting results can be found in the following directory:
 
 if len(integtest_overviews) > 0:
    rich.print("\n\n")
-   rich.print(f"[yellow]##########################################SUMMARY OF INTEGRATION TESTS#############################################[/yellow]")
+   rich.print(f"[yellow]########################################SUMMARY OF INTEGRATION TESTS###########################################[/yellow]")
 
 for test in sorted(integtest_overviews, key=lambda d: (d["package"], d["test"])):
 
@@ -626,7 +626,7 @@ for test in sorted(integtest_overviews, key=lambda d: (d["package"], d["test"]))
    else:
       summary = "TEST ITSELF IS BROKEN"
 
-   dots = "." * max(4, 120 - len(label) - len(summary)) # At least 4 dots for readability
+   dots = "." * max(4, 110 - len(label) - len(summary)) # At least 4 dots for readability
 
    print(f"{label}{dots}{summary} ", end = "")
 
