@@ -611,8 +611,20 @@ Automated code linting results can be found in the following directory:
 """
 
 if len(integtest_overviews) > 0:
-   for integtest_overview in integtest_overviews:
-      print(integtest_overview)
+   rich.print("\n\n")
+   rich.print(f"[yellow]##########################################SUMMARY OF INTEGRATION TESTS#############################################[/yellow]")
+
+for test in sorted(integtest_overviews, key=lambda d: (d["package"], d["test"])):
+   passed = int(test["num_subtests"]) - int(test["num_failed_subtests"])
+   label = f"{test['package']}/{test['test']} ({test['time']}s)"
+   dots = "." * max(4, 60 - len(label)) # At least 4 dots for readability
+   summary = f"{passed}/{test['num_subtests']} subtests passed, {test['num_skipped_subtests']} subtests_skipped"
+   print(f"{label}{dots}{summary} ", end = "")
+
+   if test["num_failed_subtests"] == "0" and test["num_skipped_subtests"] == "0":
+      rich.print("[green]SUCCESS[/green]")
+   else:
+      rich.print("[red]FAILURE[/red]")
 
 # Recreate the output of the old dbt-unittest-summary.sh script
 
