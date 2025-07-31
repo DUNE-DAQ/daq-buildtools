@@ -442,6 +442,7 @@ RUNNING UNIT TESTS IN {unittestdir}
             rich.print(f"[yellow]Testing complete for package \"{pkgname}\". Ran {num_unit_tests} unit test suites.[/yellow]")
             rich.print("\n")
 
+integtest_overviews = []
 if run_integtests:
     datestring = re.sub("[: ]+", "_", sh.date().strip())
 
@@ -452,7 +453,7 @@ if run_integtests:
     os.chdir(BASEDIR)
 
     if args.integtest == "all":
-        integtest_package_list = [path for path in pathlib.Path('sourcecode').iterdir() 
+        integtest_package_list = [path for path in pathlib.Path('sourcecode').iterdir()
                                if path.is_dir() and path.name != '.pytest_cache']
     else:
         integtest_package_list = [pathlib.Path(f'sourcecode/{package_to_integtest}')]
@@ -496,6 +497,12 @@ if run_integtests:
             rich.print(f"""[green]Test \"{integtest_name}\" complete for package \"{package}\". 
             The full integtest output can be found at {integtest_full_output_log}
             The junit xml file can be found at {integtest_junit_xml_output}[/green]""")
+
+            with open(integtest_junit_xml_output, "r") as inf:
+               res = re.search(r'.*errors="([0-9]+)" failures="([0-9]+)" skipped="([0-9]+)" tests="([0-9]+)" time="([0-9\.]+)".*', inf.read())
+               assert res, f"Some assumption made by dbt-build on how to parse {integtest_junit_xml_output} is broken; please contact John Freeman"
+               errors, failures, skipped, subtests, time = [res.group(itoken) for itoken in range(1,6)]
+               integtest_overviews.append({"package": package, "test": integtest_name, "errors": errors, "num_subtests": subtests, "num_failed_subtests": failures, "num_skipped_subtests": skipped, "time": time })
 
         # Remove __pycache__ directories
         pycache_dir = package_path/'integtest/__pycache__'
@@ -603,11 +610,38 @@ Automated code linting results can be found in the following directory:
 {lint_log_dir}.
 """
 
+if len(integtest_overviews) > 0:
+   rich.print("\n\n")
+   rich.print(f"[yellow]########################################SUMMARY OF INTEGRATION TESTS###########################################[/yellow]")
+
+for test in sorted(integtest_overviews, key=lambda d: (d["package"], d["test"])):
+
+   errors = int(test["errors"])
+   passed = int(test["num_subtests"]) - int(test["num_failed_subtests"]) - int(test["num_skipped_subtests"])
+   ran = int(test["num_subtests"]) - int(test["num_skipped_subtests"])
+   label = f"{test['package']}/{test['test']} ({test['time']}s)"
+
+   if errors == 0:
+      summary = f"{passed}/{ran} run subtests passed, {test['num_skipped_subtests']} subtests skipped"
+   else:
+      summary = "TEST ITSELF IS BROKEN"
+
+   dots = "." * max(4, 110 - len(label) - len(summary)) # At least 4 dots for readability
+
+   print(f"{label}{dots}{summary} ", end = "")
+
+   if test["num_failed_subtests"] == "0" and test["num_skipped_subtests"] == "0" and errors == 0:
+      rich.print("[green]SUCCESS[/green]")
+   elif test["num_failed_subtests"] == "0" and errors == 0:
+      rich.print("[yellow]SKIPPED[/yellow]")
+   else:
+      rich.print("[red]FAILURE[/red]")
+
 # Recreate the output of the old dbt-unittest-summary.sh script
 
 if len(unittest_overviews) > 0:
    rich.print("\n\n")
-   rich.print(f"[yellow]###########################SUMMARY OF UNIT TESTS##############################[/yellow]")
+   rich.print(f"[yellow]################################SUMMARY OF UNIT TESTS###################################[/yellow]")
 
 for (path, retval) in unittest_overviews:
    print(f"{path:.<120}", end = "")
