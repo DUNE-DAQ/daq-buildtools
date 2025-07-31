@@ -608,9 +608,12 @@ Automated code linting results can be found in the following directory:
 if len(unittest_overviews) > 0:
    rich.print("\n\n")
    rich.print(f"[yellow]###########################SUMMARY OF UNIT TESTS##############################[/yellow]")
-
-for (path, retval) in unittest_overviews:
-   print(f"{path:.<120}", end = "")
+for i_t, (path, retval) in enumerate(unittest_overviews):
+   res = re.search(r"(.*/build).*/([^/]+/[^/]+/[^/]+)", path)
+   assert res, "Problem in dbt-build with broken assumption about path to unit test; please contact John Freeman"
+   if i_t == 0:
+      print(f"From {res.group(1)}:\n")
+   print(f"{res.group(2):.<80}", end = "")
    if retval == 0:
       rich.print('[green]SUCCESS[/green]')
    else:
