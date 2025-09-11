@@ -667,19 +667,24 @@ for i_t, (path, retval) in enumerate(unittest_overviews):
 
 if args.sanitize:
    solib = ""
-   if args.sanitize == "address":
+   solib_label = ""
+   if "address" in args.sanitize:
       solib = "libasan.so"
-   elif args.sanitize == "thread":
+      solib_label = "address"
+   elif "thread" in args.sanitize:
       solib = "libtsan.so"
-   elif args.sanitize == "leak":
+      solib_label = "thread"
+   elif "leak" in args.sanitize:
       solib = "liblsan.so"
-   elif args.sanitize == "undefined":
+      solib_label = "leak"
+   elif "undefined" in args.sanitize:
       solib = "libubsan.so"
+      solib_label = "leak"
 
    if solib != "":
       print(f"""
 ==> You've compiled your code with sanitization turned on. For best results, 
-ensure the preloader loads in the \"{args.sanitize}\" sanitizer library when you 
+ensure the preloader loads in the \"{solib_label}\" sanitizer library when you 
 run your application, i.e.
 
 LD_PRELOAD=$(gcc -print-file-name={solib}) <name of application>
