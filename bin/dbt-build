@@ -59,6 +59,7 @@ Usage
         --cmake-trace enable cmake tracing
         --cmake-graphviz generates a target dependency graph
         --codegen-only means you only want CMake to run its config+generate stages, and not actually compile the code
+        --sanitize=<type> means you want gcc to sanitize your code to help you debug via its -fsanitize=<type> flag; examples of <type> are "address" (for an address sanitizer) or "thread" (for a thread sanitizer)
 
     All arguments are optional. With no arguments, CMake will typically just run
     build, unless build/CMakeCache.txt is missing
@@ -92,6 +93,7 @@ parser.add_argument("--optimize-flag", dest="optimize_flag", help=argparse.SUPPR
 parser.add_argument("--cmake-trace", action="store_true", dest="cmake_trace", help=argparse.SUPPRESS)
 parser.add_argument("--cmake-graphviz", action="store_true", dest="cmake_graphviz", help=argparse.SUPPRESS)
 parser.add_argument("--codegen-only", action="store_true", dest="codegen_only", help=argparse.SUPPRESS)
+parser.add_argument("--sanitize", nargs="?", dest="sanitize", help=argparse.SUPPRESS)
 parser.add_argument("-y", "--yes-to-all", action="store_true", dest="yes_to_all", help=argparse.SUPPRESS)
 
 args = parser.parse_args()
@@ -101,6 +103,12 @@ if args.debug_build and args.optimize_flag:
 You've passed both a -d/--debug argument and an --optimize-flag argument to this
 script; this is not allowed as they both try to set the optimization level of
 a gcc build
+""")
+
+if args.sanitize:
+   if not args.clean_build:
+      error(f"""
+You've passed a \"--sanitize {args.sanitize}\" argument to this script, but you also need to supply "--clean" to force a ground-up rebuild
 """)
 
 if args.optimize_flag:
@@ -243,6 +251,9 @@ if not os.path.exists("CMakeCache.txt"):
         cmake_msg_lvl = args.cmake_msg_lvl
 
     fullcmd="{} -DCMAKE_POLICY_DEFAULT_CMP0116=OLD -DCMAKE_MESSAGE_LOG_LEVEL={} -DMOO_CMD={} -DDBT_ROOT={} -DDBT_DEBUG={} -DDBT_OPTIMIZE_FLAG={} -DCMAKE_INSTALL_PREFIX={} -G Ninja {}".format(cmake, cmake_msg_lvl, moo_path, os.environ["DBT_ROOT"], debug_build, args.optimize_flag, INSTALLDIR, SRCDIR)
+
+    if args.sanitize:
+       fullcmd = f"{fullcmd} -DDBT_SANITIZE={args.sanitize}"
 
     rich.print(f"Executing '{fullcmd}'")
     retval=pytee.run(fullcmd.split(" ")[0], fullcmd.split(" ")[1:], build_log)
@@ -653,6 +664,31 @@ for i_t, (path, retval) in enumerate(unittest_overviews):
       rich.print('[green]SUCCESS[/green]')
    else:
       rich.print('[red]FAILURE[/red]')
+
+if args.sanitize:
+   solib = ""
+   solib_label = ""
+   if "address" in args.sanitize:
+      solib = "libasan.so"
+      solib_label = "address"
+   elif "thread" in args.sanitize:
+      solib = "libtsan.so"
+      solib_label = "thread"
+   elif "leak" in args.sanitize:
+      solib = "liblsan.so"
+      solib_label = "leak"
+   elif "undefined" in args.sanitize:
+      solib = "libubsan.so"
+      solib_label = "leak"
+
+   if solib != "":
+      print(f"""
+==> You've compiled your code with sanitization turned on. For best results, 
+ensure the preloader loads in the \"{solib_label}\" sanitizer library when you 
+run your application, i.e.
+
+LD_PRELOAD=$(gcc -print-file-name={solib}) <name of application>
+""")
 
 rich.print("\n")
 rich.print(f"""
