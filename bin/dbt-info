@@ -215,9 +215,7 @@ def pymodule_info(requested_package):
 def process_pymodule(package):
 
    venv_subdir = package
-   if package == "connectivityserver":
-      venv_subdir = "connection-service"
-   elif package == "daq-assettools":
+   if package == "daq-assettools":
       venv_subdir = "daq_assettools"
    elif package == "runconf-ui":
       venv_subdir = "runconf_ui"
