@@ -115,11 +115,12 @@ you haven't requested sanitization for this build, so you also need to
 supply "--clean" to force a ground-up rebuild. Exiting...
 """)
       else:
-         if not "DBT_SANITIZE" in inf.read():
+         if not f"DBT_SANITIZE:UNINITIALIZED={args.sanitize}" in inf.read():
             error(f"""
 You've passed a \"--sanitize {args.sanitize}\" argument to this script,
 but you also need to supply "--clean" to force a ground-up rebuild since
-it appears a previous build was performed without sanitization. Exiting...
+it appears a previous build was performed either without sanitization,
+or with a different form of sanitization. Exiting...
 """)
 
 if args.optimize_flag:
