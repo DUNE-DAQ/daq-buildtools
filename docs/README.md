@@ -1,6 +1,6 @@
 # DUNE DAQ Buildtools
 
-_This document was last edited Sep-23-2025_
+_This document was last edited Nov-6-2025_
 
 `daq-buildtools` is the toolset to simplify the development of DUNE DAQ packages. It provides environment and building utilities for the DAQ Suite.
 
@@ -18,9 +18,9 @@ To get set up, you'll need access to the cvmfs areas `/cvmfs/dunedaq.openscience
 Simply do:
 ```
 source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt fddaq-v5.4.3
+setup_dbt latest
 ```
-Note that `fddaq-v5.4.3` is aliased to `v8.9.8`. 
+Note that `latest` is aliased to `v8.9.10`. 
 
 After running these two commands, then you'll see something like:
 ```
@@ -190,7 +190,7 @@ If you wish to only generate files but _not_ also perform a compilation (this is
 dbt-build --codegen-only
 ```
 
-If you want to troubleshoot your code by taking advantage of `gcc`'s `-fsanitize` option, you can forward an argument to it via `dbt-build`'s `--sanitize` option. Note that in order to keep things consistent a clean build is required for this. One example:
+If you want to troubleshoot your code by taking advantage of `gcc`'s `-fsanitize` option, you can forward an argument to it via `dbt-build`'s `--sanitize` option. Note that a clean build is required for this if you already have performed a build without sanitization; the opposite is also true. One example:
 ```
 dbt-build --clean --sanitize address  # Will ensure -fsanitize=address is passed to gcc
 ```
