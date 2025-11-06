@@ -105,10 +105,22 @@ script; this is not allowed as they both try to set the optimization level of
 a gcc build
 """)
 
-if args.sanitize:
-   if not args.clean_build:
-      error(f"""
-You've passed a \"--sanitize {args.sanitize}\" argument to this script, but you also need to supply "--clean" to force a ground-up rebuild
+if not args.clean_build and os.path.exists(f"{BUILDDIR}/CMakeCache.txt"):
+   with open(f"{BUILDDIR}/CMakeCache.txt") as inf:
+      if not args.sanitize:
+         if "DBT_SANITIZE" in inf.read():
+            error(f"""
+It appears a previous build was performed with gcc sanitization on; however,
+you haven't requested sanitization for this build, so you also need to
+supply "--clean" to force a ground-up rebuild. Exiting...
+""")
+      else:
+         if not f"DBT_SANITIZE:UNINITIALIZED={args.sanitize}" in inf.read():
+            error(f"""
+You've passed a \"--sanitize {args.sanitize}\" argument to this script,
+but you also need to supply "--clean" to force a ground-up rebuild since
+it appears a previous build was performed either without sanitization,
+or with a different form of sanitization. Exiting...
 """)
 
 if args.optimize_flag:
