@@ -31,6 +31,8 @@ import json
 
 sys.path.append(f'{DBT_ROOT}/scripts')
 
+ansi_escape = re.compile(r'\x1b\[[0-9;]*m')
+
 from dbt_setup_tools import error, find_work_area, get_time
 import pytee
 
@@ -509,7 +511,8 @@ if run_integtests:
                     universal_newlines=True)
                 for line in process.stdout:
                     print(line, end="")
-                    log.write(line)
+                    clean_line = ansi_escape.sub('', line)
+                    log.write(clean_line)
                     log.flush()
 
                 process.wait()
