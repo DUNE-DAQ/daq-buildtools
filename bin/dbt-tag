@@ -1,0 +1,12 @@
+#!/usr/bin/env python3
+import os
+import sys
+
+if "DBT_ROOT" in os.environ:
+   DBT_ROOT=os.environ["DBT_ROOT"]
+else:
+    print("Environment variable DBT_ROOT isn't set, which suggests you haven't yet set up the daq-buildtools environment. Exiting...")
+    sys.exit(2)
+
+exec(open('{}/scripts/dbt_tag.py'.format(DBT_ROOT)).read())
+

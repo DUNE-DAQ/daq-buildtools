@@ -67,17 +67,24 @@ def get_time(kind):
 
     return timenow
 
-def run_command(cmd):
+def run_command(cmd, capture=False):
 
     res = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE)
+
+    captured_output = []
 
     while True:
         output = res.stdout.readline()
         if output:
             print(output.rstrip().decode("utf-8"))
+            if capture:
+                captured_output.append(output.rstrip().decode("utf-8"))
         if res.poll() is not None:
             break
 
     if res.returncode != 0:
         error(f"There was a problem running \"{cmd}\" (return value {res.returncode}); exiting...")
+
+    if capture:
+        return "".join(captured_output)
