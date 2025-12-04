@@ -224,24 +224,8 @@ function spack_load_target_package() {
     if ! spack find --variants coredaq | grep -q "$daq_pkg_variant"; then
         daq_pkg_variant=""
     fi
-    if [[ $spack_pkgname =~ (nd|fd|core|dune)daq || $spack_pkgname == "externals" ]]; then
-        spack_pkg="$spack_pkgname@${SPACK_RELEASE}${daq_pkg_variant}"
-    else
-	local base_release=$( spack find --format "{version}" coredaq${daq_pkg_variant} )
 
-	# JCF, Apr-11-2024: Check and see if the old name for the core
-	# packages is used in this release
-
-	if [[ "$base_release" =~ "No package matches the query" ]]; then
-	    base_release=$( spack find --format "{version}" dunedaq )
-	fi
-
-	if [[ "$base_release" =~ "No package matches the query" ]]; then
-	    spack_pkg=$spack_pkgname
-        else
-	    spack_pkg=$spack_pkgname@${base_release}
-	fi
-    fi
+    spack_pkg="$spack_pkgname@${SPACK_RELEASE}${daq_pkg_variant}"
 
     pkg_loaded_status=$(spack find --loaded -l $spack_pkg | sed -r -n '/^\w{7} '$spack_pkgname'/p' )
     
