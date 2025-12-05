@@ -110,7 +110,7 @@ if [[ -z "${DBT_PACKAGE_SETUP_DONE}" ]]; then
     echo -e "${COL_GREEN}This script hasn't yet been sourced (successfully) in this shell; setting up the build environment${COL_RESET}\n"
     
     if [[ "$DBT_PKG_SET" =~ "daqpackages" ]]; then
-        target_package=$( get_target_package $SPACK_RELEASES_DIR/$SPACK_RELEASE )
+        target_package=$( get_target_package_name $SPACK_RELEASES_DIR/$SPACK_RELEASE )
     else
 	target_package=$DBT_PKG_SET
     fi

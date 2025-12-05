@@ -144,7 +144,7 @@ if [[ "$retval" != "0" ]]; then
     return $retval
 fi
 
-target_package=$( get_target_package "${SPACK_RELEASES_DIR}/${RELEASE_TAG}" )
+target_package=$( get_target_package_name "${SPACK_RELEASES_DIR}/${RELEASE_TAG}" )
 
 # For dbt-setup-release, we don't need to drag in build-only dependencies
 spack_load_target_package ${target_package}~dev

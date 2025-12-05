@@ -359,7 +359,7 @@ function prioritize_directories() {
 }
 
 # This function is needed as part of daq-release Issue #500
-function get_target_package() {
+function get_target_package_name() {
     local release_dir=$1
 
     spec_file=$( ls $release_dir/spec_*_log.txt )
@@ -368,10 +368,10 @@ function get_target_package() {
 	if [[ -n $target_package ]]; then
 	    echo $target_package
 	else
-	    echo "get_target_package_error2"
+	    echo "get_target_package_name_error2"
 	fi
     else
-	echo "get_target_package_error1"
+	echo "get_target_package_name_error1"
     fi
 }
 
