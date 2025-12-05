@@ -250,8 +250,15 @@ if not os.path.exists("CMakeCache.txt"):
 
     stringio_obj3 = io.StringIO()
     the_which_cmd = sh.Command("which")  # Needed because of a complex alias, at least on mu2edaq
-    the_which_cmd("moo", _out=stringio_obj3)  # Will raise helpful exception if moo not found
-    moo_path=stringio_obj3.getvalue().strip().split()[-1]
+
+    possible_moo_arg = ""
+    try:
+       the_which_cmd("moo", _out=stringio_obj3)  # Will raise helpful exception if moo not found
+    except:
+       pass
+    else:
+       moo_path=stringio_obj3.getvalue().strip().split()[-1]
+       possible_moo_arg = f"-DMOO_CMD={moo_path}"
 
     starttime_cfggen_d=get_time("as_date")
     starttime_cfggen_s=get_time("as_seconds_since_epoch")
@@ -264,7 +271,7 @@ if not os.path.exists("CMakeCache.txt"):
     if args.cmake_msg_lvl:
         cmake_msg_lvl = args.cmake_msg_lvl
 
-    fullcmd="{} -DCMAKE_POLICY_DEFAULT_CMP0116=OLD -DCMAKE_MESSAGE_LOG_LEVEL={} -DMOO_CMD={} -DDBT_ROOT={} -DDBT_DEBUG={} -DDBT_OPTIMIZE_FLAG={} -DCMAKE_INSTALL_PREFIX={} -G Ninja {}".format(cmake, cmake_msg_lvl, moo_path, os.environ["DBT_ROOT"], debug_build, args.optimize_flag, INSTALLDIR, SRCDIR)
+    fullcmd="{} -DCMAKE_POLICY_DEFAULT_CMP0116=OLD -DCMAKE_MESSAGE_LOG_LEVEL={} {} -DDBT_ROOT={} -DDBT_DEBUG={} -DDBT_OPTIMIZE_FLAG={} -DCMAKE_INSTALL_PREFIX={} -G Ninja {}".format(cmake, cmake_msg_lvl, possible_moo_arg, os.environ["DBT_ROOT"], debug_build, args.optimize_flag, INSTALLDIR, SRCDIR)
 
     if args.sanitize:
        fullcmd = f"{fullcmd} -DDBT_SANITIZE={args.sanitize}"
