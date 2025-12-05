@@ -147,9 +147,8 @@ fi
 target_package=$( get_target_package "${SPACK_RELEASES_DIR}/${RELEASE_TAG}" )
 
 # For dbt-setup-release, we don't need to drag in build-only dependencies
-variant="~dev"
+spack_load_target_package ${target_package}~dev
 
-spack_load_target_package $target_package $variant
 retval=$?
 if [[ "$retval" != "0" ]]; then
     error "Failed to load spack target package \"$target_package\". Returning..."

@@ -215,33 +215,19 @@ function spack_setup_env() {
 #------------------------------------------------------------------------------
 function spack_load_target_package() {
 
-    local spack_pkgname=$1
-    local spack_pkg
+    local spack_pkg=$1
 
-    local daq_pkg_variant=${2:-+dev}
+    # if [[ $daq_pkg_variant != "" ]]; then
+    #     spack_pkg="$spack_pkgname@${SPACK_RELEASE}${daq_pkg_variant}"
+    # else
+    # 	local base_release=$( spack find --format "{version}" coredaq+dev ) # +dev arbitrary, both +dev/~dev have same base release
 
-    # For backwards compatibility, only use a variant if it exists
-    if ! spack find --variants coredaq | grep -q "$daq_pkg_variant"; then
-        daq_pkg_variant=""
-    fi
-    if [[ $spack_pkgname =~ (nd|fd|core|dune)daq || $spack_pkgname == "externals" ]]; then
-        spack_pkg="$spack_pkgname@${SPACK_RELEASE}${daq_pkg_variant}"
-    else
-	local base_release=$( spack find --format "{version}" coredaq${daq_pkg_variant} )
-
-	# JCF, Apr-11-2024: Check and see if the old name for the core
-	# packages is used in this release
-
-	if [[ "$base_release" =~ "No package matches the query" ]]; then
-	    base_release=$( spack find --format "{version}" dunedaq )
-	fi
-
-	if [[ "$base_release" =~ "No package matches the query" ]]; then
-	    spack_pkg=$spack_pkgname
-        else
-	    spack_pkg=$spack_pkgname@${base_release}
-	fi
-    fi
+    # 	if [[ "$base_release" =~ "No package matches the query" ]]; then
+    # 	    spack_pkg=$spack_pkgname
+    #     else
+    # 	    spack_pkg=$spack_pkgname@${base_release}
+    # 	fi
+    # fi
 
     pkg_loaded_status=$(spack find --loaded -l $spack_pkg | sed -r -n '/^\w{7} '$spack_pkgname'/p' )
     

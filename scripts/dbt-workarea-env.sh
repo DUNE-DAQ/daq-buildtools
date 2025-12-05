@@ -115,7 +115,7 @@ if [[ -z "${DBT_PACKAGE_SETUP_DONE}" ]]; then
 	target_package=$DBT_PKG_SET
     fi
 
-    spack_load_target_package $target_package
+    spack_load_target_package ${target_package}+dev
 
     retval=$?
     if [[ "$retval" != "0" ]]; then
