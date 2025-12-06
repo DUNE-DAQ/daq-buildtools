@@ -217,18 +217,6 @@ function spack_load_target_package() {
 
     local spack_pkg=$1
 
-    # if [[ $daq_pkg_variant != "" ]]; then
-    #     spack_pkg="$spack_pkgname@${SPACK_RELEASE}${daq_pkg_variant}"
-    # else
-    # 	local base_release=$( spack find --format "{version}" coredaq+dev ) # +dev arbitrary, both +dev/~dev have same base release
-
-    # 	if [[ "$base_release" =~ "No package matches the query" ]]; then
-    # 	    spack_pkg=$spack_pkgname
-    #     else
-    # 	    spack_pkg=$spack_pkgname@${base_release}
-    # 	fi
-    # fi
-
     pkg_loaded_status=$(spack find --loaded -l $spack_pkg | sed -r -n '/^\w{7} '$spack_pkgname'/p' )
     
     if [[ -z $pkg_loaded_status || $pkg_loaded_status =~ "0 loaded packages" || $pkg_loaded_status =~ "No package matches the query: $spack_pkgname" ]]; then
