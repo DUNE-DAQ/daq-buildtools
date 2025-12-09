@@ -81,3 +81,18 @@ def run_command(cmd):
 
     if res.returncode != 0:
         error(f"There was a problem running \"{cmd}\" (return value {res.returncode}); exiting...")
+
+# This function is needed as part of daq-release Issue #500
+# Its namesake bash counterpart can be found in dbt-setup-tools.sh
+
+def get_target_package_name(release_dir):
+    spec_files = glob.glob(f"{release_dir}/spec_*_log.txt")
+    assert len(spec_files) == 1, f"Glob of {release_dir}/spec_*_log.txt didn't yield one and only one file"
+
+    spec_file = spec_files[0]
+
+    assert os.path.exists(spec_file)
+    res = re.search(r".*/spec_([^_]+)_log.txt", spec_file)
+
+    assert res
+    return res.group(1)

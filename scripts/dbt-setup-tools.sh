@@ -215,33 +215,7 @@ function spack_setup_env() {
 #------------------------------------------------------------------------------
 function spack_load_target_package() {
 
-    local spack_pkgname=$1
-    local spack_pkg
-
-    local daq_pkg_variant=${2:-+dev}
-
-    # For backwards compatibility, only use a variant if it exists
-    if ! spack find --variants coredaq | grep -q "$daq_pkg_variant"; then
-        daq_pkg_variant=""
-    fi
-    if [[ $spack_pkgname =~ (nd|fd|core|dune)daq || $spack_pkgname == "externals" ]]; then
-        spack_pkg="$spack_pkgname@${SPACK_RELEASE}${daq_pkg_variant}"
-    else
-	local base_release=$( spack find --format "{version}" coredaq${daq_pkg_variant} )
-
-	# JCF, Apr-11-2024: Check and see if the old name for the core
-	# packages is used in this release
-
-	if [[ "$base_release" =~ "No package matches the query" ]]; then
-	    base_release=$( spack find --format "{version}" dunedaq )
-	fi
-
-	if [[ "$base_release" =~ "No package matches the query" ]]; then
-	    spack_pkg=$spack_pkgname
-        else
-	    spack_pkg=$spack_pkgname@${base_release}
-	fi
-    fi
+    local spack_pkg=$1
 
     pkg_loaded_status=$(spack find --loaded -l $spack_pkg | sed -r -n '/^\w{7} '$spack_pkgname'/p' )
     
@@ -372,5 +346,21 @@ function prioritize_directories() {
 
 }
 
+# This function is needed as part of daq-release Issue #500
+function get_target_package_name() {
+    local release_dir=$1
+
+    spec_file=$( ls $release_dir/spec_*_log.txt )
+    if [[ -n $spec_file ]]; then
+	target_package=$( echo $spec_file | sed -r 's!.*/spec_([^_]+)_log.txt!\1!' )
+	if [[ -n $target_package ]]; then
+	    echo $target_package
+	else
+	    echo "get_target_package_name_error2"
+	fi
+    else
+	echo "get_target_package_name_error1"
+    fi
+}
 
 #------------------------------------------------------------------------------
