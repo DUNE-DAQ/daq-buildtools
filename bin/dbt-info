@@ -15,23 +15,16 @@ else:
 
 
 sys.path.append(f'{DBT_ROOT}/scripts')
-from dbt_setup_tools import error, run_command
+from dbt_setup_tools import error, run_command, get_target_package_name
 
 this_script = os.path.basename(__file__)
+release_dir = os.environ["SPACK_RELEASES_DIR"] + "/" + os.environ["SPACK_RELEASE"]
+
+target_package = get_target_package_name(release_dir)
 
 def env_check():
     if not "SPACK_ROOT" in os.environ:
         error("It doesn't appear Spack was set up; exiting...")
-
-def is_far_detector_release():
-   if "FD" in os.environ["SPACK_RELEASE"] or "fd" in os.environ["SPACK_RELEASE"]:
-      is_fd = True
-   elif "ND" in os.environ["SPACK_RELEASE"] or "nd" in os.environ["SPACK_RELEASE"]:
-      is_fd = False
-   else:
-      error("Unable to determine if this release is for the far detector or the near detector; exiting...")
-
-   return is_fd
 
 def get_target_dir(package):
    res = subprocess.Popen(f"realpath $(spack location -p {package})/../..", 
@@ -57,32 +50,25 @@ def release_help():
 
 def release_info():
 
-    try:
-      releasedata = get_release_data("coredaq")
-    except:
-      releasedata = get_release_data("dunedaq")
+   releasedata = get_release_data("coredaq")
 
-    base_release = releasedata["release"]
-    target_dir = "Error"
+   base_release = releasedata["release"]
+   target_dir = "Error"
 
-    if is_far_detector_release():
-        releasedata = get_release_data("fddaq")
-        target_dir = get_target_dir("fddaq")
-    else:
-        releasedata = get_release_data("nddaq")
-        target_dir = get_target_dir("nddaq")
+   releasedata = get_release_data(target_package)
+   target_dir = get_target_dir(target_package)
 
-    full_release = releasedata["release"]
-    full_release_type = releasedata["type"]
+   full_release = releasedata["release"]
+   full_release_type = releasedata["type"]
     
-    pos = target_dir.find(full_release)
-    release_dir = target_dir[:pos + len(full_release)]
+   pos = target_dir.find(full_release)
+   release_dir = target_dir[:pos + len(full_release)]
 
-    print(f"Release type: {full_release_type}")
-    print(f"Release name: {full_release}")
-    print(f"Base release name: {base_release}")
-    print(f"Release dir: {release_dir}")
-    
+   print(f"Release type: {full_release_type}")
+   print(f"Release name: {full_release}")
+   print(f"Base release name: {base_release}")
+   print(f"Release dir: {release_dir}")
+ 
 def release_size_help():
    print(f"\n{this_script} release_size  # No additional arguments")
 
@@ -135,22 +121,11 @@ def package_info(requested_pkg, ok_to_miss = False):
 
    was_found = False
 
-   try:
-     base_data = get_release_data("coredaq")
-   except:
-     base_data = get_release_data("dunedaq")
+   base_data = get_release_data("coredaq")
 
-   is_fd = is_far_detector_release()
+   release_data = get_release_data(target_package)
 
-   if is_fd:
-      fd_or_nd_data = get_release_data("fddaq")
-   else:
-      fd_or_nd_data = get_release_data("nddaq")
-
-   try:
-     base_packages = base_data["coredaq"]
-   except:
-     base_packages = base_data["dunedaq"]
+   base_packages = base_data["coredaq"]
 
    for pkg in base_packages:
       if pkg["name"] == requested_pkg or requested_pkg == "all":
@@ -159,12 +134,7 @@ def package_info(requested_pkg, ok_to_miss = False):
          if requested_pkg != "all":
              return
 
-   if is_fd:
-      datakey = "fddaq"
-   else:
-      datakey = "nddaq"
-
-   for pkg in fd_or_nd_data[ datakey ]:
+   for pkg in release_data[ target_package ]:
       if pkg["name"] == requested_pkg or requested_pkg == "all":
          was_found = True
          package_print(pkg)
@@ -237,12 +207,7 @@ def process_pymodule(package):
       # installation, get version from YAML file from which the python
       # packages are locally installed
 
-      is_fd = is_far_detector_release()
-
-      if is_fd:
-         data = get_release_data("fddaq")
-      else:
-         data = get_release_data("nddaq")
+      data = get_release_data(target_package)
 
       pyvenv_file = "%s/%s/pyvenv_requirements.txt" % (os.environ["SPACK_RELEASES_DIR"], os.environ["SPACK_RELEASE"])
       assert os.path.exists(pyvenv_file)
