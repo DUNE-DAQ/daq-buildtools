@@ -77,9 +77,10 @@ def run_command(cmd, capture=False):
     while True:
         output = res.stdout.readline()
         if output:
-            print(output.rstrip().decode("utf-8"))
             if capture:
                 captured_output.append(output.rstrip().decode("utf-8"))
+            else:
+                print(output.rstrip().decode("utf-8"))
         if res.poll() is not None:
             break
 
