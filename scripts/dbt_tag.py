@@ -32,7 +32,7 @@ class RepoTag:
     def __post_init__(self):
         parts = self.tag[1:].split('.')
         if len(parts) != 3 or not all(p.isdigit() for p in parts) or not self.tag.startswith('v'):
-            raise ValueError(f"Invalid tag format: '{self.tag}'. Format should be 'vX.Y.Z'.")
+            raise click.BadParameter(f"Invalid tag format: '{self.tag}'. Format should be 'vX.Y.Z'.")
 
 class DAQRepo:
     def __init__(self, repo_tag):
@@ -46,19 +46,22 @@ class DAQRepo:
         self.cmakelists_tag = None
         self.pyproject_tag  = None
 
+        if self.repo_tag.tag < self.latest_tag.tag:
+            raise click.UsageError(f"The requested tag {self.repo_tag.tag} is older than the most recent tag: {self.latest_tag.tag}.")
+        if self.repo_tag.tag == self.latest_tag.tag:
+            raise click.UsageError(
+                f"{self.repo_tag.tag} already exists.\n\n"
+                f"If you need to revert your current tag, use dbt-tag delete <tag>"
+            )
+
     def get_latest_tag(self):
-        latest_hash = self.gitrepo.git.rev_list("--tags", "--max-count=1")
         latest_tag = run_command("git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1", capture=True)
         return RepoTag(latest_tag)
 
-    def get_latest_tag_backup(self):
-        latest_hash = self.gitrepo.git.rev_list("--tags", "--max-count=1")
-        return RepoTag(self.gitrepo.git.describe("--tags", latest_hash))
-
-    def update_cmakelists_tag(self, tag, dry_run=False):
+    def update_cmakelists_tag(self, dry_run=False):
         if not self.cmakelists_path.exists():
             return
-        new_version = tag.lstrip('v')
+        new_version = self.repo_tag.tag.lstrip('v')
         text = self.cmakelists_path.read_text()
         pattern = r"(project\s*\(\s*[^ )]+\s+VERSION\s+)([\d\.]+)"
         repl = r"\g<1>" + new_version
@@ -69,7 +72,7 @@ class DAQRepo:
                 old_line = match.group(0)
                 new_line = re.sub(pattern, repl, old_line)
                 if old_line == new_line:
-                    click.echo("This action would make no change to the current CMakeLists.txt.")
+                    click.echo("\nThis action would make no change to the current CMakeLists.txt.")
                     return
                 click.echo("This action would perform the following change in CMakeLists.txt:")
                 click.secho(f"{old_line})", fg='yellow')
@@ -79,10 +82,10 @@ class DAQRepo:
             self.cmakelists_path.write_text(new_text)
             click.secho(f"Updated version to {new_version} in {self.cmakelists_path}", fg="blue")
 
-    def update_pyproject_tag(self, tag, dry_run=False):
+    def update_pyproject_tag(self, dry_run=False):
         if not self.pyproject_path.exists():
             return
-        new_version = tag.lstrip('v')
+        new_version = self.repo_tag.tag.lstrip('v')
         text = self.pyproject_path.read_text()
         pattern = r'(version\s*=\s*")(\d+\.\d+\.\d+)(")'
         repl = r"\g<1>" + new_version + r"\g<3>"
@@ -93,15 +96,26 @@ class DAQRepo:
                 old_line = match.group(0)
                 new_line = re.sub(pattern, repl, old_line)
                 if old_line == new_line:
-                    click.echo("This action would make no change to the current pyproject.toml.")
+                    click.echo("\nThis action would make no change to the current pyproject.toml.")
                     return
-                click.echo("This action would perform the following change in pyproject.toml:")
+                click.echo("\nThis action would perform the following change in pyproject.toml:")
                 click.secho(f"{old_line}", fg='yellow')
                 click.secho(f"{new_line}", fg='bright_cyan')
         else:
             new_text = re.sub(pattern, repl, text)
             self.pyproject_path.write_text(new_text)
-            click.secho(f"Updated version to {new_version} in {self.pyproject_path}", fg="blue")
+            click.secho(f"\nUpdated version to {new_version} in {self.pyproject_path}", fg="blue")
+
+    def create_and_checkout_branch(self, branch_name, dry_run=False):
+        if dry_run:
+            click.secho(f"\nThis action would create and checkout a branch called {branch_name} with the changes listed above.")
+            return
+        self.gitrepo.git.switch('-c', branch_name)
+        click.echo(f"\nSwitched to new branch {branch_name}")
+
+    def commit_changes(self):
+        pass
+        #self.gitrepo.add()
 
 @click.group()
 @click.option("--dry-run", is_flag=True, help="Show actions without running them.")
@@ -113,21 +127,16 @@ def cli(ctx, dry_run):
 
 @cli.command()
 @click.argument("tag")
+@click.option("--branch", required=True, help="Branch from which the tag will be committed and pushed.")
 @click.pass_context
-def create(ctx, tag):
+def create(ctx, tag, branch):
     repo_tag = RepoTag(tag)
     daq_repo = DAQRepo(repo_tag)
-    latest_tag = daq_repo.get_latest_tag()
-    if repo_tag < latest_tag:
-        raise click.ClickException(f"The requested tag {repo_tag.tag} is older than (or the same as) the most recent tag: {latest_tag.tag}.")
-    if repo_tag == latest_tag:
-        raise click.ClickException(dedent(f"""
-            The requested tag {repo_tag.tag} is the same as the most recent tag: {latest_tag.tag}.
-            If you need to revert your current tag, use dbt-tag delete <tag>
-        """))
-    daq_repo.update_cmakelists_tag(repo_tag.tag, ctx.obj["dry_run"])
-    daq_repo.update_pyproject_tag(repo_tag.tag, ctx.obj["dry_run"])
-    #pyproject_tag = daq_repo.get_pyproject_tag()
+    daq_repo.update_cmakelists_tag(ctx.obj["dry_run"])
+    daq_repo.update_pyproject_tag(ctx.obj["dry_run"])
+    daq_repo.create_and_checkout_branch(branch, ctx.obj["dry_run"])
+    if not ctx.obj["dry_run"]:
+        daq_repo.commit_changes()
 
 @cli.command()
 @click.argument("tag")
