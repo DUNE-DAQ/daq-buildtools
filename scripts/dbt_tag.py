@@ -3,6 +3,7 @@ import re
 import argparse
 import click
 from git import Repo
+from git.exc import GitCommandError
 from pathlib import Path
 from textwrap import dedent
 from dataclasses import dataclass
@@ -74,7 +75,7 @@ class DAQRepo:
                 if old_line == new_line:
                     click.echo("\nThis action would make no change to the current CMakeLists.txt.")
                     return
-                click.echo("This action would perform the following change in CMakeLists.txt:")
+                click.echo("Changes to CMakeLists.txt:")
                 click.secho(f"{old_line})", fg='yellow')
                 click.secho(f"{new_line})", fg='bright_cyan')
         else:
@@ -98,7 +99,7 @@ class DAQRepo:
                 if old_line == new_line:
                     click.echo("\nThis action would make no change to the current pyproject.toml.")
                     return
-                click.echo("\nThis action would perform the following change in pyproject.toml:")
+                click.echo("\nChanges to pyproject.toml:")
                 click.secho(f"{old_line}", fg='yellow')
                 click.secho(f"{new_line}", fg='bright_cyan')
         else:
@@ -106,16 +107,40 @@ class DAQRepo:
             self.pyproject_path.write_text(new_text)
             click.secho(f"\nUpdated version to {new_version} in {self.pyproject_path}", fg="blue")
 
-    def create_and_checkout_branch(self, branch_name, dry_run=False):
+    def create_and_checkout_branch(self, branch, overwrite, dry_run=False):
+        if overwrite:
+            if branch in self.gitrepo.refs:
+                try:
+                    self.gitrepo.git.branch("-D", f"{branch}")
+                except GitCommandError as e:
+                    raise RuntimeError(
+                        f"Cannot delete branch {branch}. Make sure it's not already checked out."
+                    ) from e
+            else:
+                click.echo("Nope")
         if dry_run:
-            click.secho(f"\nThis action would create and checkout a branch called {branch_name} with the changes listed above.")
+            click.secho(f"\nThis action would create and checkout a branch called {branch} with the changes listed below.")
             return
-        self.gitrepo.git.switch('-c', branch_name)
-        click.echo(f"\nSwitched to new branch {branch_name}")
+        self.gitrepo.git.switch('-c', branch)
+        click.echo(f"\nSwitched to new branch {branch}")
 
-    def commit_changes(self):
-        pass
-        #self.gitrepo.add()
+    def commit_changes(self, dry_run=False):
+        if dry_run:
+            diff_text = self.gitrepo.git.diff("HEAD~1", color="always")
+            click.echo("Changes to be committed:")
+            click.echo(diff_text)
+            return
+        if self.cmakelists_path.exists():
+            self.gitrepo.index.add(["CMakeLists.txt"])
+            click.echo("CMakeLists added")
+        if self.pyproject_path.exists():
+            self.gitrepo.index.add(["pyproject.toml"])
+            click.echo("pyproject added")
+        self.gitrepo.index.commit("[DBT-TAG]: Bump version numbers")
+        click.echo("Committed")
+        diff_text = self.gitrepo.git.diff("HEAD~1", color="always")
+        click.echo(diff_text)
+
 
 @click.group()
 @click.option("--dry-run", is_flag=True, help="Show actions without running them.")
@@ -128,15 +153,15 @@ def cli(ctx, dry_run):
 @cli.command()
 @click.argument("tag")
 @click.option("--branch", required=True, help="Branch from which the tag will be committed and pushed.")
+@click.option("--overwrite", is_flag=True, help="Whether to overwrite the tagged branch if it already exists.")
 @click.pass_context
-def create(ctx, tag, branch):
+def create(ctx, tag, branch, overwrite):
     repo_tag = RepoTag(tag)
     daq_repo = DAQRepo(repo_tag)
+    daq_repo.create_and_checkout_branch(branch, overwrite, ctx.obj["dry_run"])
     daq_repo.update_cmakelists_tag(ctx.obj["dry_run"])
     daq_repo.update_pyproject_tag(ctx.obj["dry_run"])
-    daq_repo.create_and_checkout_branch(branch, ctx.obj["dry_run"])
-    if not ctx.obj["dry_run"]:
-        daq_repo.commit_changes()
+    daq_repo.commit_changes(ctx.obj["dry_run"])
 
 @cli.command()
 @click.argument("tag")
