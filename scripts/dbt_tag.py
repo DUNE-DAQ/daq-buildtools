@@ -59,6 +59,23 @@ class DAQRepo:
         latest_tag = run_command("git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1", capture=True)
         return RepoTag(latest_tag)
 
+    def create_and_checkout_branch(self, branch, overwrite, dry_run=False):
+        if overwrite:
+            if branch in self.gitrepo.refs:
+                try:
+                    self.gitrepo.git.branch("-D", f"{branch}")
+                except GitCommandError as e:
+                    raise RuntimeError(
+                        f"Cannot delete branch {branch}. Make sure it's not already checked out."
+                    ) from e
+            else:
+                click.echo("Nope")
+        if dry_run:
+            click.secho(f"\nThis action would create and checkout a branch called {branch} with the changes listed below.")
+            return
+        self.gitrepo.git.switch('-c', branch)
+        click.echo(f"\nSwitched to new branch {branch}")
+
     def update_cmakelists_tag(self, dry_run=False):
         if not self.cmakelists_path.exists():
             return
@@ -106,23 +123,6 @@ class DAQRepo:
             new_text = re.sub(pattern, repl, text)
             self.pyproject_path.write_text(new_text)
             click.secho(f"\nUpdated version to {new_version} in {self.pyproject_path}", fg="blue")
-
-    def create_and_checkout_branch(self, branch, overwrite, dry_run=False):
-        if overwrite:
-            if branch in self.gitrepo.refs:
-                try:
-                    self.gitrepo.git.branch("-D", f"{branch}")
-                except GitCommandError as e:
-                    raise RuntimeError(
-                        f"Cannot delete branch {branch}. Make sure it's not already checked out."
-                    ) from e
-            else:
-                click.echo("Nope")
-        if dry_run:
-            click.secho(f"\nThis action would create and checkout a branch called {branch} with the changes listed below.")
-            return
-        self.gitrepo.git.switch('-c', branch)
-        click.echo(f"\nSwitched to new branch {branch}")
 
     def commit_changes(self, dry_run=False):
         if dry_run:
