@@ -271,7 +271,7 @@ if not os.path.exists("CMakeCache.txt"):
     if args.cmake_msg_lvl:
         cmake_msg_lvl = args.cmake_msg_lvl
 
-    fullcmd="{} -DCMAKE_POLICY_DEFAULT_CMP0116=OLD -DCMAKE_MESSAGE_LOG_LEVEL={} {} -DDBT_ROOT={} -DDBT_DEBUG={} -DDBT_OPTIMIZE_FLAG={} -DCMAKE_INSTALL_PREFIX={} -G Ninja {}".format(cmake, cmake_msg_lvl, possible_moo_arg, os.environ["DBT_ROOT"], debug_build, args.optimize_flag, INSTALLDIR, SRCDIR)
+    fullcmd="{} -DCMAKE_POLICY_DEFAULT_CMP0116=OLD -DCMAKE_POLICY_DEFAULT_CMP0144=OLD -DCMAKE_POLICY_DEFAULT_CMP0167=OLD -DPYBIND11_FINDPYTHON=1 -DCMAKE_MESSAGE_LOG_LEVEL={} {} -DDBT_ROOT={} -DDBT_DEBUG={} -DDBT_OPTIMIZE_FLAG={} -DCMAKE_INSTALL_PREFIX={} -G Ninja {}".format(cmake, cmake_msg_lvl, possible_moo_arg, os.environ["DBT_ROOT"], debug_build, args.optimize_flag, INSTALLDIR, SRCDIR)
 
     if args.sanitize:
        fullcmd = f"{fullcmd} -DDBT_SANITIZE={args.sanitize}"
