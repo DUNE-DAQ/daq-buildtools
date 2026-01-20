@@ -127,6 +127,10 @@ if [[ -z "${DBT_PACKAGE_SETUP_DONE}" ]]; then
     echo "Now loading devtools for latest CMake, gcc, etc."
     spack load devtools || echo -e "\nWARNING: this script was unable to load \"devtools\"; you may be using an older CMake as a result (run \"which cmake\" to check)\n"
 
+    gcc_version=$( gcc --version | head -1 | sed -r 's/.*\s+([0-9]+.[0-9]+.[0-9]+).*/\1/' )
+    echo "gcc $gcc_version is used, so loading corresponding gcc-runtime $gcc_version"
+    spack load gcc-runtime@${gcc_version} || echo -e "\nWARNING: unable to load the correct gcc-runtime\n"
+
     # Assumption is you've already spack loaded python, etc...
     local_venv_dir=${DBT_AREA_ROOT}/${DBT_VENV}
     release_venv_dir=`realpath ${SPACK_RELEASES_DIR}/$SPACK_RELEASE/${DBT_VENV}`

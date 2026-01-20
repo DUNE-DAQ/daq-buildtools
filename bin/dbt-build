@@ -271,7 +271,13 @@ if not os.path.exists("CMakeCache.txt"):
     if args.cmake_msg_lvl:
         cmake_msg_lvl = args.cmake_msg_lvl
 
-    fullcmd="{} -DCMAKE_POLICY_DEFAULT_CMP0116=OLD -DCMAKE_MESSAGE_LOG_LEVEL={} {} -DDBT_ROOT={} -DDBT_DEBUG={} -DDBT_OPTIMIZE_FLAG={} -DCMAKE_INSTALL_PREFIX={} -G Ninja {}".format(cmake, cmake_msg_lvl, possible_moo_arg, os.environ["DBT_ROOT"], debug_build, args.optimize_flag, INSTALLDIR, SRCDIR)
+    cmake_version_output = subprocess.check_output(["cmake", "--version"], text=True)
+    cmake_version = cmake_version_output.splitlines()[0].split()[-1]
+
+    if cmake_version != "3.26.3":  # i.e., if it's not the older CMake from externals v2.2
+       fullcmd="{} -DCMAKE_POLICY_DEFAULT_CMP0116=OLD -DCMAKE_POLICY_DEFAULT_CMP0144=OLD -DCMAKE_POLICY_DEFAULT_CMP0167=OLD -DPYBIND11_FINDPYTHON=1 -DCMAKE_MESSAGE_LOG_LEVEL={} {} -DDBT_ROOT={} -DDBT_DEBUG={} -DDBT_OPTIMIZE_FLAG={} -DCMAKE_INSTALL_PREFIX={} -G Ninja {}".format(cmake, cmake_msg_lvl, possible_moo_arg, os.environ["DBT_ROOT"], debug_build, args.optimize_flag, INSTALLDIR, SRCDIR)
+    else:
+       fullcmd="{} -DCMAKE_POLICY_DEFAULT_CMP0116=OLD -DCMAKE_MESSAGE_LOG_LEVEL={} {} -DDBT_ROOT={} -DDBT_DEBUG={} -DDBT_OPTIMIZE_FLAG={} -DCMAKE_INSTALL_PREFIX={} -G Ninja {}".format(cmake, cmake_msg_lvl, possible_moo_arg, os.environ["DBT_ROOT"], debug_build, args.optimize_flag, INSTALLDIR, SRCDIR)
 
     if args.sanitize:
        fullcmd = f"{fullcmd} -DDBT_SANITIZE={args.sanitize}"
