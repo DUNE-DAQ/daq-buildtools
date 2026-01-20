@@ -255,7 +255,7 @@ def sourcecode_info():
       for repo in repos:
          os.chdir(repo)
          print(f"%s: " % (repo.split("/")[-1]), end="")
-         run_command('echo -n \"$( git rev-parse --abbrev-ref HEAD )$( git diff --no-ext-diff --quiet --exit-code || echo \* ) [$( git rev-parse --short HEAD )]\" ')
+         run_command('echo -n \"$( git rev-parse --abbrev-ref HEAD )$( git diff --no-ext-diff --quiet --exit-code || echo \\* ) [$( git rev-parse --short HEAD )]\" ')
    else: 
       print('There are no locally checked out packages in $DBT_AREA_ROOT/sourcecode')
    print()
