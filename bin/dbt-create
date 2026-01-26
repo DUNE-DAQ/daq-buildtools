@@ -8,5 +8,6 @@ else:
     print("Environment variable DBT_ROOT isn't set, which suggests you haven't yet set up the daq-buildtools environment. Exiting...")
     sys.exit(2)
 
+print('Hello from amogan/add_print_statements')
 exec(open('{}/scripts/dbt_create.py'.format(DBT_ROOT)).read())
 
