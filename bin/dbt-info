@@ -243,11 +243,17 @@ def sourcecode_help():
    print(f"\n{this_script} sourcecode  # No additional arguments")
 
 def sourcecode_info():
-   codepath = "%s/%s" % (os.environ["DBT_AREA_ROOT"], "sourcecode")
-   if not os.path.exists( codepath ):
-      error(f"Are you sure you have a work area set up? Unable to find expected path {codepath}; exiting...")
-   
-   repos = [os.path.join(codepath, d) for d in os.listdir(codepath) if os.path.isdir(os.path.join(codepath, d))]
+   codepaths = []
+   for subdir in ["sourcecode", "pythoncode"]:
+      codepaths.append( "%s/%s" % (os.environ["DBT_AREA_ROOT"], subdir) )
+
+   repos = []
+   for codepath in codepaths:
+      if not os.path.exists( codepath ):
+         error(f"Are you sure you have a work area set up? Unable to find expected path {codepath}; exiting...")
+
+      for repo in [os.path.join(codepath, d) for d in os.listdir(codepath) if os.path.isdir(os.path.join(codepath, d))]:
+         repos.append(repo)
 
    print()
    if repos:
@@ -260,7 +266,7 @@ def sourcecode_info():
       print('There are no locally checked out packages in $DBT_AREA_ROOT/sourcecode')
    print()
 
-   print(f"Source code for packages not checked out locally is in {os.environ.get('DUNE_DAQ_RELEASE_SOURCE')}")
+   print(f"Source code for packages not checked out locally is in\n{os.environ.get('DUNE_DAQ_RELEASE_SOURCE')}")
 
 def full_help():
     release_help()

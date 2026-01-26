@@ -80,11 +80,12 @@ MyTopDir
 ├── dbt-workarea-constants.sh
 ├── env.sh
 ├── log
+├── pythoncode
 └── sourcecode
     ├── CMakeLists.txt
     └── dbt-build-order.cmake
 ```
-The next section of this document concerns how to build code in your new work area. However, if you'd like to learn about how to retrieve information about your work area such as the release of the DUNE DAQ suite it builds against, you can skip ahead to [Finding Info on Your Work Area](#Finding_Info).
+Here, the `pythoncode` directory is intended for pure Python repos, while the `sourcecode` directory is intended for C++ or hybrid C++/Python repos (i.e., packages with `CMakeLists.txt` at their base). The next section of this document concerns how to build code in your new work area. However, if you'd like to learn about how to retrieve information about your work area such as the release of the DUNE DAQ suite it builds against, you can skip ahead to [Finding Info on Your Work Area](#Finding_Info).
 
 ### Advanced `dbt-create` options
 
