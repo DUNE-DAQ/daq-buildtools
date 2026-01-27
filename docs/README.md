@@ -1,6 +1,6 @@
 # DUNE DAQ Buildtools
 
-_This document was last edited Dec-13-2025_
+_This document was last edited Jan-27-2026_
 
 `daq-buildtools` is the toolset to simplify the development of DUNE DAQ packages. It provides environment and building utilities for the DAQ Suite.
 
@@ -18,14 +18,14 @@ To get set up, you'll need access to the cvmfs areas `/cvmfs/dunedaq.openscience
 Simply do:
 ```
 source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt fddaq-v5.5.0
+setup_dbt latest
 ```
-Note that `fddaq-v5.5.0` is aliased to `v8.9.11`. 
+Note that `latest` is aliased to `v8.12.0`. 
 
 After running these two commands, then you'll see something like:
 ```
-Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v8.9.11/bin -> PATH
-Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v8.9.11/scripts -> PATH
+Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v8.12.0/bin -> PATH
+Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v8.12.0/scripts -> PATH
 DBT setuptools loaded
 ```
 
@@ -85,11 +85,12 @@ MyTopDir
 ├── dbt-workarea-constants.sh
 ├── env.sh
 ├── log
+├── pythoncode
 └── sourcecode
     ├── CMakeLists.txt
     └── dbt-build-order.cmake
 ```
-The next section of this document concerns how to build code in your new work area. However, if you'd like to learn about how to retrieve information about your work area such as the release of the DUNE DAQ suite it builds against, you can skip ahead to [Finding Info on Your Work Area](#Finding_Info).
+Here, the `pythoncode` directory is intended for pure Python repos (i.e., packages with `pyproject.toml` files at their base), while the `sourcecode` directory is intended for C++ or hybrid C++/Python repos (i.e., packages with `CMakeLists.txt` at their base). The next section of this document concerns how to build code in your new work area. However, if you'd like to learn about how to retrieve information about your work area such as the release of the DUNE DAQ suite it builds against, you can skip ahead to [Finding Info on Your Work Area](#Finding_Info).
 
 ### Advanced `dbt-create` options
 
