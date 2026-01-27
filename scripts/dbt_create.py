@@ -152,8 +152,9 @@ TARGETDIR=os.getcwd() # Get full path
 BUILDDIR=f"{TARGETDIR}/build"
 LOGDIR=f"{TARGETDIR}/log"
 SRCDIR=f"{TARGETDIR}/sourcecode"
+PYTHONDIR=f"{TARGETDIR}/pythoncode"
 
-for workareadir in [BUILDDIR, LOGDIR, SRCDIR]:
+for workareadir in [BUILDDIR, LOGDIR, SRCDIR, PYTHONDIR]:
     os.mkdir(workareadir)
 
 os.chdir(SRCDIR)

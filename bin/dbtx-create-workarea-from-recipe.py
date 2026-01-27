@@ -6,6 +6,8 @@ exec(open(f'{DBT_ROOT}/scripts/dbt_setup_constants.py').read())
 
 import argparse
 from datetime import datetime
+from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -91,9 +93,7 @@ def create_workarea_from_recipe(recipe_source, use_ref, build, use_ssh_repos, wo
     '''], check=True, executable='/bin/bash')
 
     workarea_path = os.path.abspath(workarea_name)
-    
-    sourcecode_path = os.path.join(workarea_path, "sourcecode")
-    os.chdir(sourcecode_path)
+    os.chdir(workarea_path)
 
     #now loop over the repos in the recipe, clone and checkout what's needed
     for repo in repos:
@@ -105,7 +105,7 @@ def create_workarea_from_recipe(recipe_source, use_ref, build, use_ssh_repos, wo
         print(f"\nCloning {name} from {url}...")
         subprocess.run(['git', 'clone', url, name], check=True)
 
-        repo_path = os.path.join(sourcecode_path, name)
+        repo_path = f"{workarea_path}/{name}"
         os.chdir(repo_path)
 
         #fetch everything
@@ -142,7 +142,14 @@ def create_workarea_from_recipe(recipe_source, use_ref, build, use_ssh_repos, wo
             print(f"  Checking out commit: {commit}")
             subprocess.run(['git', 'checkout', commit], check=True)
 
-        os.chdir(sourcecode_path)
+        os.chdir(workarea_path)
+
+        if os.path.exists(f"{name}/CMakeLists.txt"):
+            shutil.move(f"{Path.cwd()}/{name}", f"{workarea_path}/sourcecode/{name}")
+        elif os.path.exists(f"{name}/pyproject.toml"):
+            shutil.move(f"{Path.cwd()}/{name}", f"{workarea_path}/pythoncode/{name}")
+        else:
+            assert False, f"Unable to determine what type of repo {Path.cwd()}/{name} is"
 
     os.chdir(workarea_path)  # Back to workarea root
 
