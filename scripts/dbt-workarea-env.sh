@@ -203,6 +203,27 @@ for p in ${DBT_PACKAGES}; do
     add_many_paths DUNEDAQ_DB_PATH "${SOURCE_DIR}/$p"
 done
 
+# If a repo is removed from a work area, we need to ensure
+# <PACKAGENAME>_SHARE is updated accordingly
+
+# To check for candidates, we loop over packages which appear anywhere
+# in the DUNEDAQ_SHARE_PATH colon-separated list with a local
+# installation directory; if so that tips us off that _at least at
+# some point_ it was worked on in this work area
+
+for p in $( echo $DUNEDAQ_SHARE_PATH | tr ":" "\n" | grep $DBT_INSTALL_DIR | sed -r 's!'$DBT_INSTALL_DIR'/(.*)/share!\1!' ); do
+    if [[ ! -d ${SOURCE_DIR}/$p ]]; then  # package is no longer a repo in the work area
+	spack_directory=$( spack find -p $p | sed -r -n 's!.*(/cvmfs/.*)!\1!p' )
+	if [[ -n $spack_directory ]]; then
+	    PNAME=${p^^}
+	    pkg_share="${PNAME//-/_}_SHARE"
+	    declare -xg "${pkg_share}"="$spack_directory/share"
+	else
+	    echo "WARNING: it appears $p was removed from the work area, but unable to reset the $p_SHARE variable" >&2
+	fi
+    fi
+done
+
 prioritize_directories DUNEDAQ_DB_PATH
 
 export PATH PYTHONPATH LD_LIBRARY_PATH CET_PLUGIN_PATH DUNEDAQ_SHARE_PATH DUNEDAQ_DB_PATH
