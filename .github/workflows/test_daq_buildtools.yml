@@ -1,0 +1,31 @@
+name: Test daq-buildtools
+
+on:
+  pull_request:
+    branches: develop
+    types: [opened, reopened, synchronize]
+
+jobs:
+  test_daq_buildtools:
+    name: Test daq-buildtools
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - id: checkout_daq_buildtools
+      uses: actions/checkout@v6
+      with:
+        path: daq-buildtools-test
+
+    - uses: cvmfs-contrib/github-action-cvmfs@v5
+      with:
+        cvmfs_repositories: 'dunedaq.opensciencegrid.org'
+
+    - name: Run test_daq-buildtools script
+      run: |
+        cd daq-buildtools-test
+        source env.sh
+        cd scripts
+        ./test_daq-buildtools.sh --dbt-branch ${{ github.head_ref }}
+        
