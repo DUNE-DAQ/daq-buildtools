@@ -14,7 +14,6 @@ jobs:
     defaults:
       run:
         shell: bash
-
     steps:
     - id: checkout_daq_buildtools
       uses: actions/checkout@v6
