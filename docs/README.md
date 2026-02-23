@@ -114,6 +114,10 @@ Both scripts have further options; pass `--help` as an argument to either one in
 
 ### The basics
 
+#### DUNE DAQ C++ packages
+
+We'll start with DUNE DAQ C++ packages, that is, packages whose repos have a `CMakeLists.txt` file in their repo's base directory. 
+
 First step: `cd` into the base of the work area you've created. 
 
 For the purposes of instruction, let's build the `listrev` package. Downloading it is simple:
@@ -134,6 +138,10 @@ Now, do the following:
 dbt-build
 ```
 ...and this will build `listrev` in the local `./build` subdirectory and then install it as a package either in the local `./install` subdirectory or in whatever you pointed `DBT_INSTALL_DIR` to. `env.sh` performs two steps: it will both set up the daq-buildtools environment (if it hasn't already been set) and then it will update environment variables (`LD_LIBRARY_PATH`, etc.) to account for the packages in your work area. Note that whenever you add a new repo to your work area, you'll want to run the second of these two steps, `dbt-workarea-env`, so that environment variables such as `LD_LIBRARY_PATH`, etc, are again updated accordingly. 
+
+#### DUNE DAQ Python packages
+
+Installing DUNE DAQ Python packages is more straightforward than C++ packages as here `dbt-build` will simply loop on the Python package repos in the `./pythoncode` subdirectory and call `pip install` on each one, exiting out with an error in the event that `pip install` exits out with an error. The packages will be installed in the active Python environment located in `$DBT_AREA_ROOT/.venv`.
 
 
 ### Working with more repos
