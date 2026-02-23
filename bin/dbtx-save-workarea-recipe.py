@@ -113,18 +113,21 @@ def save_workarea_recipe(recipe_name,require_valid_refs):
         raise CustomError("DUNE_DAQ_BASE_RELEASE not set in environment! "
                           "Setup dunedaq before running this script.")
 
-    sourcecode_dir = os.path.join(os.environ.get("DBT_AREA_ROOT"), "sourcecode")
+    sourcecode_dirs = []
+    for subdir in ["sourcecode", "pythoncode"]:
+        sourcecode_dirs.append( os.path.join(os.environ.get("DBT_AREA_ROOT"), subdir) )
 
     repos = []
     all_commits_valid = True
     all_refs_valid = True
 
-    for entry in os.listdir(sourcecode_dir):
-        repo_path = os.path.join(sourcecode_dir, entry)
-        if os.path.isdir(repo_path) and os.path.isdir(os.path.join(repo_path, '.git')):
-            repos.append(get_repo_info(repo_path))
-            if not repos[-1]['commit_valid']: all_commits_valid = False
-            if not repos[-1]['ref_valid']: all_refs_valid = False
+    for sourcecode_dir in sourcecode_dirs:
+        for entry in os.listdir(sourcecode_dir):
+            repo_path = os.path.join(sourcecode_dir, entry)
+            if os.path.isdir(repo_path) and os.path.isdir(os.path.join(repo_path, '.git')):
+                repos.append(get_repo_info(repo_path))
+                if not repos[-1]['commit_valid']: all_commits_valid = False
+                if not repos[-1]['ref_valid']: all_refs_valid = False
 
     #check that all commits are ok, and optionally that all refs are ok
     if not all_commits_valid:
