@@ -10,7 +10,7 @@ on:
 jobs:
   test_daq_buildtools:
     name: Test daq-buildtools
-    runs-on: ubuntu-latest
+    runs-on: daq
     defaults:
       run:
         shell: bash
