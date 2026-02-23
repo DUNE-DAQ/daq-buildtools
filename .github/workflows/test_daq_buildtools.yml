@@ -2,7 +2,9 @@ name: Test daq-buildtools
 
 on:
   pull_request:
-    branches: develop
+    branches:
+      - develop
+      - amogan/test_daq_buildtools_workflow
     types: [opened, reopened, synchronize]
 
 jobs:
@@ -12,6 +14,7 @@ jobs:
     defaults:
       run:
         shell: bash
+
     steps:
     - id: checkout_daq_buildtools
       uses: actions/checkout@v6
