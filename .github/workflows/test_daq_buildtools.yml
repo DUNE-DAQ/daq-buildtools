@@ -1,9 +1,15 @@
 name: Test daq-buildtools
 
 on:
-  pull_request:
-    branches: develop
-    types: [opened, reopened, synchronize]
+  #pull_request:
+  #  branches: develop
+  #  types: [opened, reopened, synchronize]
+  workflow_dispatch:
+    inputs:
+      dbt-branch:
+        type: string
+        default: 'develop'
+        description: "Branch from which to run test_daq-buildtools.sh"
 
 jobs:
   test_daq_buildtools:
