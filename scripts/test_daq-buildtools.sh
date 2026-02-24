@@ -102,7 +102,11 @@ echo "**********************************TEST dbt-build *************************
 dbt-build || exit 8
 
 echo "******************************TEST dbt-build --lint *************************************"
-dbt-build --lint || exit 9
+if spack find --loaded llvm >/dev/null 2>&1; then
+    dbt-build --lint || exit 9
+else
+    echo "WARNING: Skipping dbt-build --lint since llvm is not loaded"
+fi
 
 echo "******************************TEST dbt-build --unittest *********************************"
 dbt-build --unittest || exit 10
