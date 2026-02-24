@@ -11,6 +11,8 @@ jobs:
   test_daq_buildtools:
     name: Test daq-buildtools
     runs-on: daq
+    container:
+      image: almalinux:9
     defaults:
       run:
         shell: bash
