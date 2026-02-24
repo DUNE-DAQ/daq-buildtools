@@ -10,7 +10,7 @@ on:
 jobs:
   test_daq_buildtools:
     name: Test daq-buildtools
-    runs-on: daq
+    runs-on: ubuntu-latest
     container:
       image: almalinux:9
     defaults:
