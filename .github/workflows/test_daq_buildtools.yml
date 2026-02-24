@@ -26,6 +26,15 @@ jobs:
     #  with:
     #    cvmfs_repositories: 'dunedaq.opensciencegrid.org'
 
+    - name: Troubleshoot llvm package
+      run: |
+        source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
+        setup_dbt latest
+        dbt-setup-release -n last_fddaq
+        spack find llvm
+        spack find --loaded llvm
+        spack list llvm
+
     - name: Run test_daq-buildtools script
       run: |
         cd daq-buildtools-test
