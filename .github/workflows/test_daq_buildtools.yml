@@ -22,9 +22,9 @@ jobs:
       with:
         path: daq-buildtools-test
 
-    - uses: cvmfs-contrib/github-action-cvmfs@v5
-      with:
-        cvmfs_repositories: 'dunedaq.opensciencegrid.org'
+    #- uses: cvmfs-contrib/github-action-cvmfs@v5
+    #  with:
+    #    cvmfs_repositories: 'dunedaq.opensciencegrid.org'
 
     - name: Run test_daq-buildtools script
       run: |
