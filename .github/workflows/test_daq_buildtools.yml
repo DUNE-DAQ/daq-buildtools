@@ -12,7 +12,7 @@ jobs:
     name: Test daq-buildtools
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/dune-daq/alma9-slim-externals:v2.3
+      image: ghcr.io/dune-daq/nightly-release-alma9:latest
     defaults:
       run:
         shell: bash
