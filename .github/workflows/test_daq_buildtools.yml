@@ -16,15 +16,18 @@ jobs:
     defaults:
       run:
         shell: bash
+
     steps:
+    - name: Validate actor
+      run: |
+        if [[ "${{ github.actor }}" != "andrewmogan" && "${{ github.actor }}" != "jcfreeman" ]]; then
+          exit 1
+        fi
+
     - id: checkout_daq_buildtools
       uses: actions/checkout@v6
       with:
         path: daq-buildtools-test
-
-    #- uses: cvmfs-contrib/github-action-cvmfs@v5
-    #  with:
-    #    cvmfs_repositories: 'dunedaq.opensciencegrid.org'
 
     - name: Troubleshoot llvm package
       run: |
