@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 
+
 import os
 import sys
+
+print("Intentionally crashing dbt-build out")
+sys.exit(1)
 
 if "DBT_ROOT" in os.environ:
    DBT_ROOT=os.environ["DBT_ROOT"]
