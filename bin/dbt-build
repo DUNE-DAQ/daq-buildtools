@@ -76,6 +76,7 @@ if not os.path.exists(BASEDIR):
 BUILDDIR=f"{BASEDIR}/build"
 LOGDIR=f"{BASEDIR}/log"
 SRCDIR=f"{BASEDIR}/sourcecode"
+PYTHONDIR=f"{BASEDIR}/pythoncode"
 
 if "DBT_INSTALL_DIR" in os.environ and os.path.exists(os.environ["DBT_INSTALL_DIR"]):
     INSTALLDIR=os.environ["DBT_INSTALL_DIR"]
@@ -414,6 +415,39 @@ for pkg in get_package_list(BUILDDIR):
 with open(f"{INSTALLDIR}/build_summary_info.json", 'w') as sbi_f:
     json.dump( summary_build_info, sbi_f, sort_keys=True, indent=4 )
 
+starttime_pyinstall_d=get_time("as_date")
+starttime_pyinstall_s=get_time("as_seconds_since_epoch")
+
+pyinstall_success=True
+for pypkg in get_package_list(PYTHONDIR):
+   if not os.path.exists(f"{PYTHONDIR}/{pypkg}/pyproject.toml"):
+      error(f"""Unable to find {PYTHONDIR}/{pypkg}/pyproject.toml; 
+note that modern standards for DUNE-DAQ Python packages are expected. Exiting...
+""")
+
+   fullcmd=f"pip install {PYTHONDIR}/{pypkg}"
+   rich.print(f"Executing '{fullcmd}'")
+   retval=pytee.run(fullcmd.split(" ")[0], fullcmd.split(" ")[1:], build_log)
+   if retval != 0:
+      pyinstall_success=False
+      break
+
+endtime_pyinstall_d=get_time("as_date")
+endtime_pyinstall_s=get_time("as_seconds_since_epoch")
+
+if pyinstall_success:
+    pyinstalltime=int(endtime_pyinstall_s) - int(starttime_pyinstall_s)
+else:
+    error(f"""
+
+This script ran into a problem installing a Python package from {PYTHONDIR}.
+Scroll up for details or look at the build log via
+
+less -R {build_log}
+
+Exiting...
+""")
+
 unittest_overviews = []
 if run_tests:
     stringio_obj5 = io.StringIO()
@@ -616,6 +650,12 @@ rich.print("")
 rich.print(f"CMake's build+install stages took {buildtime} seconds")
 rich.print(f"Start time: {starttime_build_d}")
 rich.print(f"End time:   {endtime_build_d}")
+
+rich.print("")
+rich.print(f"Python package installation stage took {pyinstalltime} seconds")
+rich.print(f"Start time: {starttime_pyinstall_d}")
+rich.print(f"End time:   {endtime_pyinstall_d}")
+
 
 if num_estimated_warnings == 0:
     pass   # Avoiding screen clutter more important than making developers feel good
