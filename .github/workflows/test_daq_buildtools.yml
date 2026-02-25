@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - develop
+      - amogan/test_daq_buildtools_workflow
     types: [opened, reopened, synchronize]
 
 jobs:
@@ -28,6 +29,7 @@ jobs:
 
     - name: Run test_daq-buildtools script
       run: |
+        echo "Hello from feature branch"
         cd daq-buildtools-test
         source env.sh
         cd scripts
