@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - develop
+      - johnfreeman/test_daq_buildtools_workflow
     types: [opened, reopened, synchronize]
 
 jobs:
