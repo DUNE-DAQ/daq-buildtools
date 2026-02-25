@@ -112,8 +112,12 @@ echo "******************************TEST dbt-build --unittest ******************
 dbt-build --unittest || exit 10
 
 echo "******************************TEST dbt-clang-format.sh **********************************"
-cd $DBT_AREA_ROOT/sourcecode
-dbt-clang-format.sh $repo --view-differences-only || exit 11
+if spack find --loaded llvm >/dev/null 2>&1; then
+    cd $DBT_AREA_ROOT/sourcecode
+    dbt-clang-format.sh $repo --view-differences-only || exit 11
+else
+    echo "WARNING: Skipping dbt-clang-format.sh since llvm is not loaded"
+fi
 
 # Test building against a sourcecode directory outside of the work area
 echo "***********************TEST dbt-build with external sourcecode **************************"
