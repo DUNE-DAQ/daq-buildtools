@@ -1,10 +1,12 @@
 name: Test daq-buildtools
 
+permissions:
+  contents: read
+
 on:
   pull_request:
     branches:
       - develop
-      - amogan/test_daq_buildtools_workflow
     types: [opened, reopened, synchronize]
 
 jobs:
@@ -18,25 +20,11 @@ jobs:
         shell: bash
 
     steps:
-    - name: Validate actor
-      run: |
-        if [[ "${{ github.actor }}" != "andrewmogan" && "${{ github.actor }}" != "jcfreeman" ]]; then
-          exit 1
-        fi
-
     - id: checkout_daq_buildtools
       uses: actions/checkout@v6
       with:
         path: daq-buildtools-test
-
-    - name: Troubleshoot llvm package
-      run: |
-        source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-        setup_dbt latest
-        dbt-setup-release -n last_fddaq
-        spack find llvm
-        spack find --loaded llvm
-        spack list llvm
+        persist-credentials: false
 
     - name: Run test_daq-buildtools script
       run: |
