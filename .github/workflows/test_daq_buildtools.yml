@@ -1,9 +1,9 @@
 name: Test daq-buildtools
 
 on:
-  #pull_request:
-  #  branches: develop
-  #  types: [opened, reopened, synchronize]
+  pull_request:
+    branches: develop
+    types: [opened, reopened, synchronize]
   workflow_dispatch:
     inputs:
       dbt-branch:
