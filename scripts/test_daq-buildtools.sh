@@ -101,38 +101,41 @@ cd ..
 echo "**********************************TEST dbt-build ****************************************"
 dbt-build || exit 8
 
-echo "******************************TEST dbt-build --lint *************************************"
-if spack find --loaded llvm >/dev/null 2>&1; then
-    dbt-build --lint || exit 9
-else
-    echo "WARNING: Skipping dbt-build --lint since llvm is not loaded"
-fi
-
 echo "******************************TEST dbt-build --unittest *********************************"
-dbt-build --unittest || exit 10
+dbt-build --unittest || exit 9
 
-echo "******************************TEST dbt-clang-format.sh **********************************"
 if spack find --loaded llvm >/dev/null 2>&1; then
+    echo "******************************TEST dbt-build --lint *************************************"
+    dbt-build --lint || exit 10
+
+    echo "******************************TEST dbt-clang-format.sh *************************************"
     cd $DBT_AREA_ROOT/sourcecode
     dbt-clang-format.sh $repo --view-differences-only || exit 11
     cd ..
 else
-    echo "WARNING: Skipping dbt-clang-format.sh since llvm is not loaded"
+    echo "WARNING: Skipping dbt-build --lint and dbt-clang-format.sh since llvm is not loaded"
+fi
+
+if spack find --loaded lcov >/dev/null 2>&1; then
+    echo "*********************************TEST dbt-lcov.sh****************************************"
+    dbt-lcov.sh || exit 12
+else
+    echo "WARNING: Skipping dbt-lcov.sh since lcov is not loaded"
 fi
 
 # Test building against a sourcecode directory outside of the work area
 echo "***********************TEST dbt-build with external sourcecode **************************"
 mv sourcecode $release_tmpdir
 ln -s $release_tmpdir/sourcecode
-dbt-build --clean || exit 12
+dbt-build --clean || exit 13
 
 echo "*****************************TEST dbt-build --codegen **********************************"
-dbt-build --codegen || exit 13
+dbt-build --codegen || exit 14
+
 
 echo "********************TEST local workarea Spack package installation **********************"
-spack install py-wesanderson || exit 14
+spack install py-wesanderson || exit 15
 
-echo "*********************************TEST dbt-lcov.sh****************************************"
-dbt-lcov.sh || exit 15
+echo "Testing completed successfully."
 
 exit 0
