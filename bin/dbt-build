@@ -166,6 +166,58 @@ if not os.path.exists(BUILDDIR):
     except PermissionError:
         error(f"You don't have permission to create {BUILDDIR} from this directory. Exiting...")
 
+stringio_obj2 = io.StringIO()
+sh.date(_out=stringio_obj2)
+datestring=re.sub("[: ]+", "_", stringio_obj2.getvalue().strip())
+
+build_log=f"{LOGDIR}/build_attempt_{datestring}.log"
+
+pyinstalltime=None
+python_packages=get_package_list(PYTHONDIR)
+
+if python_packages:
+   print(f"\nPython packages found in {PYTHONDIR}, will proceed with their installation...")
+   starttime_pyinstall_d=get_time("as_date")
+   starttime_pyinstall_s=get_time("as_seconds_since_epoch")
+
+   pyinstall_success=True
+   for pypkg in get_package_list(PYTHONDIR):
+      if not os.path.exists(f"{PYTHONDIR}/{pypkg}/pyproject.toml"):
+         error(f"""Unable to find {PYTHONDIR}/{pypkg}/pyproject.toml;
+   note that modern standards for DUNE-DAQ Python packages are expected. Exiting...
+   """)
+
+      fullcmd=f"pip install {PYTHONDIR}/{pypkg}"
+      rich.print(f"Executing '{fullcmd}'")
+      retval=pytee.run(fullcmd.split(" ")[0], fullcmd.split(" ")[1:], build_log)
+      if retval != 0:
+         pyinstall_success=False
+         break
+
+   endtime_pyinstall_d=get_time("as_date")
+   endtime_pyinstall_s=get_time("as_seconds_since_epoch")
+
+   if pyinstall_success:
+       pyinstalltime=int(endtime_pyinstall_s) - int(starttime_pyinstall_s)
+   else:
+       error(f"""
+
+   This script ran into a problem installing a Python package from {PYTHONDIR}.
+   Scroll up for details or look at the build log via
+
+   less -R {build_log}
+
+   Exiting...
+   """)
+else:
+   rich.print(f"""
+
+No Python repos have been found in {PYTHONDIR},
+so no Python package installation will take place.
+
+""")
+
+
 os.chdir(BUILDDIR)
 
 if args.clean_build or args.codegen_only:
@@ -207,20 +259,21 @@ def erase_installdir_contents():
    else:
        error(f"Installation directory is defined as \"{INSTALLDIR}\", which would result in the deletion of the entire contents of this system if it weren't for this check!!!")
 
-
 if not get_package_list(SRCDIR):
-   print(f"""No package repos have been found in {SRCDIR}, 
+
+   if pyinstalltime is not None:
+      rich.print("")
+      rich.print(f"Python package installation stage took {pyinstalltime} seconds")
+      rich.print(f"Start time: {starttime_pyinstall_d}")
+      rich.print(f"End time:   {endtime_pyinstall_d}")
+
+   print("")
+   print(f"""No C++ package repos have been found in {SRCDIR}, 
 so no C++ build will take place. However, a script saving the environment will
-be put in {INSTALLDIR}""")
+be put in {INSTALLDIR}\n""")
    erase_installdir_contents()
    create_app_rte_script()
    sys.exit(0)
-
-stringio_obj2 = io.StringIO()
-sh.date(_out=stringio_obj2)
-datestring=re.sub("[: ]+", "_", stringio_obj2.getvalue().strip())
-
-build_log=f"{LOGDIR}/build_attempt_{datestring}.log"
 
 cmake="cmake"
 if args.cmake_trace:
@@ -415,39 +468,6 @@ for pkg in get_package_list(BUILDDIR):
 with open(f"{INSTALLDIR}/build_summary_info.json", 'w') as sbi_f:
     json.dump( summary_build_info, sbi_f, sort_keys=True, indent=4 )
 
-starttime_pyinstall_d=get_time("as_date")
-starttime_pyinstall_s=get_time("as_seconds_since_epoch")
-
-pyinstall_success=True
-for pypkg in get_package_list(PYTHONDIR):
-   if not os.path.exists(f"{PYTHONDIR}/{pypkg}/pyproject.toml"):
-      error(f"""Unable to find {PYTHONDIR}/{pypkg}/pyproject.toml; 
-note that modern standards for DUNE-DAQ Python packages are expected. Exiting...
-""")
-
-   fullcmd=f"pip install {PYTHONDIR}/{pypkg}"
-   rich.print(f"Executing '{fullcmd}'")
-   retval=pytee.run(fullcmd.split(" ")[0], fullcmd.split(" ")[1:], build_log)
-   if retval != 0:
-      pyinstall_success=False
-      break
-
-endtime_pyinstall_d=get_time("as_date")
-endtime_pyinstall_s=get_time("as_seconds_since_epoch")
-
-if pyinstall_success:
-    pyinstalltime=int(endtime_pyinstall_s) - int(starttime_pyinstall_s)
-else:
-    error(f"""
-
-This script ran into a problem installing a Python package from {PYTHONDIR}.
-Scroll up for details or look at the build log via
-
-less -R {build_log}
-
-Exiting...
-""")
-
 unittest_overviews = []
 if run_tests:
     stringio_obj5 = io.StringIO()
@@ -639,6 +659,14 @@ if args.lint:
           error(f"There was a problem linting the file \"{code_to_lint}\". Exiting...")
 
 rich.print("")
+if pyinstalltime is not None:
+   rich.print(f"Python package installation stage took {pyinstalltime} seconds")
+   rich.print(f"Start time: {starttime_pyinstall_d}")
+   rich.print(f"End time:   {endtime_pyinstall_d}")
+else:
+   rich.print(f"Python package installation stage skipped as no Python repos were found in {PYTHONDIR}")
+
+rich.print("")
 if cfggentime is not None:
     rich.print(f"CMake's build file config+generate stages took {cfggentime} seconds")
     rich.print(f"Start time: {starttime_cfggen_d}")
@@ -650,11 +678,6 @@ rich.print("")
 rich.print(f"CMake's build+install stages took {buildtime} seconds")
 rich.print(f"Start time: {starttime_build_d}")
 rich.print(f"End time:   {endtime_build_d}")
-
-rich.print("")
-rich.print(f"Python package installation stage took {pyinstalltime} seconds")
-rich.print(f"Start time: {starttime_pyinstall_d}")
-rich.print(f"End time:   {endtime_pyinstall_d}")
 
 
 if num_estimated_warnings == 0:
