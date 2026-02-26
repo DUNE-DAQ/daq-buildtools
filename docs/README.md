@@ -1,6 +1,6 @@
 # DUNE DAQ Buildtools
 
-_This document was last edited Feb-24-2026_
+_This document was last edited Feb-26-2026_
 
 `daq-buildtools` is the toolset to simplify the development of DUNE DAQ packages. It provides environment and building utilities for the DAQ Suite.
 
@@ -16,12 +16,12 @@ Simply do:
 source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
 setup_dbt latest
 ```
-Note that `latest` is aliased to `v8.13.0`. 
+Note that `latest` is aliased to `v8.13.1`. 
 
 After running these two commands, then you'll see something like:
 ```
-Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v8.13.0/bin -> PATH
-Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v8.13.0/scripts -> PATH
+Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v8.13.1/bin -> PATH
+Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v8.13.1/scripts -> PATH
 DBT setuptools loaded
 ```
 
@@ -197,6 +197,11 @@ If you want to troubleshoot your code by taking advantage of `gcc`'s `-fsanitize
 dbt-build --clean --sanitize address  # Will ensure -fsanitize=address is passed to gcc
 ```
 Depending on the argument provided, there may be some helpful tips at the bottom of the `dbt-build` output on how to run the code you've built with sanitization applied. 
+
+If you wish to skip the installation of any Python packages in the `./pythoncode` subdirectory, just do
+```
+dbt-build --skip-python-install
+```
 
 You can see all the options listed if you run the script with the `--help` command, i.e.
 ```
