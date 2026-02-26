@@ -62,6 +62,7 @@ Usage
         --cmake-graphviz generates a target dependency graph
         --codegen-only means you only want CMake to run its config+generate stages, and not actually compile the code
         --sanitize=<type> means you want gcc to sanitize your code to help you debug via its -fsanitize=<type> flag; examples of <type> are "address" (for an address sanitizer) or "thread" (for a thread sanitizer)
+        -sp/--skip-python-install means dbt-build will ignore any Python packages in ./pythoncode
 
     All arguments are optional. With no arguments, CMake will typically just run
     build, unless build/CMakeCache.txt is missing
@@ -87,6 +88,7 @@ parser = argparse.ArgumentParser(usage=usage_blurb)
 parser.add_argument("-c", "--clean", action="store_true", dest="clean_build", help=argparse.SUPPRESS)
 parser.add_argument("-d", "--debug", action="store_true", dest='debug_build', help=argparse.SUPPRESS)
 parser.add_argument("-v", "--cpp-verbose", action="store_true", dest='cpp_verbose', help=argparse.SUPPRESS)
+parser.add_argument("-sp", "--skip-python-install", action="store_true", dest='skip_python_install', help=argparse.SUPPRESS)
 parser.add_argument("-j", "--jobs", action='store', type=int, dest='n_jobs', help=argparse.SUPPRESS)
 parser.add_argument("--unittest", nargs="?", const="all", help=argparse.SUPPRESS)
 parser.add_argument("--integtest", nargs="?", const="all", help=argparse.SUPPRESS)
@@ -175,7 +177,7 @@ build_log=f"{LOGDIR}/build_attempt_{datestring}.log"
 pyinstalltime=None
 python_packages=get_package_list(PYTHONDIR)
 
-if python_packages:
+if python_packages and not args.skip_python_install:
    print(f"\nPython packages found in {PYTHONDIR}, will proceed with their installation...")
    starttime_pyinstall_d=get_time("as_date")
    starttime_pyinstall_s=get_time("as_seconds_since_epoch")
@@ -209,7 +211,7 @@ if python_packages:
 
    Exiting...
    """)
-else:
+elif not args.skip_python_install:
    rich.print(f"""
 
 No Python repos have been found in {PYTHONDIR},
@@ -664,7 +666,10 @@ if pyinstalltime is not None:
    rich.print(f"Start time: {starttime_pyinstall_d}")
    rich.print(f"End time:   {endtime_pyinstall_d}")
 else:
-   rich.print(f"Python package installation stage skipped as no Python repos were found in {PYTHONDIR}")
+   if not args.skip_python_install:
+      rich.print(f"Python package installation stage skipped as no Python repos were found in {PYTHONDIR}")
+   else:
+      rich.print(f"Python package installation stage skipped on request")
 
 rich.print("")
 if cfggentime is not None:
