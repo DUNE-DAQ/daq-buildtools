@@ -30,6 +30,7 @@ trap cleanup EXIT SIGINT SIGTERM
 
 release="last_fddaq"
 repo="ipm"
+pyrepo="daqpytools"
 dbt_branch="develop"
 
 while [[ $# -gt 0 ]]; do
@@ -67,7 +68,8 @@ fi
 echo -e "Running daq-buildtools commands using:\n"
 echo -e "\tRelease name: $release"
 echo -e "\tdbt branch:   $dbt_branch"
-echo -e "\trepo:         $repo\n"
+echo -e "\trepo:         $repo"
+echo -e "\tpyrepo:       $pyrepo\n"
 
 . /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh || exit 1
 setup_dbt latest_v5 || exit 2
@@ -93,12 +95,24 @@ rm -f dbt-setup-release_result.txt
 echo "*********************************TEST dbt-create ***************************************"
 dbt-create -s ${extra_args[@]} $release || exit 5
 cd $(ls)  # Only thing in the directory will be the work area
+
+
+cd pythoncode
+git clone https://github.com/DUNE-DAQ/$pyrepo || exit 16
+cd ..
+. env.sh || exit 17
+rm -f .venv/lib64/python*/site-packages/$pyrepo/__init__.py || exit 18
+echo "******************************TEST dbt-build (Python) *************************************"
+dbt-build || exit 19
+find .venv/lib64/python*/site-packages/$pyrepo/__init__.py | read || exit 20
+rm -rf pythoncode/$pyrepo
+
 cd sourcecode
 git clone https://github.com/DUNE-DAQ/$repo || exit 6
 cd ..
 . env.sh || exit 7
 
-echo "**********************************TEST dbt-build ****************************************"
+echo "******************************TEST dbt-build (C++) *************************************"
 dbt-build || exit 8
 
 echo "******************************TEST dbt-build --unittest *********************************"
