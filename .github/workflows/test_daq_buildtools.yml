@@ -30,6 +30,7 @@ jobs:
 
   test_daq_buildtools:
     name: Test daq-buildtools
+    needs: load_cvmfs
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/dune-daq/nightly-release-alma9:development_v5
