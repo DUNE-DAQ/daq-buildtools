@@ -44,6 +44,8 @@ jobs:
         #./test_daq-buildtools.sh --dbt-branch ${{ github.head_ref }}
         docker run --rm -it \
           --mount type=bind,src=/cvmfs,dst=/cvmfs,bind-propagation=shared \
+          --mount type=bind,src="$PWD",dst=/workspace,bind-propagation=shared \
+          -w /workspace \
           ghcr.io/dune-daq/nightly-release-alma9:development_v5 \
           ./test_daq-buildtools.sh --dbt-branch ${{ github.head_ref }}
 
