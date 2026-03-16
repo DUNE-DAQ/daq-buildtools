@@ -102,6 +102,10 @@ git clone https://github.com/DUNE-DAQ/$pyrepo || exit 16
 cd ..
 . env.sh || exit 17
 rm -f .venv/lib64/python*/site-packages/$pyrepo/__init__.py || exit 18
+
+echo "******************************TEST dbt-build --lint *************************************"
+dbt-build --lint || exit 123
+
 echo "******************************TEST dbt-build (Python) *************************************"
 dbt-build || exit 19
 find .venv/lib64/python*/site-packages/$pyrepo/__init__.py | read || exit 20

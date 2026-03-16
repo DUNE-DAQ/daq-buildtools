@@ -16,16 +16,33 @@ on:
         description: "Branch from which to run test_daq-buildtools.sh"
 
 jobs:
+  load_cvmfs:
+    name: Load CVMFS
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps: 
+    - uses: cvmfs-contrib/github-action-cvmfs@v5
+      with:
+        cvmfs_repositories: 'dunedaq-development.opensciencegrid.org'
+
   test_daq_buildtools:
     name: Test daq-buildtools
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/dune-daq/nightly-release-alma9:development_v5
+      volumes: 
+        - /cvmfs:/cvmfs
     defaults:
       run:
         shell: bash
 
     steps:
+    - name: Check CVMFS
+      run: |
+        ls -lrt /cvmfs || exit 1
     - id: checkout_daq_buildtools
       uses: actions/checkout@v6
       with:
