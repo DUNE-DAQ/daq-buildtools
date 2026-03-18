@@ -96,14 +96,14 @@ mkdir -p "$release_tmpdir" && cd "$release_tmpdir"
 
 echo "*********************************TEST dbt-setup-release *******************************"
 # Check that dbt-setup-release works without altering the environment, thus the (...)
-(dbt-setup-release "${extra_args[@]}" "$release"; echo $? > $release_tmpdir/dbt-setup-release_result.txt)
+time (dbt-setup-release "${extra_args[@]}" "$release"; echo $? > $release_tmpdir/dbt-setup-release_result.txt)
 
 test -e $release_tmpdir/dbt-setup-release_result.txt || exit 3
 test $( cat $release_tmpdir/dbt-setup-release_result.txt ) == 0 || exit 4
 rm -f dbt-setup-release_result.txt
 
 echo "*********************************TEST dbt-create ***************************************"
-dbt-create -s ${extra_args[@]} $release || exit 5
+time dbt-create -s ${extra_args[@]} $release || exit 5
 cd $(ls)  # Only thing in the directory will be the work area
 
 
@@ -113,11 +113,8 @@ cd ..
 . env.sh || exit 17
 rm -f .venv/lib64/python*/site-packages/$pyrepo/__init__.py || exit 18
 
-echo "******************************TEST dbt-build --lint *************************************"
-dbt-build --lint || exit 123
-
 echo "******************************TEST dbt-build (Python) *************************************"
-dbt-build || exit 19
+time dbt-build || exit 19
 find .venv/lib64/python*/site-packages/$pyrepo/__init__.py | read || exit 20
 rm -rf pythoncode/$pyrepo
 
@@ -127,18 +124,18 @@ cd ..
 . env.sh || exit 7
 
 echo "******************************TEST dbt-build (C++) *************************************"
-dbt-build || exit 8
+time dbt-build || exit 8
 
 echo "******************************TEST dbt-build --unittest *********************************"
-dbt-build --unittest || exit 9
+time dbt-build --unittest || exit 9
 
 if spack find --loaded llvm >/dev/null 2>&1; then
     echo "******************************TEST dbt-build --lint *************************************"
-    dbt-build --lint || exit 10
+    time dbt-build --lint || exit 10
 
     echo "******************************TEST dbt-clang-format.sh *************************************"
     cd $DBT_AREA_ROOT/sourcecode
-    dbt-clang-format.sh $repo --view-differences-only || exit 11
+    time dbt-clang-format.sh $repo --view-differences-only || exit 11
     cd ..
 else
     echo "WARNING: Skipping dbt-build --lint and dbt-clang-format.sh since llvm is not loaded"
@@ -146,7 +143,7 @@ fi
 
 if spack find --loaded lcov >/dev/null 2>&1; then
     echo "*********************************TEST dbt-lcov.sh****************************************"
-    dbt-lcov.sh || exit 12
+    time dbt-lcov.sh || exit 12
 else
     echo "WARNING: Skipping dbt-lcov.sh since lcov is not loaded"
 fi
@@ -155,10 +152,10 @@ fi
 echo "***********************TEST dbt-build with external sourcecode **************************"
 mv sourcecode $release_tmpdir
 ln -s $release_tmpdir/sourcecode
-dbt-build --clean || exit 13
+time dbt-build --clean || exit 13
 
 echo "*****************************TEST dbt-build --codegen **********************************"
-dbt-build --codegen || exit 14
+time dbt-build --codegen || exit 14
 
 
 echo "********************TEST local workarea Spack package installation **********************"
