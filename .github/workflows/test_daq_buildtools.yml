@@ -36,12 +36,12 @@ jobs:
         sudo mkdir -p /var/lib/cvmfs
         sudo chmod -R 777 /var/lib/cvmfs
   
-    - name: Cache cvmfs cache
-      id: cvmfs_cache
-      uses: actions/cache@main
-      with:
-        path: /var/lib/cvmfs/shared
-        key: cachecvmfs
+    #- name: Cache cvmfs cache
+    #  id: cvmfs_cache
+    #  uses: actions/cache@main
+    #  with:
+    #    path: /var/lib/cvmfs/shared
+    #    key: cachecvmfs
 
     - name: restore dir permission
       run: |
