@@ -59,6 +59,7 @@ jobs:
 
     - name: Run test_daq-buildtools script
       run: |
+        BRANCH="${{ inputs.dbt-branch || github.head_ref || github.ref_name }}"
         cd daq-buildtools-test
         source env.sh
         cd scripts
@@ -68,7 +69,7 @@ jobs:
           -v "$PWD":/workspace \
           -w /workspace \
           ghcr.io/dune-daq/nightly-release-alma9:development_v5 \
-          ./test_daq-buildtools.sh --dbt-branch ${{ github.head_ref }}
+          ./test_daq-buildtools.sh --dbt-branch $BRANCH
 
         
 

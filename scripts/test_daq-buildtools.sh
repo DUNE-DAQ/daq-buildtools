@@ -33,6 +33,13 @@ repo="ipm"
 pyrepo="daqpytools"
 dbt_branch="develop"
 
+validate_arg() {
+    if [[ -z "$2" || "$2" == -* ]]; then
+        echo "ERROR: $1 requires an argument."
+        exit 2
+    fi
+}
+
 while [[ $# -gt 0 ]]; do
     case "$1" in
     -h|--help|-?)
@@ -40,14 +47,17 @@ while [[ $# -gt 0 ]]; do
         exit 1
         ;;
     --release)
+        validate_arg $1 $2
         release="$2"
         shift 2
         ;;
     --repo)
+        validate_arg $1 $2
         repo="$2"
         shift 2
         ;;
     --dbt-branch)
+        validate_arg $1 $2
         dbt_branch="$2"
         shift 2
         ;;
