@@ -27,26 +27,6 @@ jobs:
     - uses: cvmfs-contrib/github-action-cvmfs@v5
       with:
         cvmfs_repositories: 'dunedaq-development.opensciencegrid.org'
-    - name: Check CVMFS
-      run: |
-        ls -lrt /cvmfs || exit 1
-
-    - name: change dir permission
-      run: |
-        sudo mkdir -p /var/lib/cvmfs
-        sudo chmod -R 777 /var/lib/cvmfs
-  
-    #- name: Cache cvmfs cache
-    #  id: cvmfs_cache
-    #  uses: actions/cache@main
-    #  with:
-    #    path: /var/lib/cvmfs/shared
-    #    key: cachecvmfs
-
-    - name: restore dir permission
-      run: |
-        sudo chown -R cvmfs:cvmfs /var/lib/cvmfs
-        sudo chmod -R 700 /var/lib/cvmfs
 
     - name: Pull latest nightly build image
       run: docker pull ghcr.io/dune-daq/nightly-release-alma9:development_v5
@@ -63,7 +43,6 @@ jobs:
         cd daq-buildtools-test
         source env.sh
         cd scripts
-        #./test_daq-buildtools.sh --dbt-branch ${{ github.head_ref }}
         docker run --rm \
           -v /cvmfs:/cvmfs:shared \
           -v "$PWD":/workspace \
