@@ -19,13 +19,18 @@ jobs:
   test_daq_buildtools:
     name: Test daq-buildtools
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/dune-daq/nightly-release-alma9:development_v5
     defaults:
       run:
         shell: bash
 
     steps:
+    - uses: cvmfs-contrib/github-action-cvmfs@v5
+      with:
+        cvmfs_repositories: 'dunedaq-development.opensciencegrid.org'
+
+    - name: Pull latest nightly build image
+      run: docker pull ghcr.io/dune-daq/nightly-release-alma9:development_v5
+
     - id: checkout_daq_buildtools
       uses: actions/checkout@v6
       with:
@@ -34,9 +39,16 @@ jobs:
 
     - name: Run test_daq-buildtools script
       run: |
+        BRANCH="${{ inputs.dbt-branch || github.head_ref || github.ref_name }}"
         cd daq-buildtools-test
         source env.sh
         cd scripts
-        ./test_daq-buildtools.sh --dbt-branch ${{ github.head_ref }}
+        docker run --rm \
+          -v /cvmfs:/cvmfs:shared \
+          -v "$PWD":/workspace \
+          -w /workspace \
+          ghcr.io/dune-daq/nightly-release-alma9:development_v5 \
+          ./test_daq-buildtools.sh --dbt-branch $BRANCH
+
         
 
