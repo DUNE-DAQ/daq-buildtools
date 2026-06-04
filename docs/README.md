@@ -1,6 +1,6 @@
 # DUNE DAQ Buildtools
 
-_This document was last edited Feb-26-2026_
+_This document was last edited Jun-4-2026_
 
 `daq-buildtools` is the toolset to simplify the development of DUNE DAQ packages. It provides environment and building utilities for the DAQ Suite.
 
@@ -14,9 +14,9 @@ To get set up, you'll need access to the cvmfs areas `/cvmfs/dunedaq.openscience
 Simply do:
 ```
 source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt latest
+setup_dbt fddaq-v5.6.0
 ```
-Note that `latest` is aliased to `v8.13.1`. 
+Note that `fddaq-v5.6.0` is aliased to `v8.13.1`. 
 
 After running these two commands, then you'll see something like:
 ```
@@ -35,10 +35,10 @@ Each time that you log into a fresh Linux shell and want to either (1) set up an
 If you only want access to a DUNE DAQ software release (its executables, etc.) without actually developing DUNE DAQ software itself, you'll want to run a release from cvmfs. Please note that in general, stable releases (especially patch stable releases) are intended for this scenario, and _not_ for development. After setting up daq-buildtools, you can simply run the following command if you wish to use a stable release:
 
 ```sh
-dbt-setup-release <release> # fddaq-v5.5.0-a9 the latest stable release as of Dec-13-2025
+dbt-setup-release <release> # fddaq-v5.6.0-a9 the latest stable release as of Jun-04-2026
 ```
 
-Note that if you set up a stable release you'll get a message along the lines of `Release "fddaq-v5.5.0-a9" requested; interpreting this as release "fddaq-v5.5.0-a9-1"`; this simply reflects that the latest build iteration of the stable release (`-1`, `-2`, etc.) has been alias'd out for the convenience of the user.
+Note that if you set up a stable release you'll get a message along the lines of `Release "fddaq-v5.6.0-a9" requested; interpreting this as release "fddaq-v5.6.0-a9-1"`; this simply reflects that the latest build iteration of the stable release (`-1`, `-2`, etc.) has been alias'd out for the convenience of the user.
 
 Instead of a stable release you can also set up nightly releases or candidate releases using the same arguments as are described later for `dbt-create`; e.g. if you want to set up candidate release `fddaq-v5.2.0-rc3-a9` you can do:
 ```
