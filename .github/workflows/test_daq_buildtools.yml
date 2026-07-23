@@ -31,24 +31,22 @@ jobs:
     - name: Pull latest nightly build image
       run: docker pull ghcr.io/dune-daq/nightly-release-alma9:development_v5
 
-    - id: checkout_daq_buildtools
+    - name: Checkout daq-release
       uses: actions/checkout@v6
       with:
-        path: daq-buildtools-test
+        repository: DUNE-DAQ/daq-release
+        path: daq-release
         persist-credentials: false
 
-    - name: Run test_daq-buildtools script
+    - name: Run test_daq-buildtools script from daq-release
       run: |
         BRANCH="${{ inputs.dbt-branch || github.head_ref || github.ref_name }}"
-        cd daq-buildtools-test
-        source env.sh
-        cd scripts
         docker run --rm \
           -v /cvmfs:/cvmfs:shared \
-          -v "$PWD":/workspace \
-          -w /workspace \
+          -v "${GITHUB_WORKSPACE}:/ghw" \
+          -w /ghw \
           ghcr.io/dune-daq/nightly-release-alma9:development_v5 \
-          ./test_daq-buildtools.sh --dbt-branch $BRANCH
+          ./daq-release/scripts/test_daq-buildtools.sh --dbt-branch $BRANCH
 
         
 
