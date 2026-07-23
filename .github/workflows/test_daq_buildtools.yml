@@ -40,8 +40,6 @@ jobs:
 
     - name: Run test_daq-buildtools script from daq-release
       run: |
-        echo "pwd: $(pwd)"
-        echo "ls -lrt: $(ls -lrt)"
         BRANCH="${{ inputs.dbt-branch || github.head_ref || github.ref_name }}"
         docker run --rm \
           -v /cvmfs:/cvmfs:shared \
