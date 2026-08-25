@@ -289,34 +289,34 @@ def full_help():
 env_check()
 
 if len(sys.argv) == 1:
-   full_help()
-   sys.exit(1)
+    full_help()
+    sys.exit(1)
 
 infotype = sys.argv[1]
 
 if infotype == "package":
-   if len(sys.argv) < 3:
-      package_help()
-      sys.exit(1)
-   package_info(sys.argv[2])
+    if len(sys.argv) < 3:
+       package_help()
+       sys.exit(1)
+    package_info(sys.argv[2])
 elif infotype == "external":
-   if len(sys.argv) < 3:
-      externals_help()
-      sys.exit(1)
-   externals_info(sys.argv[2])
+    if len(sys.argv) < 3:
+       externals_help()
+       sys.exit(1)
+    externals_info(sys.argv[2])
 elif infotype == "pymodule":
-   if len(sys.argv) < 3:
-      pymodule_help()
-      sys.exit(1)
-   pymodule_info(sys.argv[2])
+    if len(sys.argv) < 3:
+       pymodule_help()
+       sys.exit(1)
+    pymodule_info(sys.argv[2])
 elif infotype == "release":
-   release_info()
+    release_info()
 elif infotype == "sourcecode":
    sourcecode_info()
 elif infotype == "release_size":
    release_size_info()
 else:  # This encompasses when a user passes "-h" or "--help", but also "--smurf" or "--albania"
-   full_help()
+    full_help()
 
 
 
