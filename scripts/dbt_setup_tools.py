@@ -67,10 +67,10 @@ def get_time(kind):
 
     return timenow
 
-def run_command(cmd):
+def run_command(cmd, cwd="."):
 
     res = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE)
+                        stderr=subprocess.PIPE, cwd=cwd)
 
     while True:
         output = res.stdout.readline()
