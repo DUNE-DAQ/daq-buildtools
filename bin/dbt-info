@@ -144,6 +144,9 @@ def package_info(requested_pkg, ok_to_miss = False):
    if not was_found and not ok_to_miss:
       print(f"Unable to find \"{requested_pkg}\"")
 
+def local_package_info(package_path):
+   print(f"%s: " % (package_path.split("/")[-1]), end="")
+   run_command('echo -n \"$( git rev-parse --abbrev-ref HEAD )$( git diff --no-ext-diff --quiet --exit-code || echo \\* ) [$( git rev-parse --short HEAD )]\" ', cwd=package_path)
  
 def externals_help():
     print(f"\n{this_script} external <name of package>  # Use \"all\" instead of a package name for all external packages") 
@@ -191,23 +194,32 @@ def process_pymodule(package):
       venv_subdir = "runconf_ui"
 
    possible_venv_dir = glob.glob( "%s/.venv/lib/python*/site-packages/%s" % (os.environ["DBT_AREA_ROOT"], venv_subdir ))
+   possible_pythoncode_dir = glob.glob( "%s/pythoncode/%s" % (os.environ["DBT_AREA_ROOT"], package ))
 
-   if len(possible_venv_dir) == 0:
+   num_venv_dirs = len(possible_venv_dir)
+   num_pythoncode_dirs = len(possible_pythoncode_dir)
+
+   if num_venv_dirs + num_pythoncode_dirs == 0:
 
       # Need to find the package in Spack
       if package[0:3] != "py-":
-         error("The requested package wasn't found in .venv and doesn't appear to be a Python package in Spack")
+         error("The requested package wasn't found in .venv or pythoncode/ and doesn't appear to be a Python package in Spack")
 
       package_info(package, ok_to_miss = True)
       externals_info(package, ok_to_miss = False)
 
-   elif len(possible_venv_dir) == 1:
+   elif num_pythoncode_dirs == 1:
+
+      package_path = "%s/pythoncode/%s" % (os.environ["DBT_AREA_ROOT"], package)
+      if not os.path.isdir(package_path):
+         error("Some logic in this script is broken; contact Software Coordination")
+      local_package_info(package_path)
+
+   elif num_venv_dirs == 1:
 
       # Local work area .venv installation takes priority over Spack
       # installation, get version from YAML file from which the python
       # packages are locally installed
-
-      data = get_release_data(target_package)
 
       pyvenv_file = "%s/%s/pyvenv_requirements.txt" % (os.environ["SPACK_RELEASES_DIR"], os.environ["SPACK_RELEASE"])
       assert os.path.exists(pyvenv_file)
@@ -244,6 +256,7 @@ def sourcecode_help():
 
 def sourcecode_info():
    codepaths = []
+
    for subdir in ["sourcecode", "pythoncode"]:
       codepaths.append( "%s/%s" % (os.environ["DBT_AREA_ROOT"], subdir) )
 
@@ -257,11 +270,9 @@ def sourcecode_info():
 
    print()
    if repos:
-      print('Source code for locally checked out packages:')
+      print('Source code for locally checked out package(s):')
       for repo in repos:
-         os.chdir(repo)
-         print(f"%s: " % (repo.split("/")[-1]), end="")
-         run_command('echo -n \"$( git rev-parse --abbrev-ref HEAD )$( git diff --no-ext-diff --quiet --exit-code || echo \\* ) [$( git rev-parse --short HEAD )]\" ')
+         local_package_info(repo)
    else: 
       print('There are no locally checked out packages in $DBT_AREA_ROOT/sourcecode')
    print()
@@ -279,24 +290,34 @@ def full_help():
 env_check()
 
 if len(sys.argv) == 1:
-    full_help()
-    sys.exit(1)
+   full_help()
+   sys.exit(1)
 
 infotype = sys.argv[1]
 
 if infotype == "package":
-    package_info(sys.argv[2])
+   if len(sys.argv) < 3:
+      package_help()
+      sys.exit(1)
+   package_info(sys.argv[2])
 elif infotype == "external":
-    externals_info(sys.argv[2])
+   if len(sys.argv) < 3:
+      externals_help()
+      sys.exit(1)
+   externals_info(sys.argv[2])
 elif infotype == "pymodule":
-    pymodule_info(sys.argv[2])
+   if len(sys.argv) < 3:
+      pymodule_help()
+      sys.exit(1)
+   pymodule_info(sys.argv[2])
 elif infotype == "release":
-    release_info()
+   release_info()
 elif infotype == "sourcecode":
    sourcecode_info()
 elif infotype == "release_size":
    release_size_info()
 else:  # This encompasses when a user passes "-h" or "--help", but also "--smurf" or "--albania"
-    full_help()
+   full_help()
+
 
 
