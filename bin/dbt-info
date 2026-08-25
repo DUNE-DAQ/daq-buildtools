@@ -196,10 +196,7 @@ def process_pymodule(package):
    possible_venv_dir = glob.glob( "%s/.venv/lib/python*/site-packages/%s" % (os.environ["DBT_AREA_ROOT"], venv_subdir ))
    possible_pythoncode_dir = glob.glob( "%s/pythoncode/%s" % (os.environ["DBT_AREA_ROOT"], package ))
 
-   num_venv_dirs = len(possible_venv_dir)
-   num_pythoncode_dirs = len(possible_pythoncode_dir)
-
-   if num_venv_dirs + num_pythoncode_dirs == 0:
+   if len(possible_venv_dir) + len(possible_pythoncode_dir) == 0:
 
       # Need to find the package in Spack
       if package[0:3] != "py-":
@@ -208,14 +205,16 @@ def process_pymodule(package):
       package_info(package, ok_to_miss = True)
       externals_info(package, ok_to_miss = False)
 
-   elif num_pythoncode_dirs == 1:
+   elif len(possible_pythoncode_dir) == 1:
+
+      # Local $DBT_AREA_ROOT/pythoncode takes priority over .venv
 
       package_path = "%s/pythoncode/%s" % (os.environ["DBT_AREA_ROOT"], package)
       if not os.path.isdir(package_path):
          error("Some logic in this script is broken; contact Software Coordination")
       local_package_info(package_path)
 
-   elif num_venv_dirs == 1:
+   elif len(possible_venv_dir) == 1:
 
       # Local work area .venv installation takes priority over Spack
       # installation, get version from YAML file from which the python
