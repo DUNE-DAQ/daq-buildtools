@@ -7,6 +7,7 @@ import subprocess
 import sys
 import datetime
 import time
+import shlex
 
 exec(open(f'{os.environ["DBT_ROOT"]}/scripts/dbt_setup_constants.py').read())
 
@@ -67,20 +68,46 @@ def get_time(kind):
 
     return timenow
 
-def run_command(cmd, cwd="."):
+def run_command(cmd, cwd=None, check=True, warn=True,
+                context=None, echo=True, shell=False, **kwargs):
+    """
+    Run a bash command, echo its output, return the CompletedProcess.
 
-    res = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE, cwd=cwd)
+    cmd: "git clone repo" (split with shlex) or ["git", "clone", "repo"].
+    shell=True to use the shell for pipes, globs, redirects, and ~.
+    check=True raises RuntimeError on nonzero exit; check=False warns to stderr.
+    Extra kwargs (timeout, env, input, ...) pass through to subprocess.run.
+    """
+    if shell:
+        argv = pretty = cmd if isinstance(cmd, str) else shlex.join(cmd)
+    elif isinstance(cmd, str):
+        argv, pretty = shlex.split(cmd), cmd
+    else:
+        argv, pretty = cmd, shlex.join(cmd)
 
-    while True:
-        output = res.stdout.readline()
-        if output:
-            print(output.rstrip().decode("utf-8"))
-        if res.poll() is not None:
-            break
+    try:
+        proc = subprocess.run(
+            argv, cwd=cwd, capture_output=True, text=True, shell=shell, **kwargs,
+        )
+    except (OSError, subprocess.SubprocessError) as e:
+        raise RuntimeError("\n".join(filter(None, [context, f"Could not run: {pretty}", str(e)]))) from e
 
-    if res.returncode != 0:
-        error(f"There was a problem running \"{cmd}\" (return value {res.returncode}); exiting...")
+    if echo and proc.stdout:
+        print(proc.stdout, end="")
+
+    if proc.returncode != 0:
+        message = "\n".join(filter(None, [
+            context,
+            f"Command failed ({proc.returncode}): {pretty}",
+            f"stdout:\n{proc.stdout}" if proc.stdout else "",
+            f"stderr:\n{proc.stderr}" if proc.stderr else "",
+        ]))
+        if check:
+            raise RuntimeError(message)
+        if warn:
+            print(message, file=sys.stderr)
+
+    return proc
 
 # This function is needed as part of daq-release Issue #500
 # Its namesake bash counterpart can be found in dbt-setup-tools.sh
