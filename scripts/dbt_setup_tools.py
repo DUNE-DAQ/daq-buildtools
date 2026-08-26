@@ -71,11 +71,12 @@ def get_time(kind):
 def run_command(cmd, cwd=None, check=True, warn=True,
                 context=None, echo=True, shell=False, **kwargs):
     """
-    Run a bash command, echo its output, return the CompletedProcess.
+    Run a bash command, echo its output, and return the CompletedProcess.
 
     cmd: "git clone repo" (split with shlex) or ["git", "clone", "repo"].
     shell=True to use the shell for pipes, globs, redirects, and ~.
     check=True raises RuntimeError on nonzero exit; check=False warns to stderr.
+    warn=True prints stderr warn messages but does not fail; warn=False is silent.
     Extra kwargs (timeout, env, input, ...) pass through to subprocess.run.
     """
     if shell:
