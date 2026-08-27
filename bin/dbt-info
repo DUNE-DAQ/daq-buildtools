@@ -257,7 +257,7 @@ def process_pymodule(package):
       assert os.path.exists(pyvenv_file)
 
       pattern1 = re.compile(
-        rf'git\+https://github\.com/DUNE-DAQ/{re.escape(package)}@([0-9a-zA-Z/\.]+)#egg'
+        rf'git\+https://github\.com/DUNE-DAQ/{re.escape(package)}@([0-9a-zA-Z_/\.]+)#egg'
     )
 
       pattern2 = re.compile(
