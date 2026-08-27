@@ -73,11 +73,32 @@ def run_command(cmd, cwd=None, check=True, warn=True,
     """
     Run a bash command, echo its output, and return the CompletedProcess.
 
-    cmd: "git clone repo" (split with shlex) or ["git", "clone", "repo"].
-    shell=True to use the shell for pipes, globs, redirects, and ~.
-    check=True raises RuntimeError on nonzero exit; check=False warns to stderr.
-    warn=True prints stderr warn messages but does not fail; warn=False is silent.
-    Extra kwargs (timeout, env, input, ...) pass through to subprocess.run.
+    Args:
+        cmd: Command as a string ("git clone repo") or list (["git", "clone", "repo"]).
+            Strings are tokenized with shlex.split unless shell=True. Wrap interpolated
+            values in f-strings using shlex.quote():
+                run_command(f"du -sk {shlex.quote(path)}")
+        cwd: Directory to run the command in. Defaults to the current directory.
+        check: Raise RuntimeError if the command exits nonzero.
+        warn: When check=False, print the failure message to stderr. Set warn=False when
+            a nonzero exit is an expected result you handle yourself — e.g. `git diff
+            --quiet` exits 1 to mean "dirty tree".
+        context: Extra text prepended to error messages, describing what was attempted.
+        echo: Print the command's stdout.
+        shell: Run the command through /bin/sh rather than executing it directly.
+            Required for shell syntax — pipes, redirects, globs, ~, $VAR, &&:
+                run_command(f"spack find --loaded | grep {shlex.quote(path)} | wc -l",
+                            shell=True)
+            Caveats: a pipeline reports only the last command's exit status (prefix with
+            "set -o pipefail; " to catch earlier failures), and metacharacters in
+            interpolated values are interpreted, so never pass unsanitized input.
+        **kwargs: Passed through to subprocess.run (timeout, env, input, ...)
+
+    Returns:
+        subprocess.CompletedProcess, with .stdout, .stderr, .returncode, .args.
+
+    Raises:
+        RuntimeError: if the command cannot be started, or exits nonzero and check=True.
     """
     if shell:
         argv = pretty = cmd if isinstance(cmd, str) else shlex.join(cmd)
