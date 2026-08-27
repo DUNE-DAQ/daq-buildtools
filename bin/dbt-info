@@ -6,6 +6,7 @@ import re
 import subprocess
 import sys
 import yaml
+import shlex
 
 if "DBT_ROOT" in os.environ:
    DBT_ROOT=os.environ["DBT_ROOT"]
@@ -93,9 +94,9 @@ def release_size_info():
          label=repopath.split("/")[-2]
          print(f"{label}:")
          print(f"path: {repopath}")
-         run_command(f"du {repopath} -sk | sed -r -n 's/^([0-9]+).*/size: \\1 kB/p'")
+         run_command(f"du {shlex.quote(repopath)} -sk | sed -r -n 's/^([0-9]+).*/size: \\1 kB/p'", shell=True)
          print("number of packages: ", end = "") 
-         run_command(f"spack find -p --loaded | grep {repopath} | wc -l")
+         run_command(f"spack find -p --loaded | grep {shlex.quote(repopath)} | wc -l", shell=True)
          print()
    else:
       error("Something went wrong trying to find the Spack repos used in this release")
@@ -144,24 +145,21 @@ def package_info(requested_pkg, ok_to_miss = False):
    if not was_found and not ok_to_miss:
       print(f"Unable to find \"{requested_pkg}\"")
 
-def local_package_info(package_path):
+def local_package_info(package_path, venv_dir=None):
    package_name = package_path.split("/")[-1]
    package_base_path = package_path.split("/")[-2]
    package_type = "C++"
    if "pythoncode" in package_path:
       package_type = "python"
 
+   local_info = f"DUNE DAQ {package_type} package {package_name} in {package_base_path}/: "
+
    current_branch = run_command(
       "git rev-parse --abbrev-ref HEAD",
-      echo=False, cwd=package_path,
+      echo=False, check=False, cwd=package_path,
       context="Could not determine branch name"
-   ).stdout.strip()
-
-   short_sha = run_command(
-      "git rev-parse --short HEAD",
-      echo=False, cwd=package_path,
-      context="Could not determine the current commit"
-   ).stdout.strip()
+   )
+   local_info += f"{current_branch.stdout.strip() if current_branch.returncode == 0 else 'Unknown branch'}"
 
    diff = run_command(
       "git diff --no-ext-diff --quiet HEAD",
@@ -171,16 +169,22 @@ def local_package_info(package_path):
       raise RuntimeError(
          f"git diff failed ({diff.returncode}): {diff.stderr.strip()}"
       )
-
    has_uncommitted_changes = diff.returncode == 1
+   local_info += f"{'*' if has_uncommitted_changes else ''} "
 
-   print(
-      f"DUNE DAQ {package_type} package {package_name} "
-      f"in {package_base_path}/: "
-      f"{current_branch}{'*' if has_uncommitted_changes else ''} "
-      f"[{short_sha}]"
+   short_sha = run_command(
+      "git rev-parse --short HEAD",
+      echo=False, check=False, cwd=package_path,
+      context="Could not determine the current commit"
    )
- 
+   local_info += f"{short_sha.stdout.strip() if short_sha.returncode == 0 else 'Unknown hash'}"
+
+   if venv_dir:
+      local_info += f"\n  * Information about {package_name} may not be accurate since it's being developed "
+      local_info += f"\n  * in your work area while also installed in the venv."
+
+   print(local_info)
+
 def externals_help():
     print(f"\n{this_script} external <name of package>  # Use \"all\" instead of a package name for all external packages") 
 
@@ -245,7 +249,12 @@ def process_pymodule(package):
       package_path = "%s/pythoncode/%s" % (os.environ["DBT_AREA_ROOT"], package)
       if not os.path.isdir(package_path):
          error("Some logic in this script is broken; contact Software Coordination")
-      local_package_info(package_path)
+
+      # If a package is checked out locally and not installed in editable mode,
+      # there may be a different version/commit in the .venv dir compared to the
+      # local checkout
+      venv_dir = possible_venv_dir[0] if len(possible_venv_dir) == 1 else None
+      local_package_info(package_path, venv_dir)
 
    elif len(possible_venv_dir) == 1:
 
