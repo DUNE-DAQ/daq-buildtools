@@ -6,6 +6,7 @@ import re
 import subprocess
 import sys
 import yaml
+import shlex
 
 if "DBT_ROOT" in os.environ:
    DBT_ROOT=os.environ["DBT_ROOT"]
@@ -93,9 +94,9 @@ def release_size_info():
          label=repopath.split("/")[-2]
          print(f"{label}:")
          print(f"path: {repopath}")
-         run_command(f"du {repopath} -sk | sed -r -n 's/^([0-9]+).*/size: \\1 kB/p'")
+         run_command(f"du {shlex.quote(repopath)} -sk | sed -r -n 's/^([0-9]+).*/size: \\1 kB/p'", shell=True)
          print("number of packages: ", end = "") 
-         run_command(f"spack find -p --loaded | grep {repopath} | wc -l")
+         run_command(f"spack find -p --loaded | grep {shlex.quote(repopath)} | wc -l", shell=True)
          print()
    else:
       error("Something went wrong trying to find the Spack repos used in this release")
@@ -144,7 +145,46 @@ def package_info(requested_pkg, ok_to_miss = False):
    if not was_found and not ok_to_miss:
       print(f"Unable to find \"{requested_pkg}\"")
 
- 
+def local_package_info(package_path, venv_dir=None):
+   package_name = package_path.split("/")[-1]
+   package_base_path = package_path.split("/")[-2]
+   package_type = "C++"
+   if "pythoncode" in package_path:
+      package_type = "python"
+
+   local_info = f"DUNE DAQ {package_type} package {package_name} in {package_base_path}/: "
+
+   current_branch = run_command(
+      "git rev-parse --abbrev-ref HEAD",
+      echo=False, check=False, cwd=package_path,
+      context="Could not determine branch name"
+   )
+   local_info += f"{current_branch.stdout.strip() if current_branch.returncode == 0 else 'Unknown branch'}"
+
+   diff = run_command(
+      "git diff --no-ext-diff --quiet HEAD",
+      echo=False, cwd=package_path, check=False, warn=False,
+   )
+   if diff.returncode not in (0, 1):
+      raise RuntimeError(
+         f"git diff failed ({diff.returncode}): {diff.stderr.strip()}"
+      )
+   has_uncommitted_changes = diff.returncode == 1
+   local_info += f"{'*' if has_uncommitted_changes else ''} "
+
+   short_sha = run_command(
+      "git rev-parse --short HEAD",
+      echo=False, check=False, cwd=package_path,
+      context="Could not determine the current commit"
+   )
+   local_info += f"{short_sha.stdout.strip() if short_sha.returncode == 0 else 'Unknown hash'}"
+
+   if venv_dir:
+      local_info += f"\n  * Information about {package_name} may not be accurate since it's being developed "
+      local_info += f"\n  * in your work area while also installed in the venv."
+
+   print(local_info)
+
 def externals_help():
     print(f"\n{this_script} external <name of package>  # Use \"all\" instead of a package name for all external packages") 
 
@@ -191,15 +231,30 @@ def process_pymodule(package):
       venv_subdir = "runconf_ui"
 
    possible_venv_dir = glob.glob( "%s/.venv/lib/python*/site-packages/%s" % (os.environ["DBT_AREA_ROOT"], venv_subdir ))
+   possible_pythoncode_dir = glob.glob( "%s/pythoncode/%s" % (os.environ["DBT_AREA_ROOT"], package ))
 
-   if len(possible_venv_dir) == 0:
+   if len(possible_venv_dir) + len(possible_pythoncode_dir) == 0:
 
       # Need to find the package in Spack
       if package[0:3] != "py-":
-         error("The requested package wasn't found in .venv and doesn't appear to be a Python package in Spack")
+         error("The requested package wasn't found in .venv or pythoncode/ and doesn't appear to be a Python package in Spack")
 
       package_info(package, ok_to_miss = True)
       externals_info(package, ok_to_miss = False)
+
+   elif len(possible_pythoncode_dir) == 1:
+
+      # Local $DBT_AREA_ROOT/pythoncode takes priority over .venv
+
+      package_path = "%s/pythoncode/%s" % (os.environ["DBT_AREA_ROOT"], package)
+      if not os.path.isdir(package_path):
+         error("Some logic in this script is broken; contact Software Coordination")
+
+      # If a package is checked out locally and not installed in editable mode,
+      # there may be a different version/commit in the .venv dir compared to the
+      # local checkout
+      venv_dir = possible_venv_dir[0] if len(possible_venv_dir) == 1 else None
+      local_package_info(package_path, venv_dir)
 
    elif len(possible_venv_dir) == 1:
 
@@ -207,13 +262,11 @@ def process_pymodule(package):
       # installation, get version from YAML file from which the python
       # packages are locally installed
 
-      data = get_release_data(target_package)
-
       pyvenv_file = "%s/%s/pyvenv_requirements.txt" % (os.environ["SPACK_RELEASES_DIR"], os.environ["SPACK_RELEASE"])
       assert os.path.exists(pyvenv_file)
 
       pattern1 = re.compile(
-        rf'git\+https://github\.com/DUNE-DAQ/{re.escape(package)}@([0-9a-zA-Z/\.]+)#egg'
+        rf'git\+https://github\.com/DUNE-DAQ/{re.escape(package)}@([0-9a-zA-Z_/\.]+)#egg'
     )
 
       pattern2 = re.compile(
@@ -244,6 +297,7 @@ def sourcecode_help():
 
 def sourcecode_info():
    codepaths = []
+
    for subdir in ["sourcecode", "pythoncode"]:
       codepaths.append( "%s/%s" % (os.environ["DBT_AREA_ROOT"], subdir) )
 
@@ -257,11 +311,9 @@ def sourcecode_info():
 
    print()
    if repos:
-      print('Source code for locally checked out packages:')
+      print('Source code for locally checked out package(s):')
       for repo in repos:
-         os.chdir(repo)
-         print(f"%s: " % (repo.split("/")[-1]), end="")
-         run_command('echo -n \"$( git rev-parse --abbrev-ref HEAD )$( git diff --no-ext-diff --quiet --exit-code || echo \\* ) [$( git rev-parse --short HEAD )]\" ')
+         local_package_info(repo)
    else: 
       print('There are no locally checked out packages in $DBT_AREA_ROOT/sourcecode')
    print()
@@ -285,10 +337,19 @@ if len(sys.argv) == 1:
 infotype = sys.argv[1]
 
 if infotype == "package":
+    if len(sys.argv) < 3:
+       package_help()
+       sys.exit(1)
     package_info(sys.argv[2])
 elif infotype == "external":
+    if len(sys.argv) < 3:
+       externals_help()
+       sys.exit(1)
     externals_info(sys.argv[2])
 elif infotype == "pymodule":
+    if len(sys.argv) < 3:
+       pymodule_help()
+       sys.exit(1)
     pymodule_info(sys.argv[2])
 elif infotype == "release":
     release_info()
@@ -298,5 +359,6 @@ elif infotype == "release_size":
    release_size_info()
 else:  # This encompasses when a user passes "-h" or "--help", but also "--smurf" or "--albania"
     full_help()
+
 
 

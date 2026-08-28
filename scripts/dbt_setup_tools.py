@@ -7,6 +7,7 @@ import subprocess
 import sys
 import datetime
 import time
+import shlex
 
 exec(open(f'{os.environ["DBT_ROOT"]}/scripts/dbt_setup_constants.py').read())
 
@@ -67,20 +68,68 @@ def get_time(kind):
 
     return timenow
 
-def run_command(cmd):
+def run_command(cmd, cwd=None, check=True, warn=True,
+                context=None, echo=True, shell=False, **kwargs):
+    """
+    Run a bash command, echo its output, and return the CompletedProcess.
 
-    res = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE)
+    Args:
+        cmd: Command as a string ("git clone repo") or list (["git", "clone", "repo"]).
+            Strings are tokenized with shlex.split unless shell=True. Wrap interpolated
+            values in f-strings using shlex.quote():
+                run_command(f"du -sk {shlex.quote(path)}")
+        cwd: Directory to run the command in. Defaults to the current directory.
+        check: Raise RuntimeError if the command exits nonzero.
+        warn: When check=False, print the failure message to stderr. Set warn=False when
+            a nonzero exit is an expected result you handle yourself — e.g. `git diff
+            --quiet` exits 1 to mean "dirty tree".
+        context: Extra text prepended to error messages, describing what was attempted.
+        echo: Print the command's stdout.
+        shell: Run the command through /bin/sh rather than executing it directly.
+            Required for shell syntax — pipes, redirects, globs, ~, $VAR, &&:
+                run_command(f"spack find --loaded | grep {shlex.quote(path)} | wc -l",
+                            shell=True)
+            Caveats: a pipeline reports only the last command's exit status (prefix with
+            "set -o pipefail; " to catch earlier failures), and metacharacters in
+            interpolated values are interpreted, so never pass unsanitized input.
+        **kwargs: Passed through to subprocess.run (timeout, env, input, ...)
 
-    while True:
-        output = res.stdout.readline()
-        if output:
-            print(output.rstrip().decode("utf-8"))
-        if res.poll() is not None:
-            break
+    Returns:
+        subprocess.CompletedProcess, with .stdout, .stderr, .returncode, .args.
 
-    if res.returncode != 0:
-        error(f"There was a problem running \"{cmd}\" (return value {res.returncode}); exiting...")
+    Raises:
+        RuntimeError: if the command cannot be started, or exits nonzero and check=True.
+    """
+    if shell:
+        argv = pretty = cmd if isinstance(cmd, str) else shlex.join(cmd)
+    elif isinstance(cmd, str):
+        argv, pretty = shlex.split(cmd), cmd
+    else:
+        argv, pretty = cmd, shlex.join(cmd)
+
+    try:
+        proc = subprocess.run(
+            argv, cwd=cwd, capture_output=True, text=True, shell=shell, **kwargs,
+        )
+    except (OSError, subprocess.SubprocessError) as e:
+        raise RuntimeError("\n".join(filter(None, [context, f"Could not run: {pretty}", str(e)]))) from e
+
+    if echo and proc.stdout:
+        print(proc.stdout, end="")
+
+    if proc.returncode != 0:
+        message = "\n".join(filter(None, [
+            context,
+            f"Command failed ({proc.returncode}): {pretty}",
+            f"stdout:\n{proc.stdout}" if proc.stdout else "",
+            f"stderr:\n{proc.stderr}" if proc.stderr else "",
+        ]))
+        if check:
+            raise RuntimeError(message)
+        if warn:
+            print(message, file=sys.stderr)
+
+    return proc
 
 # This function is needed as part of daq-release Issue #500
 # Its namesake bash counterpart can be found in dbt-setup-tools.sh
