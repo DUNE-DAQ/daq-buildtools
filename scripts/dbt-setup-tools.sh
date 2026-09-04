@@ -222,7 +222,7 @@ function get_usable_arch_spec() {
 	return
     fi
 
-    local major_ver=$( cat /etc/os-release | sed -r -n 's/^VERSION_ID="([0-9]).*/\1/p' )
+    local major_ver=$( cat /etc/os-release | sed -r -n 's/^VERSION_ID="([0-9]+).*/\1/p' )
     echo "arch=linux-almalinux${major_ver}-x86_64"
     return
 }
