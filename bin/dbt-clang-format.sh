@@ -90,7 +90,7 @@ if [[ "$retval" != "0" ]]; then
             exit 101
         fi
 
-        cmd="spack load llvm"
+        cmd="spack load llvm $(get_usable_arch_spec)"
         $cmd
 
         if [[ "$?" != "0" ]]; then

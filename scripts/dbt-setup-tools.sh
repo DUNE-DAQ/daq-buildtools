@@ -213,6 +213,22 @@ function spack_setup_env() {
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
+function get_usable_arch_spec() {
+
+    local disttype=$( cat /etc/os-release | sed -r -n 's/^ID="(.*)"/\1/p' )
+
+    if [[ "$disttype" != "almalinux" ]]; then
+	echo "unable to determine arch"
+	return
+    fi
+
+    local major_ver=$( cat /etc/os-release | sed -r -n 's/^VERSION_ID="([0-9]).*/\1/p' )
+    echo "arch=linux-almalinux${major_ver}-x86_64"
+    return
+}
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
 function spack_load_target_package() {
 
     local spack_pkg=$1
@@ -223,9 +239,9 @@ function spack_load_target_package() {
 
 	local cmd=""
 	if [[ -n $SPACK_VERBOSE ]] && $SPACK_VERBOSE ; then
-	    cmd="spack --debug load $spack_pkg"
+	    cmd="spack --debug load $spack_pkg $(get_usable_arch_spec)"
 	else
-	    cmd="spack load $spack_pkg"
+	    cmd="spack load $spack_pkg $(get_usable_arch_spec)"
 	fi
 
 

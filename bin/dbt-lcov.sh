@@ -1,8 +1,19 @@
 #!/bin/bash
 
+if [[ -z $DBT_ROOT ]]; then
+    echo "Error: daq-buildtools environment needs to be set up for this script to function. Exiting..." >&2
+    exit 10
+fi
+
 if [[ -z $DBT_AREA_ROOT ]]; then
     echo "Error: work area needs to be set up for this script to function. Exiting..." >&2
     exit 1
+fi
+
+source ${DBT_ROOT}/scripts/dbt-setup-tools.sh
+if [[ "$?" != 0 ]]; then
+    echo "The source of dbt-setup-tools.sh failed; exiting..." >&2
+    exit 11
 fi
 
 cd $DBT_AREA_ROOT
@@ -31,7 +42,7 @@ cd $output_dir
 numerator_file=$PWD/code.numerator
 denominator_file=$PWD/code.denominator
 
-spack load lcov || exit 3
+spack load lcov $(get_usable_arch_spec) || exit 3
 
 # Reset all execution counts to zero, if we've already run this script
 lcov  --zerocounters --directory $DBT_AREA_ROOT || exit 4
@@ -47,7 +58,7 @@ spack unload lcov || exit 6
 # Run the unit tests in our repos, and then we'll figure out what fraction of the code the tests hit
 dbt-build --unittest || exit 7
 
-spack load lcov || exit 8
+spack load lcov $(get_usable_arch_spec) || exit 8
 
 lcov --capture --directory $DBT_AREA_ROOT/build --output-file  $numerator_file  --ignore-errors mismatch,mismatch --include "$DBT_AREA_ROOT/sourcecode/*" || exit 9
 
