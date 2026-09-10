@@ -215,15 +215,7 @@ function spack_setup_env() {
 #------------------------------------------------------------------------------
 function get_usable_arch_spec() {
 
-    local disttype=$( cat /etc/os-release | sed -r -n 's/^ID="(.*)"/\1/p' )
-
-    if [[ "$disttype" != "almalinux" ]]; then
-	echo "unable to determine arch"
-	return
-    fi
-
-    local major_ver=$( cat /etc/os-release | sed -r -n 's/^VERSION_ID="([0-9]+).*/\1/p' )
-    echo "arch=linux-almalinux${major_ver}-x86_64"
+    echo "arch=linux-"$(spack arch -o)"-x86_64"
     return
 }
 #------------------------------------------------------------------------------
