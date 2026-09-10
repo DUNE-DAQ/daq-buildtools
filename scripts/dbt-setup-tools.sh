@@ -213,6 +213,14 @@ function spack_setup_env() {
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
+function get_usable_arch_spec() {
+
+    echo "arch=linux-"$(spack arch -o)"-x86_64"
+    return
+}
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
 function spack_load_target_package() {
 
     local spack_pkg=$1
@@ -223,9 +231,9 @@ function spack_load_target_package() {
 
 	local cmd=""
 	if [[ -n $SPACK_VERBOSE ]] && $SPACK_VERBOSE ; then
-	    cmd="spack --debug load $spack_pkg"
+	    cmd="spack --debug load $spack_pkg $(get_usable_arch_spec)"
 	else
-	    cmd="spack load $spack_pkg"
+	    cmd="spack load $spack_pkg $(get_usable_arch_spec)"
 	fi
 
 
