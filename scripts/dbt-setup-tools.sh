@@ -215,7 +215,11 @@ function spack_setup_env() {
 #------------------------------------------------------------------------------
 function get_usable_arch_spec() {
 
-    echo "arch=linux-"$(spack arch -o)"-x86_64"
+    if [[ -z $DBT_ARCH ]]; then
+	echo "arch=linux-"$(spack arch -o)"-x86_64"
+    else
+	echo "arch=${DBT_ARCH}"
+    fi
     return
 }
 #------------------------------------------------------------------------------
