@@ -643,7 +643,8 @@ if args.lint:
        os.mkdir(lint_log_dir)
        for pkgdir in package_list:
            pkgname=os.path.basename(pkgdir)
-           rich.print(f"Package to lint is {pkgname}")
+           rich.print(f"Linting {pkgname}; this may take several minutes. "
+                      "Output appears only if the linter finds issues.")
            fullcmd = f"./styleguide/cpplint/dune-cpp-style-check.sh build sourcecode/{pkgname}"
            lint_log = f"{lint_log_dir}/{pkgname}_linting.log"
            retval = pytee.run(fullcmd.split()[0], fullcmd.split()[1:], lint_log)
