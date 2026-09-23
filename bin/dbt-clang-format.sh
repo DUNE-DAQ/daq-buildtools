@@ -205,7 +205,7 @@ format_files true "$files_to_format" $output_markdown_file
 if ! $differences_only ; then
     
     cat<<EOF
-You ran this script without the $view_only_option option, are you
+You ran this script without the -v/--view-differences-only option, are you
 sure you want it to perform the edits (if any) suggested by the
 file-by-file diffs shown above? Type in yes or no.
 
