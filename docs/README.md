@@ -1,6 +1,6 @@
 # DUNE DAQ Buildtools
 
-_This document was last edited Oct-7-2026_
+_This document was last edited Nov-10-2026_
 
 `daq-buildtools` is the toolset to simplify the development of DUNE DAQ packages. It provides environment and building utilities for the DAQ Suite.
 
@@ -14,14 +14,14 @@ To get set up, you'll need access to the cvmfs areas `/cvmfs/dunedaq.openscience
 Simply do:
 ```
 source /cvmfs/dunedaq.opensciencegrid.org/setup_dunedaq.sh
-setup_dbt fddaq-v5.7.1
+setup_dbt latest
 ```
-Note that `fddaq-v5.7.1` is aliased to `v8.14.2`. 
+Note that `latest` is aliased to `v8.14.3`. 
 
 After running these two commands, then you'll see something like:
 ```
-Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v8.14.2/bin -> PATH
-Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v8.14.2/scripts -> PATH
+Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v8.14.3/bin -> PATH
+Added /cvmfs/dunedaq.opensciencegrid.org/tools/dbt/v8.14.3/scripts -> PATH
 DBT setuptools loaded
 ```
 
@@ -163,7 +163,10 @@ dbt-build --clean --unittest  # Blow away the contents of ./build, run config+ge
 ```
 ..where in the above case, you blow away the contents of `./build`,  run config+generate+build, install the result in `$DBT_INSTALL_DIR` and then run the unit tests. Be aware that for many packages, unit tests will only (fully) work if you've also rerun `dbt-workarea-env`. 
 
-To run any integration tests your repos may contain (e.g., `dfmodules`) , you can pass the `--integtest` option to `dbt-build`.  
+Before `v8.14.3` of daq-buildtools (released Nov-10-2026), there was
+an `--integtest` option to run integration tests from your local
+repos. This is now deprecated and the expectation is that developers
+will use `dunedaq_integtest_bundle.sh` to run integration tests.
 
 To check for deviations from the coding rules described in the [DUNE C++ Style Guide](https://dune-daq-sw.readthedocs.io/en/latest/packages/styleguide/), run with the `--lint` option:
 ```
