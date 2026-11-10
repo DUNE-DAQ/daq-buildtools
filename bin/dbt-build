@@ -47,13 +47,12 @@ usage_blurb=f"""
 Usage
 -----
 
-      {os.path.basename(__file__)} [-c/--clean] [-d/--debug] [-j<n>/--jobs <number parallel build jobs>] [--unittest (<optional package name>)] [--integtest <optional package name>] [--lint (<optional package name|optional file name>)] [-v/--cpp-verbose] [-h/--help]
+      {os.path.basename(__file__)} [-c/--clean] [-d/--debug] [-j<n>/--jobs <number parallel build jobs>] [--unittest (<optional package name>)] [--lint (<optional package name|optional file name>)] [-v/--cpp-verbose] [-h/--help]
 
         -c/--clean means the contents of ./build are deleted and CMake's config+generate+build stages are run
         -d/--debug means you want to build your software with optimizations off and debugging info on
         -j/--jobs means you want to specify the number of jobs used by cmake to build the project
         --unittest means that unit test executables found in ./build/<optional package name>/unittest are run, or all unit tests in ./build/*/unittest are run if no package name is provided
-        --integtest means that pytest tests found in ./build/<optional package name>/integtest are run, or all pytest tests in ./sourcecode/*/integtest are run if no package name is provided
         --lint means you check for deviations in ./sourcecode/<optional package name> from the DUNE style guide, https://dune-daq-sw.readthedocs.io/en/latest/packages/styleguide/, or deviations in all local repos if no package name is provided. You can also pass the name of an individual file. 
         -v/--cpp-verbose means that you want verbose output from the compiler
         --cmake-msg-lvl setting "CMAKE_MESSAGE_LOG_LEVEL", default is "NOTICE", choices are ERROR|WARNING|NOTICE|STATUS|VERBOSE|DEBUG|TRACE.
@@ -538,80 +537,7 @@ RUNNING UNIT TESTS IN {unittestdir}
 
 integtest_overviews = []
 if run_integtests:
-    datestring = re.sub("[: ]+", "_", sh.date().strip())
-
-    integtest_log_dir = pathlib.Path(LOGDIR)/f"integtest_tests_{datestring}"
-    integtest_log_summary = integtest_log_dir/"integtest_summary.log"
-    integtest_log_dir.mkdir(parents=True, exist_ok=True)
-
-    os.chdir(BASEDIR)
-
-    if args.integtest == "all":
-        integtest_package_list = [path for path in pathlib.Path('sourcecode').iterdir()
-                               if path.is_dir() and path.name != '.pytest_cache']
-    else:
-        integtest_package_list = [pathlib.Path(f'sourcecode/{package_to_integtest}')]
-
-    # Optional tests to ignore, such as tests that still need porting from v4 to v5
-    #ignore_args = """--ignore trigger/integtest/td_leakage_between_runs_test.py 
-    #                 --ignore "hsilibs/integtest/iceberg_real_hsi_test.py""".split()
-    ignore_args = []
-
-    for package_path in integtest_package_list:
-        package = package_path.stem
-        if not (package_path/"integtest").is_dir():
-            pytee.run("echo", ["-e", f"\033[31mNo python integration tests found in {package}/integtest\033[0m"], integtest_log_summary)
-            continue
-        # Integration tests should be stored in the integtest/ directory
-        package_integtests = package_path.glob('integtest/*_test.py')
-
-        for integtest_path in package_integtests:
-            integtest_name = (pathlib.Path(integtest_path).stem).replace('.py', '')
-            integtest_full_output_log = integtest_log_dir / f"{package}_{integtest_name}.log"
-            integtest_junit_xml_output = integtest_log_dir / f"{package}_{integtest_name}_results.xml"
-            integtest_cmd = ["pytest", integtest_path, "-v", "-s", f"--junit-xml={integtest_junit_xml_output}"] + ignore_args
-            with open(integtest_full_output_log, "w") as log:
-                process = subprocess.Popen(
-                    integtest_cmd,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                    bufsize=1,
-                    universal_newlines=True)
-                for line in process.stdout:
-                    print(line, end="")
-                    clean_line = ansi_escape.sub('', line)
-                    log.write(clean_line)
-                    log.flush()
-
-                process.wait()
-                exit_code = process.returncode
-                result_message = f"-e {package}.{integtest_name:.<70}{'SUCCESS' if exit_code == 0 else 'FAILURE'}"
-                pytee.run("echo", result_message.split(), integtest_log_summary)
-
-            rich.print(f"""[green]Test \"{integtest_name}\" complete for package \"{package}\". 
-            The full integtest output can be found at {integtest_full_output_log}
-            The junit xml file can be found at {integtest_junit_xml_output}[/green]""")
-
-            with open(integtest_junit_xml_output, "r") as inf:
-               res = re.search(r'.*errors="([0-9]+)" failures="([0-9]+)" skipped="([0-9]+)" tests="([0-9]+)" time="([0-9\.]+)".*', inf.read())
-               assert res, f"Some assumption made by dbt-build on how to parse {integtest_junit_xml_output} is broken; please contact John Freeman"
-               errors, failures, skipped, subtests, time = [res.group(itoken) for itoken in range(1,6)]
-               integtest_overviews.append({"package": package, "test": integtest_name, "errors": errors, "num_subtests": subtests, "num_failed_subtests": failures, "num_skipped_subtests": skipped, "time": time })
-
-        # Remove __pycache__ directories
-        pycache_dir = package_path/'integtest/__pycache__'
-        if pycache_dir.is_dir():
-            rich.print(f"[yellow] Removing __pycache__ directory from {package_path/'integtest'}")
-            sh.rm('-rf', pycache_dir)
-    # Move .pytest_cache directory to suppress build warnings
-    src_pytest_cache = pathlib.Path('sourcecode/.pytest_cache')
-    if src_pytest_cache.is_dir():
-        rich.print(f"[yellow] Moving {src_pytest_cache} to {BASEDIR}")
-        base_pytest_cache = pathlib.Path(f'{BASEDIR}/.pytest_cache')
-        if base_pytest_cache.is_dir():
-            sh.rm('-rf', base_pytest_cache)
-        src_pytest_cache.rename(base_pytest_cache)
+    rich.print(f"[yellow]WARNING: --integtest has been deprecated. Use dunedaq_integtest_bundle.sh instead.[/yellow]")
 
 if args.lint:
     os.chdir(BASEDIR)
@@ -703,47 +629,12 @@ Detailed unit test results are saved in the following directory:
 {test_log_dir}
 """
 
-integtestinfo = ""
-if run_integtests:
-    integtestinfo=f"""
-Integration test summary can be found in {integtest_log_summary}.
-Detailed integtest results are saved in the following directory:
-{integtest_log_dir}
-"""
-
 lintinfo = ""
 if args.lint and not code_to_lint_is_a_file:    
     lintinfo=f"""
 Automated code linting results can be found in the following directory:
 {lint_log_dir}.
 """
-
-if len(integtest_overviews) > 0:
-   rich.print("\n\n")
-   rich.print(f"[yellow]########################################SUMMARY OF INTEGRATION TESTS###########################################[/yellow]")
-
-for test in sorted(integtest_overviews, key=lambda d: (d["package"], d["test"])):
-
-   errors = int(test["errors"])
-   passed = int(test["num_subtests"]) - int(test["num_failed_subtests"]) - int(test["num_skipped_subtests"])
-   ran = int(test["num_subtests"]) - int(test["num_skipped_subtests"])
-   label = f"{test['package']}/{test['test']} ({test['time']}s)"
-
-   if errors == 0:
-      summary = f"{passed}/{ran} run subtests passed, {test['num_skipped_subtests']} subtests skipped"
-   else:
-      summary = "TEST ITSELF IS BROKEN"
-
-   dots = "." * max(4, 110 - len(label) - len(summary)) # At least 4 dots for readability
-
-   print(f"{label}{dots}{summary} ", end = "")
-
-   if test["num_failed_subtests"] == "0" and test["num_skipped_subtests"] == "0" and errors == 0:
-      rich.print("[green]SUCCESS[/green]")
-   elif test["num_failed_subtests"] == "0" and errors == 0:
-      rich.print("[yellow]SKIPPED[/yellow]")
-   else:
-      rich.print("[red]FAILURE[/red]")
 
 # Recreate the output of the old dbt-unittest-summary.sh script
 
@@ -795,7 +686,6 @@ build details you can either scroll up or run the following:
 less -R {build_log}
 
 {testinfo}
-{integtestinfo}
 {lintinfo}
 """)
 
