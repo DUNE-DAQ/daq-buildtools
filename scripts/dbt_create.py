@@ -51,6 +51,8 @@ Arguments and options:
                          virtual environment from the default venv in the
                          release's directory on cvmfs
     -s/--spack: install a local spack instance in the workarea
+    --uv:       install the python virtual environment using uv instead
+                of pip (experimental)
 
 See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-buildtools for more
 
@@ -66,6 +68,7 @@ parser.add_argument("-i", "--install-pyvenv", action="store_true", dest='install
 parser.add_argument("-p", "--pyvenv-requirements", action='store', dest='pyvenv_requirements', help=argparse.SUPPRESS)
 parser.add_argument("-q", "--quick", action="store_true", dest='quick', help=argparse.SUPPRESS)
 parser.add_argument("-s", "--spack", action="store_true", dest='install_spack', help=argparse.SUPPRESS)
+parser.add_argument("--uv", action="store_true", dest='use_uv', help=argparse.SUPPRESS)
 parser.add_argument("release_tag", nargs='?', help=argparse.SUPPRESS)
 parser.add_argument("workarea_dir", nargs='?', help=argparse.SUPPRESS)
 
@@ -177,6 +180,9 @@ with open(f'{TARGETDIR}/env.sh', "w") as outf:
 # Set these so the dbt-clone-pyvenv.sh and dbt-create-pyvenv.sh scripts get info they need
 os.environ["SPACK_RELEASE"] = f"{RELEASE}"
 os.environ["SPACK_RELEASES_DIR"] = f"{RELEASE_BASEPATH}"
+
+if args.use_uv:
+    os.environ["DBT_USE_UV"] = "true"
 
 workarea_constants_file_contents = \
     f"""export SPACK_RELEASE="{os.environ["SPACK_RELEASE"]}"

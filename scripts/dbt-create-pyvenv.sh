@@ -36,6 +36,8 @@ if [[ -z $SPACK_RELEASES_DIR ]]; then
     error "Environment variable SPACK_RELEASES_DIR needs to be set for this script to work. Exiting..."
 fi
 
+[[ $DBT_USE_UV=="true" ]] && ! command -v uv >/dev/null && error "--uv requested but uv not found. Exiting..."
+
 spack_setup_env
 spack_load_target_package systems  # Error checking occurs inside function
 
@@ -45,6 +47,10 @@ spack_load_target_package systems  # Error checking occurs inside function
 if [ -f "${DBT_AREA_ROOT}/${DBT_VENV}/pyvenv.cfg" ]; then
     echo -e "INFO [`eval $timenow`]: virtual_env ${DBT_VENV} already exists."
     cat "${DBT_AREA_ROOT}/${DBT_VENV}/pyvenv.cfg"
+elif [[ "$DBT_USE_UV"=="true" ]]; then
+    echo -e "INFO [`eval $timenow`]: creating virtual_env ${DBT_VENV} using uv."
+    uv venv --seed --prompt ${DBT_VENV_PROMPT} --python "$(command -v python)" ${DBT_AREA_ROOT}/${DBT_VENV}
+    test $? -eq 0 || error "Problem creating virtual_env ${DBT_VENV}. Exiting..."
 else
     echo -e "INFO [`eval $timenow`]: creating virtual_env ${DBT_VENV}. "
     python -m venv --prompt ${DBT_VENV_PROMPT} ${DBT_AREA_ROOT}/${DBT_VENV}
@@ -59,8 +65,13 @@ then
   error "Failed to load the virtual env. Exiting..." 
 fi
 
-spack unload openssl  # JCF, Sep-27-2022: Spack's openssl is preventing the install command below from working
-python -m pip install -r ${PYENV_REQS}
+if [[ -n $DBT_USE_UV=="true" ]]; then
+    uv pip install -r ${PYENV_REQS}
+else
+    # JCF, Sep-27-2022: Spack's openssl is preventing the install command below from working
+    spack unload openssl
+    python -m pip install -r ${PYENV_REQS}
+fi
 test $? -eq 0 || error "Installing required modules from ${PYENV_REQS} failed. Exiting..." 
 
 deactivate
